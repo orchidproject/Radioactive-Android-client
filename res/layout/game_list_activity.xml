@@ -6,6 +6,7 @@
     android:layout_height="fill_parent">
     
     <!-- Logo and header layout -->
+
     <include layout="@layout/main_header" />
     
     <TextView
@@ -62,12 +63,7 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:background="#EEE">
-       <ImageButton
-            android:id="@+id/geoloqi"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/powered_by_geoloqi"
-            android:background="@null" />
+
         <Button
             android:id="@+id/refresh_button"
             android:layout_alignParentRight="true"
@@ -77,5 +73,14 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:text="@string/find_a_game_button" />
+
+        <ImageButton
+            android:id="@+id/geoloqi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/refresh_button"
+            android:background="@null"
+            android:src="@drawable/radioactive_android" />
+
     </RelativeLayout>
 </LinearLayout>
