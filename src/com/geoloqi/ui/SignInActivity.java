@@ -68,6 +68,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			final String initials = initialsField.getText().toString();
 			final String email = emailField.getText().toString().toLowerCase();
 
+			/*
 			// Validate input
 			if (initials.length() == 2) {
 				if (EMAIL_PATTERN.matcher(email).matches()) {
@@ -80,6 +81,12 @@ public class SignInActivity extends Activity implements OnClickListener {
 				Toast.makeText(this, R.string.error_initials,
 						Toast.LENGTH_LONG).show();
 			}
+			*/
+			try {
+				finishLogin(true);
+			} catch (ClassCastException e) {
+				Log.w(TAG, "Got a ClassCastException when trying to finish login!", e);
+			}
 		}
 	}
 
@@ -88,6 +95,8 @@ public class SignInActivity extends Activity implements OnClickListener {
 		if (result) {
 			if (!TextUtils.isEmpty(mGameId)) {
 				// Launch the map attack activity
+
+				Log.i("AAA", "finishing login");
 				Intent intent = new Intent(this, MapAttackActivity.class);
 				intent.putExtra(MapAttackActivity.PARAM_GAME_ID, mGameId);
 				startActivity(intent);

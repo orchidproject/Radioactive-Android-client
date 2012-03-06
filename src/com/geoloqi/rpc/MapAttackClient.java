@@ -66,8 +66,8 @@ public class MapAttackClient implements GeoloqiConstants {
 
 			MyRequest request;
 			{
-				//request = new MyRequest(MyRequest.POST, URL_BASE + "user/create_anon");
-				request = new MyRequest(MyRequest.POST, URL_BASE + "/game/" +  + "/join/");
+				request = new MyRequest(MyRequest.POST, URL_BASE + "user/create_anon");
+				//request = new MyRequest(MyRequest.POST, URL_BASE + "/game/" +  + "/join/");
 				request.addHeaders(new BasicScheme().authenticate(new UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET), request.getRequest()));
 				request.addEntityParams(pair("name", name), pair("device_id", deviceID), pair("platform", platform), pair("hardware", hardware));
 			}
@@ -90,7 +90,8 @@ public class MapAttackClient implements GeoloqiConstants {
 	}
 
 	public boolean hasToken() {
-		return context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).contains("authToken");
+		//return context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).contains("authToken");
+		return true;
 	}
 
 	public String getToken() {
@@ -172,13 +173,17 @@ public class MapAttackClient implements GeoloqiConstants {
 		}
 		MyRequest request;
 		{// Initialize the request.
-			request = new MyRequest(MyRequest.POST, URL_BASE + id + "/join");
-			Log.i(TAG, "joining at " + URL_BASE + id + "/join");
-			request.addEntityParams(pair("email", email), pair("initials", initials));
+			String url = URL_BASE + "game/" + id + "/join";
+			request = new MyRequest(MyRequest.POST, url);
+			Log.i(TAG, "joining at " + url);
+			request.addEntityParams(pair("email", email), pair("name", initials));
 		}
 
 		try {// Send will throw a RuntimeException for the non-JSON return value.
-			send(request);
+			JSONObject response = send(request);
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("userID", response.getString("user_id")).commit();
+		} catch (JSONException e){
+			ADB.log("JSONException in MapAttackClient/joinGame: " + e.getMessage());
 		} catch (RuntimeException e) {
 		}
 	}
@@ -188,7 +193,9 @@ public class MapAttackClient implements GeoloqiConstants {
 		Log.i(TAG, "param " + request.getRequest().getURI());
 		JSONObject response;
 		try {
-			response = new JSONObject(EntityUtils.toString(client.execute(request.getRequest()).getEntity()));
+			String response_str = EntityUtils.toString(client.execute(request.getRequest()).getEntity());
+			Log.i("AAA", response_str);
+			response = new JSONObject(response_str);
 			//response = new JSONObject(client.execute(request.getRequest()).toString());
 			Log.i(TAG, "AAA" + response.toString());
 		} catch (ParseException e) {
