@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MapAttack</string>
+    
+    <!-- Game List -->
+    <string name="game_list_label">Games near your location</string>
+    <string name="game_list_empty_text">There are no games in your area.\n\nIf you would like to bring a game to your area, please contact us:\n\nplay@mapattack.org</string>
+    <string name="game_list_loading_text">Searching for games...</string>
+    
+    <!-- Sign In -->
+    <string name="sign_in_loading_text">Joining game...</string>
+    
+    <!-- Buttons -->
+    <string name="find_a_game_button">Refresh</string>
+    
+    <!-- Error Messages -->
+    <string name="error_game_list_unavailable">The game server is not responding. Do you have an active data connection?</string>
+    <string name="error_initials">Please provide your first and last initial.</string>
+    <string name="error_email">Please provide a valid email address.</string>
+    <string name="error_invalid_game_id">The game ID provided was invalid.</string>
+    <string name="error_join_game">Failed to join the game! Please try again later.</string>
+</resources>
