@@ -151,6 +151,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		final Game selection = (Game) l.getItemAtPosition(position);
 
 		// Start the MapAttackActivity for the indicated game
+		/*
 		final Intent intent = new Intent(this, MapAttackActivity.class);
 		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
 		Thread t = new Thread(){
@@ -159,8 +160,9 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			}
 		};
 		t.start();
-
-
+		*/
+		Intent intent = new Intent(this, MapAttackActivity.class);
+		startActivity(intent);
 	}
 
 	@Override

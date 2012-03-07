@@ -168,8 +168,8 @@ public class MapAttackClient implements GeoloqiConstants {
 		{// Initialize variables
 			SharedPreferences prefs = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
 			token = prefs.getString("authToken", null);
-			email = prefs.getString("email", null);
-			initials = prefs.getString("initials", null);
+			email = prefs.getString("email", "default@example.com");
+			initials = prefs.getString("initials", "DOE");
 		}
 		MyRequest request;
 		{// Initialize the request.
@@ -194,15 +194,15 @@ public class MapAttackClient implements GeoloqiConstants {
 		JSONObject response;
 		try {
 			String response_str = EntityUtils.toString(client.execute(request.getRequest()).getEntity());
-			Log.i("AAA", response_str);
+			//Log.i("AAA", response_str);
 			response = new JSONObject(response_str);
 			//response = new JSONObject(client.execute(request.getRequest()).toString());
-			Log.i(TAG, "AAA" + response.toString());
+			//Log.i(TAG, "AAA" + response.toString());
 		} catch (ParseException e) {
 			ADB.log("ParseException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());
 		} catch (JSONException e) {
-			ADB.log("JSONException: " + e.getMessage());
+			ADB.log("AAJSONException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());
 		} catch (ClientProtocolException e) {
 			ADB.log("ClientProtocolException: " + e.getMessage());
