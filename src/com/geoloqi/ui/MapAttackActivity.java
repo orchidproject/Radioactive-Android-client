@@ -40,7 +40,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private String mGameId;
 	private String mGameUrl;
 	private WebView mWebView;
-	private Intent mPushNotificationIntent;
+	//private Intent mPushNotificationIntent;
 	private String mDialogReturn = "";
 
 	@Override
@@ -59,7 +59,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		mGameUrl = String.format(URL_BASE + "game/%s", mGameId);
 		Log.i("AAA", "Game id is: " + mGameId );
 		mWebView = (WebView) findViewById(R.id.webView);
-		mPushNotificationIntent = new Intent(this, AndroidPushNotifications.class);
+		//mPushNotificationIntent = new Intent(this, AndroidPushNotifications.class);
 
 		// Prepare the web view
 		mWebView.clearCache(false);
@@ -88,14 +88,14 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			try {
 				// Stop any previously started services and broadcast receivers
 				unregisterReceiver(mPushReceiver);
-				stopService(mPushNotificationIntent);
+				//stopService(mPushNotificationIntent);
 			} catch (IllegalArgumentException e) {
 				Log.w(TAG, "Trying to unregister an inactive push receiver.");
 			}
 	
 			// Start our services
 			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
-			startService(mPushNotificationIntent);
+			//startService(mPushNotificationIntent);
 	
 			try {
 				Log.i("AAA", "starting the MapAttackActivity");
@@ -124,7 +124,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		super.onStop();
 		try {
 			unregisterReceiver(mPushReceiver);
-			stopService(mPushNotificationIntent);
+			//stopService(mPushNotificationIntent);
 		} catch (IllegalArgumentException e) {
 			Log.w(TAG, "Trying to unregister an inactive push receiver.");
 		}
