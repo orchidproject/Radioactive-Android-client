@@ -46,5 +46,7 @@
             android:name="com.geoloqi.ui.MapAttackActivity"
             android:launchMode="singleTop">
         </activity>
+        <activity android:name="com.geoloqi.ui.QRCodeScannerActivity"></activity>
+        
     </application>
 </manifest>

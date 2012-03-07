@@ -8,4 +8,5 @@
 		android:id="@+id/quit"
 		android:title="Quit"
 		android:icon="@android:drawable/ic_menu_close_clear_cancel" />
+	<item android:id="@+id/qrscan" android:icon="@android:drawable/ic_menu_view" android:title="Scan Box"></item>
 </menu>

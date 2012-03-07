@@ -223,6 +223,9 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			// Get the MapAttackClient
 			final MapAttackClient client = MapAttackClient.getApplicationClient(mContext);
 			try {
+				/* 
+				 * commented out from original because we don't need the location
+				 *
 				if (mLocation != null) {	
 					// Get the nearest intersection
 					mIntersection = client.getNearestIntersection(mLocation.getLatitude(),
@@ -231,8 +234,9 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 					// Get the game list
 					return client.getGames(mLocation.getLatitude(), mLocation.getLongitude());
 				} else {
-					return client.getGames();
-				}
+				*/
+				return client.getGames();
+				//}
 			} catch (RPCException e) {
 				Log.e(TAG, "Got an RPCException when looking for nearby games.", e);
 			}
