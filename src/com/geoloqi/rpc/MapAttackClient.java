@@ -196,7 +196,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		JSONObject response;
 		try {
 			String response_str = EntityUtils.toString(client.execute(request.getRequest()).getEntity());
-			Log.i("AAA", response_str);
+			//Log.i("AAA", response_str);
 			response = new JSONObject(response_str);
 			//response = new JSONObject(client.execute(request.getRequest()).toString());
 			//Log.i(TAG, "AAA" + response.toString());
