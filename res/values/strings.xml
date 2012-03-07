@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MapAttack</string>
+    <string name="app_name">AtomicOrchid</string>
     
     <!-- Game List -->
     <string name="game_list_label">Games near your location</string>
