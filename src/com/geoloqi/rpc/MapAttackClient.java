@@ -164,6 +164,7 @@ public class MapAttackClient implements GeoloqiConstants {
 	}
 
 	public void joinGame(String id) throws RPCException {
+		Log.i("BBB", "trying to join game " + id);
 		String token, email, initials;
 		{// Initialize variables
 			SharedPreferences prefs = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
@@ -181,6 +182,7 @@ public class MapAttackClient implements GeoloqiConstants {
 
 		try {// Send will throw a RuntimeException for the non-JSON return value.
 			JSONObject response = send(request);
+			Log.i("BBB", response.getString("user_id"));
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("userID", response.getString("user_id")).commit();
 		} catch (JSONException e){
 			ADB.log("JSONException in MapAttackClient/joinGame: " + e.getMessage());
@@ -194,7 +196,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		JSONObject response;
 		try {
 			String response_str = EntityUtils.toString(client.execute(request.getRequest()).getEntity());
-			//Log.i("AAA", response_str);
+			Log.i("AAA", response_str);
 			response = new JSONObject(response_str);
 			//response = new JSONObject(client.execute(request.getRequest()).toString());
 			//Log.i(TAG, "AAA" + response.toString());
@@ -202,7 +204,7 @@ public class MapAttackClient implements GeoloqiConstants {
 			ADB.log("ParseException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());
 		} catch (JSONException e) {
-			ADB.log("AAJSONException: " + e.getMessage());
+			ADB.log("JSONException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());
 		} catch (ClientProtocolException e) {
 			ADB.log("ClientProtocolException: " + e.getMessage());

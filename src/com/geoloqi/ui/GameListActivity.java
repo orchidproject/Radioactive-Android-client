@@ -43,7 +43,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	private static final int HELP_DIALOG = 0;
 	
 	private boolean mSyncOnStart = true;
-	private Intent mPositioningIntent;
+	//private Intent mPositioningIntent;
 	private ArrayList<Game> mGameList = null;
 	private String mNearestIntersection = null;
 
@@ -63,7 +63,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		helpButton.setOnClickListener(this);
 
 		// Reference our positioning service Intent
-		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
+		//mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
 
 		if (savedInstanceState != null) {
 			// Restore our saved instance state
@@ -77,8 +77,8 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 
 		if (mSyncOnStart || mGameList.isEmpty()) {
 			// Start our positioning service
-			stopService(mPositioningIntent);
-			startService(mPositioningIntent);
+			//stopService(mPositioningIntent);
+			//startService(mPositioningIntent);
 			
 			// Search for nearby games
 			setLoading(true);
@@ -89,7 +89,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		stopService(mPositioningIntent);
+		//stopService(mPositioningIntent);
 	}
 
 	@Override
@@ -162,6 +162,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		t.start();
 		*/
 		Intent intent = new Intent(this, MapAttackActivity.class);
+		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
 		startActivity(intent);
 	}
 
