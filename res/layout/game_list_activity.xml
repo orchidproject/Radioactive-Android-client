@@ -74,13 +74,23 @@
             android:paddingRight="20dp"
             android:text="@string/find_a_game_button" />
 
+        <Button
+            android:id="@+id/help_button"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/help_button" />
+        
         <ImageButton
             android:id="@+id/geoloqi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/refresh_button"
             android:background="@null"
-            android:src="@drawable/radioactive_android" />
-
+            android:src="@drawable/radioactive_android" 
+            android:contentDescription="@string/orchid_www"/>
     </RelativeLayout>
 </LinearLayout>

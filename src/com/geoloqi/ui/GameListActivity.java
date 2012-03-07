@@ -3,9 +3,12 @@ package com.geoloqi.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
@@ -36,6 +39,8 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	public static final String PARAM_GAME_LIST = "game_list";
 	public static final String PARAM_NEAREST_INTERSECTION = "nearest_intersection";
 	public static final String PARAM_SYNC_ON_START = "sync_on_start";
+
+	private static final int HELP_DIALOG = 0;
 	
 	private boolean mSyncOnStart = true;
 	private Intent mPositioningIntent;
@@ -50,10 +55,12 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
 		final ImageButton geoloqiButton = (ImageButton) findViewById(R.id.geoloqi);
+		final Button helpButton = (Button) findViewById(R.id.help_button);
 
 		// Set our on click listeners
 		refreshButton.setOnClickListener(this);
 		geoloqiButton.setOnClickListener(this);
+		helpButton.setOnClickListener(this);
 
 		// Reference our positioning service Intent
 		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
@@ -157,11 +164,14 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			break;
 		case R.id.geoloqi:
 			final Intent geoloqiIntent = new Intent(Intent.ACTION_VIEW,
-					Uri.parse("https://geoloqi.com/"));
+					Uri.parse("http://orchid.ac.uk/"));
 			geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(geoloqiIntent);
 			break;
+		case R.id.help_button:
+			showDialog(HELP_DIALOG);
+			
 		}
 	}
 
@@ -180,6 +190,24 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			listView.setVisibility(View.VISIBLE);
 			emptyView.setVisibility(View.GONE);
 		}
+	}
+
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		switch(id) {
+		case HELP_DIALOG:
+			builder.setMessage( R.string.help_page )
+			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					;
+				}
+			});
+
+			dialog = builder.create();
+			break;
+		}
+		return dialog;
 	}
 
 	/**

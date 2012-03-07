@@ -4,7 +4,13 @@
     
     <!-- Game List -->
     <string name="game_list_label">Games near your location</string>
-    <string name="game_list_empty_text">There are no games in your area.\n\nIf you would like to bring a game to your area, please contact us:\n\nplay@mapattack.org</string>
+    <string name="game_list_empty_text">Cannot load any Game. This could be caused
+        by one of two problems.\n
+        1. There are not games scheduled at the moment \n
+        2. There is no Internet connection available and it is impossible to 
+        connect to the server.\n
+        \nPlease check your Internet connection and refresh the list of games. 
+    </string>
     <string name="game_list_loading_text">Searching for games...</string>
     
     <!-- Sign In -->
@@ -19,4 +25,7 @@
     <string name="error_email">Please provide a valid email address.</string>
     <string name="error_invalid_game_id">The game ID provided was invalid.</string>
     <string name="error_join_game">Failed to join the game! Please try again later.</string>
+    <string name="help_button">Help!</string>
+    <string name="orchid_www">Go to ORCHID website</string>
+    <string name="help_page">Lost? Don\'t know what to do? \n\nSorry, shit happens.</string>
 </resources>
