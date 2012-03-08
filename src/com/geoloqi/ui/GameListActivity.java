@@ -29,6 +29,7 @@ import android.widget.TextView;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GeoloqiPositioning;
@@ -37,6 +38,8 @@ import com.geoloqi.widget.GameListArrayAdapter;
 public class GameListActivity extends ListActivity implements OnClickListener,
 		GeoloqiConstants {
 	public static final String TAG = "GameListActivity";
+
+	public static final String ORCHID_TAG = LoggingConstants.RECORDING_TAG;
 
 	public static final String PARAM_GAME_LIST = "game_list";
 	public static final String PARAM_NEAREST_INTERSECTION = "nearest_intersection";
@@ -117,7 +120,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	 * @param games
 	 */
 	private void populateGameList(final ArrayList<Game> games) {
-		Log.i(TAG, "AAA loading games");
+		Log.d(ORCHID_TAG, "Populated list of games: " + games);
 		setLoading(false);
 		if (games != null) {
 			mGameList = games;
