@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -43,7 +44,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private String mGameUrl;
 	private WebView mWebView;
 	private Intent mPushNotificationIntent;
-	private String mDialogReturn = "";
+	private String mQrCodeReturn = "";
 	private Intent mGPSIntent;
 
 	@Override
@@ -188,8 +189,10 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		if (scanResult != null) {
 			if (requestCode == IntentIntegrator.REQUEST_CODE) {
 				if (resultCode == RESULT_OK) {
-					mDialogReturn = intent.getStringExtra("SCAN_RESULT");
-					showDialog(DIALOG_QRCODE_SUCCESS);
+					mQrCodeReturn = intent.getStringExtra("SCAN_RESULT");
+					//showDialog(DIALOG_QRCODE_SUCCESS);
+					Uri uri = Uri.parse( mQrCodeReturn );
+					startActivity( new Intent( Intent.ACTION_VIEW, uri ) );
 				} else if (resultCode == RESULT_CANCELED) {
 					showDialog(DIALOG_QRCODE_CANCEL);
 				}
@@ -206,7 +209,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		switch (id) {
 		case DIALOG_QRCODE_SUCCESS:
-			builder.setMessage("The QR Code says: " + mDialogReturn)
+			builder.setMessage("The QR Code says: " + mQrCodeReturn)
 					.setPositiveButton("OK",
 							new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog,

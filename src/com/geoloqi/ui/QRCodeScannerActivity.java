@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class QRCodeScannerActivity extends Activity {
 
-	private final static String QRTAG = "QRCODE_TAG";
+	private static final String QRTAG = "QRCODE_TAG";
 	private static final int DIALOG_QRCODE_RETURN = 0;
 	private String mDialogReturn = "";
 
