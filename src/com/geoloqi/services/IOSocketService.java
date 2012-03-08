@@ -109,6 +109,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	public void forward(String json) {
 		Intent notifyPush = new Intent("PUSH");
 		notifyPush.putExtra("json", json);
+		Log.i(TAG, "Pushing notification to UI: " + json);
 		sendBroadcast(notifyPush);
 	}
 

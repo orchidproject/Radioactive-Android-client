@@ -268,6 +268,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		public void onReceive(Context ctxt, Intent intent) {
 			Log.i("Testing IO", "Received JSON: "
 					+ intent.getExtras().getString("json"));
+				
 			
 			mWebView.loadUrl(String.format("javascript:handleSocketData(%s)",
 					intent.getExtras().getString("json")));
