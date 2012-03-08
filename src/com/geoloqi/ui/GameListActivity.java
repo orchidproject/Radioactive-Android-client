@@ -28,20 +28,24 @@ import android.widget.TextView;
 
 import com.geoloqi.mapattack.R;
 import com.geoloqi.data.Game;
+import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GeoloqiPositioning;
 import com.geoloqi.widget.GameListArrayAdapter;
 
-public class GameListActivity extends ListActivity implements OnClickListener {
+public class GameListActivity extends ListActivity implements OnClickListener,
+		GeoloqiConstants {
 	public static final String TAG = "GameListActivity";
 
 	public static final String PARAM_GAME_LIST = "game_list";
 	public static final String PARAM_NEAREST_INTERSECTION = "nearest_intersection";
 	public static final String PARAM_SYNC_ON_START = "sync_on_start";
 
+	public static final String PARAM_GAME_ID = "game_id";
+
 	private static final int HELP_DIALOG = 0;
-	
+
 	private boolean mSyncOnStart = true;
 	private Intent mPositioningIntent;
 	private ArrayList<Game> mGameList = null;
@@ -67,10 +71,13 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 
 		if (savedInstanceState != null) {
 			// Restore our saved instance state
-			mSyncOnStart = savedInstanceState.getBoolean(PARAM_SYNC_ON_START, true);
-			mNearestIntersection = savedInstanceState.getString(PARAM_NEAREST_INTERSECTION);
-			mGameList = savedInstanceState.getParcelableArrayList(PARAM_GAME_LIST);
-			
+			mSyncOnStart = savedInstanceState.getBoolean(PARAM_SYNC_ON_START,
+					true);
+			mNearestIntersection = savedInstanceState
+					.getString(PARAM_NEAREST_INTERSECTION);
+			mGameList = savedInstanceState
+					.getParcelableArrayList(PARAM_GAME_LIST);
+
 			setNearestIntersection(mNearestIntersection);
 			populateGameList(mGameList);
 		}
@@ -79,10 +86,11 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			// Start our positioning service
 			stopService(mPositioningIntent);
 			startService(mPositioningIntent);
-			
+
 			// Search for nearby games
 			setLoading(true);
-			new RequestGamesListTask(this, getLastKnownLocation(), false).execute();
+			new RequestGamesListTask(this, getLastKnownLocation(), false)
+					.execute();
 		}
 	}
 
@@ -95,7 +103,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		
+
 		outState.putBoolean(PARAM_SYNC_ON_START, false);
 		outState.putString(PARAM_NEAREST_INTERSECTION, mNearestIntersection);
 		outState.putParcelableArrayList(PARAM_GAME_LIST,
@@ -103,8 +111,8 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	}
 
 	/**
-	 * Populate the ListView with a new GameListArrayAdapter
-	 * from the provided List of Game objects.
+	 * Populate the ListView with a new GameListArrayAdapter from the provided
+	 * List of Game objects.
 	 * 
 	 * @param games
 	 */
@@ -113,7 +121,8 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		setLoading(false);
 		if (games != null) {
 			mGameList = games;
-			setListAdapter(new GameListArrayAdapter(this, R.layout.game_list_element,
+			setListAdapter(new GameListArrayAdapter(this,
+					R.layout.game_list_element,
 					mGameList.toArray(new Game[mGameList.size()])));
 		}
 	}
@@ -152,23 +161,20 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 
 		// Start the MapAttackActivity for the indicated game
 		/*
-		final Intent intent = new Intent(this, MapAttackActivity.class);
-		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
-		Thread t = new Thread(){
-			public void run(){
-				startActivity(intent);
-			}
-		};
-		t.start();
-		*/
+		 * final Intent intent = new Intent(this, MapAttackActivity.class);
+		 * intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
+		 * Thread t = new Thread(){ public void run(){ startActivity(intent); }
+		 * }; t.start();
+		 */
 		Intent intent = new Intent(this, MapAttackActivity.class);
 		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
+
 		startActivity(intent);
 	}
 
 	@Override
 	public void onClick(View view) {
-		switch(view.getId()) {
+		switch (view.getId()) {
 		case R.id.refresh_button:
 			new RequestGamesListTask(this, getLastKnownLocation()).execute();
 			break;
@@ -181,7 +187,7 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 			break;
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
-			
+
 		}
 	}
 
@@ -205,14 +211,14 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		switch(id) {
+		switch (id) {
 		case HELP_DIALOG:
-			builder.setMessage( R.string.help_page )
-			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int id) {
-					;
-				}
-			});
+			builder.setMessage(R.string.help_page).setPositiveButton("OK",
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							;
+						}
+					});
 
 			dialog = builder.create();
 			break;
@@ -222,28 +228,33 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 
 	/**
 	 * A simple AsyncTask to request the game list from the server.
+	 * 
 	 * @TODO: Move this to an external class file.
 	 * */
-	private static class RequestGamesListTask extends AsyncTask<Void, Void, ArrayList<Game>> {
+	private static class RequestGamesListTask extends
+			AsyncTask<Void, Void, ArrayList<Game>> {
 		private final Context mContext;
 		private final Location mLocation;
-		
+
 		private String mIntersection = null;
 		private ProgressDialog mProgressDialog = null;
 
-		public RequestGamesListTask(final Context context, final Location location) {
+		public RequestGamesListTask(final Context context,
+				final Location location) {
 			this(context, location, true);
 		}
-		
-		public RequestGamesListTask(final Context context, final Location location, final boolean displayDialog) {
+
+		public RequestGamesListTask(final Context context,
+				final Location location, final boolean displayDialog) {
 			mContext = context;
 			mLocation = location;
-			
+
 			// Build a progress dialog
 			if (displayDialog) {
 				mProgressDialog = new ProgressDialog(context);
 				mProgressDialog.setTitle(null);
-				mProgressDialog.setMessage(context.getString(R.string.game_list_loading_text));
+				mProgressDialog.setMessage(context
+						.getString(R.string.game_list_loading_text));
 			}
 		}
 
@@ -259,37 +270,42 @@ public class GameListActivity extends ListActivity implements OnClickListener {
 		protected ArrayList<Game> doInBackground(Void... params) {
 
 			// Get the MapAttackClient
-			final MapAttackClient client = MapAttackClient.getApplicationClient(mContext);
+			final MapAttackClient client = MapAttackClient
+					.getApplicationClient(mContext);
 			try {
-				/* 
-				 * commented out from original because we don't need the location
-				 *
-				if (mLocation != null) {	
-					// Get the nearest intersection
-					mIntersection = client.getNearestIntersection(mLocation.getLatitude(),
-							mLocation.getLongitude());
-					
-					// Get the game list
-					return client.getGames(mLocation.getLatitude(), mLocation.getLongitude());
-				} else {
-				*/
+				/*
+				 * commented out from original because we don't need the
+				 * location
+				 * 
+				 * if (mLocation != null) { // Get the nearest intersection
+				 * mIntersection =
+				 * client.getNearestIntersection(mLocation.getLatitude(),
+				 * mLocation.getLongitude());
+				 * 
+				 * // Get the game list return
+				 * client.getGames(mLocation.getLatitude(),
+				 * mLocation.getLongitude()); } else {
+				 */
 				return client.getGames();
-				//}
+				// }
 			} catch (RPCException e) {
-				Log.e(TAG, "Got an RPCException when looking for nearby games.", e);
+				Log.e(TAG,
+						"Got an RPCException when looking for nearby games.", e);
 			}
 			return new ArrayList<Game>();
 		}
 
 		@Override
 		protected void onPostExecute(ArrayList<Game> games) {
-				try {
-					final GameListActivity activity = (GameListActivity) mContext;
-					activity.setNearestIntersection(mIntersection);
-					activity.populateGameList(games);
-				} catch (ClassCastException e) {
-					Log.w(TAG, "Got a ClassCastException when trying to update the game list!", e);
-				}
+			try {
+				final GameListActivity activity = (GameListActivity) mContext;
+				activity.setNearestIntersection(mIntersection);
+				activity.populateGameList(games);
+			} catch (ClassCastException e) {
+				Log.w(TAG,
+						"Got a ClassCastException when trying to update the game list!",
+						e);
+			}
 
 			// Dismiss our progress dialog
 			if (mProgressDialog != null) {

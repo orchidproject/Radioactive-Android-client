@@ -20,12 +20,13 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.geoloqi.mapattack.R;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
+import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.AccountMonitor;
 import com.geoloqi.rpc.MapAttackClient;
-import com.geoloqi.services.AndroidPushNotifications;
+import com.geoloqi.services.GPSTrackingService;
+import com.geoloqi.services.IOSocketService;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -36,12 +37,14 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private static final int DIALOG_QRCODE_SUCCESS = 0;
 	private static final int DIALOG_QRCODE_CANCEL = 1;
 	private static final String QRTAG = "QR_CODE_TAG";
+	public static final String PARAM_USER_ID = "user_id";
 
 	private String mGameId;
 	private String mGameUrl;
 	private WebView mWebView;
 	private Intent mPushNotificationIntent;
 	private String mDialogReturn = "";
+	private Intent mGPSIntent;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,10 +60,14 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		// Build game
-		mGameUrl = String.format(URL_BASE + "game/%s", mGameId);
-		Log.i("AAA", "Game id is: " + mGameId );
+		mGameUrl = String.format(GAME_URL_BASE + mGameId);
+		Log.i("AAA", "Game id is: " + mGameId);
 		mWebView = (WebView) findViewById(R.id.webView);
-		mPushNotificationIntent = new Intent(this, AndroidPushNotifications.class);
+		mPushNotificationIntent = new Intent(this, IOSocketService.class);
+		mPushNotificationIntent.putExtra(GameListActivity.PARAM_GAME_ID,
+				mGameId);
+
+		mGPSIntent = new Intent(this, GPSTrackingService.class);
 
 		// Prepare the web view
 		mWebView.clearCache(false);
@@ -76,7 +83,8 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	public void onStart() {
 		super.onStart();
 
-		final MapAttackClient client = MapAttackClient.getApplicationClient(this);
+		final MapAttackClient client = MapAttackClient
+				.getApplicationClient(this);
 		// Check for a valid account token
 		if (!client.hasToken()) {
 			// Kick user out to the sign in activity
@@ -90,31 +98,37 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				// Stop any previously started services and broadcast receivers
 				unregisterReceiver(mPushReceiver);
 				stopService(mPushNotificationIntent);
+				stopService(mGPSIntent);
 			} catch (IllegalArgumentException e) {
 				Log.w(TAG, "Trying to unregister an inactive push receiver.");
 			}
-	
-			// Start our services
-			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
-			startService(mPushNotificationIntent);
-	
+
 			try {
 				Log.i("AAA", "starting the MapAttackActivity");
 				// Join the game
 				client.joinGame(mGameId);
-	
+
+				String userID = AccountMonitor.getUserID(this);
+				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
+
 				Log.i("AAA", "joined the game");
-	
+
+				// Start our services
+				registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
+				startService(mPushNotificationIntent);
+				startService(mGPSIntent);
+
 				// Load the game into the WebView
-				String webUrl = String.format("%s?id=%s", mGameUrl,
-						AccountMonitor.getUserID(this));
+				String webUrl = String.format("%s?id=%s", mGameUrl, userID);
 				Log.i("AAA", webUrl);
 				mWebView.loadUrl(webUrl);
 				Log.i("AAA", "web view loaded");
 
 			} catch (RPCException e) {
-				Log.e(TAG, "Got an RPCException when trying to join the game!", e);
-				Toast.makeText(this, R.string.error_join_game, Toast.LENGTH_LONG).show();
+				Log.e(TAG, "Got an RPCException when trying to join the game!",
+						e);
+				Toast.makeText(this, R.string.error_join_game,
+						Toast.LENGTH_LONG).show();
 				finish();
 			}
 		}
@@ -126,6 +140,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		try {
 			unregisterReceiver(mPushReceiver);
 			stopService(mPushNotificationIntent);
+			stopService(mGPSIntent);
 		} catch (IllegalArgumentException e) {
 			Log.w(TAG, "Trying to unregister an inactive push receiver.");
 		}
@@ -155,7 +170,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			Intent intent = new Intent("com.google.zxing.client.android.SCAN");
 			intent.putExtra("SCAN_MODE", "PRODUCT_MODE");
 			intent.putExtra("SCAN_FORMATS", "QR_CODE");
-			
+
 			intent.putExtra("SCAN_WIDTH", 800);
 			intent.putExtra("SCAN_HEIGHT", 200);
 			intent.putExtra("RESULT_DISPLAY_DURATION_MS", 3000L);
@@ -166,17 +181,18 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		}
 		return false;
 	}
-	
+
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+		IntentResult scanResult = IntentIntegrator.parseActivityResult(
+				requestCode, resultCode, intent);
 		if (scanResult != null) {
-			if (requestCode == IntentIntegrator.REQUEST_CODE){
+			if (requestCode == IntentIntegrator.REQUEST_CODE) {
 				if (resultCode == RESULT_OK) {
-		            mDialogReturn = intent.getStringExtra("SCAN_RESULT");
-		            showDialog(DIALOG_QRCODE_SUCCESS);
-		        } else if (resultCode == RESULT_CANCELED) {
-		            showDialog(DIALOG_QRCODE_CANCEL);
-		        }				
+					mDialogReturn = intent.getStringExtra("SCAN_RESULT");
+					showDialog(DIALOG_QRCODE_SUCCESS);
+				} else if (resultCode == RESULT_CANCELED) {
+					showDialog(DIALOG_QRCODE_CANCEL);
+				}
 			}
 		} else {
 			// else continue with any other code you need in the method
@@ -188,29 +204,33 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		switch(id) {
+		switch (id) {
 		case DIALOG_QRCODE_SUCCESS:
-			builder.setMessage("The QR Code says: " + mDialogReturn )
-			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int id) {
-					;
-				}
-			});
+			builder.setMessage("The QR Code says: " + mDialogReturn)
+					.setPositiveButton("OK",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									;
+								}
+							});
 
 			dialog = builder.create();
 			break;
 		case DIALOG_QRCODE_CANCEL:
-			builder.setMessage("You cancelled the QR Code scan. Your results" +
-					"cannot be saved. Please try again." )
-			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int id) {
-					;
-				}
-			});
+			builder.setMessage(
+					"You cancelled the QR Code scan. Your results"
+							+ "cannot be saved. Please try again.")
+					.setPositiveButton("OK",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									;
+								}
+							});
 		}
 		return dialog;
 	}
-	
 
 	/** Show or hide the loading indicator. */
 	private void setLoading(boolean loading) {
@@ -246,8 +266,12 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private BroadcastReceiver mPushReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context ctxt, Intent intent) {
-			mWebView.loadUrl(String.format("javascript:LQHandlePushData(%s)",
+			Log.i("Testing IO", "Received JSON: "
+					+ intent.getExtras().getString("json"));
+			
+			mWebView.loadUrl(String.format("javascript:handleSocketData(%s)",
 					intent.getExtras().getString("json")));
+
 		}
 	};
 }

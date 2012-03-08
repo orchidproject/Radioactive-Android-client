@@ -9,8 +9,8 @@ import org.json.JSONObject;
 
 import net.tootallnate.websocket.WebSocketClient;
 
-public class IOWebSocket extends WebSocketClient{
-	
+public class IOWebSocket extends WebSocketClient {
+
 	private MessageCallback callback;
 	private IOSocket ioSocket;
 	private static int currentID = 0;
@@ -22,11 +22,10 @@ public class IOWebSocket extends WebSocketClient{
 		this.ioSocket = ioSocket;
 	}
 
-
 	@Override
 	public void onIOError(IOException arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -34,8 +33,8 @@ public class IOWebSocket extends WebSocketClient{
 		// TODO Auto-generated method stub
 		System.out.println(arg0);
 		IOMessage message = IOMessage.parseMsg(arg0);
-		
-		switch (message.getType()) {			
+
+		switch (message.getType()) {
 		case IOMessage.HEARTBEAT:
 			try {
 				send("2::");
@@ -45,11 +44,11 @@ public class IOWebSocket extends WebSocketClient{
 				e.printStackTrace();
 			}
 			break;
-			
+
 		case IOMessage.MESSAGE:
 			callback.onMessage(message.getMessageData());
 			break;
-			
+
 		case IOMessage.JSONMSG:
 			try {
 				callback.onMessage(new JSONObject(message.getMessageData()));
@@ -58,18 +57,25 @@ public class IOWebSocket extends WebSocketClient{
 				e.printStackTrace();
 			}
 			break;
-		
+
 		case IOMessage.EVENT:
 			try {
 				JSONObject event = new JSONObject(message.getMessageData());
-				JSONArray args = event.getJSONArray("args");
-				JSONObject[] argsArray = new JSONObject[args.length()];
-				for (int i = 0; i < args.length(); i++) {
-					argsArray[i] = args.getJSONObject(i);
+
+				String eventName = event.optString("name");
+				JSONArray args = event.optJSONArray("args");
+
+				if (args != null) {
+					JSONObject[] argsArray = new JSONObject[args.length()];
+					for (int i = 0; i < args.length(); i++) {
+						argsArray[i] = args.getJSONObject(i);
+					}
+					callback.on(eventName, argsArray);
+				} else {
+					callback.on(eventName);
 				}
-				String eventName = event.getString("name");
 				
-				callback.on(eventName, argsArray);
+
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -79,11 +85,11 @@ public class IOWebSocket extends WebSocketClient{
 		case IOMessage.CONNECT:
 			ioSocket.onConnect();
 			break;
-			
+
 		case IOMessage.ACK:
 		case IOMessage.ERROR:
 		case IOMessage.DISCONNECT:
-			//TODO
+			// TODO
 			break;
 		}
 	}
@@ -99,40 +105,40 @@ public class IOWebSocket extends WebSocketClient{
 
 		ioSocket.onOpen();
 	}
-	
+
 	@Override
 	public void onClose() {
 		ioSocket.onClose();
 		ioSocket.onDisconnect();
 	}
 
+	public void init(String path) throws IOException {
+		send("1::" + path);
+	}
 
-	public void init(String path) throws IOException{
-		send("1::"+path);
+	public void init(String path, String query) throws IOException {
+		this.send("1::" + path + "?" + query);
+
 	}
-	
-	public void init(String path, String query) throws IOException{
-		this.send("1::"+path+"?"+query);
-		
-	}
-	public void sendMessage(IOMessage message) throws IOException{
+
+	public void sendMessage(IOMessage message) throws IOException {
 		send(message.toString());
 	}
-	
-	public void sendMessage(String message) throws IOException{
+
+	public void sendMessage(String message) throws IOException {
 		send(new Message(message).toString());
 	}
-	
-	public static int genID(){
+
+	public static int genID() {
 		currentID++;
 		return currentID;
-		
+
 	}
 
 	public void setNamespace(String ns) {
 		namespace = ns;
 	}
-	
+
 	public String getNamespace() {
 		return namespace;
 	}

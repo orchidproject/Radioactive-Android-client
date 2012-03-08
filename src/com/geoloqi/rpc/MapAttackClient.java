@@ -184,6 +184,8 @@ public class MapAttackClient implements GeoloqiConstants {
 			JSONObject response = send(request);
 			Log.i(TAG, response.getString("user_id"));
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("userID", response.getString("user_id")).commit();
+			
+	        	
 		} catch (JSONException e){
 			ADB.log("JSONException in MapAttackClient/joinGame: " + e.getMessage());
 		} catch (RuntimeException e) {
