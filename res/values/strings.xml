@@ -27,6 +27,7 @@
     <string name="error_join_game">Failed to join the game! Please try again later.</string>
     <string name="help_button">Help!</string>
     <string name="orchid_www">Go to ORCHID website</string>
-    <string name="help_page">Lost? Sorry, there is too little space here for a full game manual, so please call 07766 393 844.</string>
-    <string name="clear_history">Clear History</string>
+    <string name="help_page">Lost? Having problems?\nSorry, there is too little space here for a full game manual, but if you are really struggling please call 07766 393 844.</string>
+    <string name="clear_history_button">Clear History</string>
+    <string name="clear_history_dialog">The history of your games played and user IDs has been cleared.\n\nThis is the first thing you should do if you ever experienced problems joining a game.</string>
 </resources>

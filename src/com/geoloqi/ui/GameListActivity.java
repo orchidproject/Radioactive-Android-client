@@ -1,11 +1,6 @@
 package com.geoloqi.ui;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -17,7 +12,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -26,7 +20,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -53,6 +46,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	public static final String PARAM_GAME_ID = "game_id";
 
 	private static final int HELP_DIALOG = 0;
+	private static final int CLEAR_HISTORY_DIALOG = 1;
 
 	private boolean mSyncOnStart = true;
 	private Intent mPositioningIntent;
@@ -205,9 +199,11 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 			.edit().remove("user_id").commit();
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
 			.edit().remove("game_id").commit();
+			showDialog(CLEAR_HISTORY_DIALOG);
+			break;
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
-
+			break;
 		}
 	}
 
@@ -242,6 +238,16 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 			dialog = builder.create();
 			break;
+		case CLEAR_HISTORY_DIALOG:
+			builder.setMessage(R.string.clear_history_dialog).setPositiveButton("OK",
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							;
+						}
+					});
+
+			dialog = builder.create();
+			break;			
 		}
 		return dialog;
 	}
@@ -254,7 +260,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private static class RequestGamesListTask extends
 			AsyncTask<Void, Void, ArrayList<Game>> {
 		private final Context mContext;
-		private final Location mLocation;
+		//private final Location mLocation;
 
 		private String mIntersection = null;
 		private ProgressDialog mProgressDialog = null;
@@ -267,7 +273,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		public RequestGamesListTask(final Context context,
 				final Location location, final boolean displayDialog) {
 			mContext = context;
-			mLocation = location;
+			//mLocation = location;
 
 			// Build a progress dialog
 			if (displayDialog) {
