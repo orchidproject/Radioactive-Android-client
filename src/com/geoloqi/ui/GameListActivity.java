@@ -51,19 +51,23 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private ArrayList<Game> mGameList = null;
 	private String mNearestIntersection = null;
 
+	private Context context;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.game_list_activity);
+		
+		this.context = getApplicationContext();
 
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
-		final ImageButton geoloqiButton = (ImageButton) findViewById(R.id.geoloqi);
+		final Button clearHistoryButton = (Button) findViewById(R.id.clear_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
 
 		// Set our on click listeners
 		refreshButton.setOnClickListener(this);
-		geoloqiButton.setOnClickListener(this);
+		clearHistoryButton.setOnClickListener(this);
 		helpButton.setOnClickListener(this);
 
 		// Reference our positioning service Intent
@@ -178,6 +182,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		case R.id.refresh_button:
 			new RequestGamesListTask(this, getLastKnownLocation()).execute();
 			break;
+		/*
 		case R.id.geoloqi:
 			final Intent geoloqiIntent = new Intent(Intent.ACTION_VIEW,
 					Uri.parse("http://orchid.ac.uk/"));
@@ -185,6 +190,12 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 			geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(geoloqiIntent);
 			break;
+		*/
+		case R.id.clear_button:
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+			.edit().remove("user_id").commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+			.edit().remove("game_id").commit();
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
 

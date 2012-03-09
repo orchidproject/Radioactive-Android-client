@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.geoloqi.ADB;
@@ -29,6 +30,7 @@ import com.geoloqi.Installation;
 import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
+import com.geoloqi.interfaces.RoleMapping;
 
 public class MapAttackClient implements GeoloqiConstants {
 	private final String TAG = "MapAttackClient";
@@ -39,6 +41,9 @@ public class MapAttackClient implements GeoloqiConstants {
 	private static HttpClient client;
 	private static MapAttackClient singleton = null;
 	private Context context;
+
+	private Integer mMyRoleId = 3;
+	private String mMyRoleString = "";
 
 	public static MapAttackClient getApplicationClient(Context context) {
 		if (singleton == null) {
@@ -52,13 +57,15 @@ public class MapAttackClient implements GeoloqiConstants {
 		HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
 		HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
 		client = new DefaultHttpClient(httpParams);
+		setRole();
 	}
 
 	public void createAnonymousAccount() throws RPCException {
 		try {
 			String name, deviceID, platform, hardware;
 			{// Initialize variables.
-				name = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).getString("initials", null);
+				name = context.getSharedPreferences(PREFERENCES_FILE,
+						Context.MODE_PRIVATE).getString("initials", null);
 				deviceID = Installation.getIDAsString(context);
 				platform = android.os.Build.VERSION.RELEASE;
 				hardware = android.os.Build.MODEL;
@@ -66,17 +73,26 @@ public class MapAttackClient implements GeoloqiConstants {
 
 			MyRequest request;
 			{
-				request = new MyRequest(MyRequest.POST, URL_BASE + "user/create_anon");
-				//request = new MyRequest(MyRequest.POST, URL_BASE + "/game/" +  + "/join/");
-				request.addHeaders(new BasicScheme().authenticate(new UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET), request.getRequest()));
-				request.addEntityParams(pair("name", name), pair("device_id", deviceID), pair("platform", platform), pair("hardware", hardware));
+				request = new MyRequest(MyRequest.POST, URL_BASE
+						+ "user/create_anon");
+				// request = new MyRequest(MyRequest.POST, URL_BASE + "/game/" +
+				// + "/join/");
+				request.addHeaders(new BasicScheme().authenticate(
+						new UsernamePasswordCredentials(GEOLOQI_ID,
+								GEOLOQI_SECRET), request.getRequest()));
+				request.addEntityParams(pair("name", name),
+						pair("device_id", deviceID),
+						pair("platform", platform), pair("hardware", hardware));
 			}
 
 			JSONObject response = send(request);
 
-			{//Save Results
+			{// Save Results
 				saveToken(new OAuthToken(response));
-				context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("userID", response.getString("user_id")).commit();
+				context.getSharedPreferences(PREFERENCES_FILE,
+						Context.MODE_PRIVATE).edit()
+						.putString("userID", response.getString("user_id"))
+						.commit();
 			}
 		} catch (JSONException e) {
 			throw new RuntimeException(e.getMessage());
@@ -86,35 +102,39 @@ public class MapAttackClient implements GeoloqiConstants {
 	}
 
 	protected void saveToken(OAuthToken token) {
-		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("authToken", token.accessToken).commit();
+		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+				.edit().putString("authToken", token.accessToken).commit();
 	}
 
 	public boolean hasToken() {
-		//return context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).contains("authToken");
+		// return context.getSharedPreferences(PREFERENCES_FILE,
+		// Context.MODE_PRIVATE).contains("authToken");
 		return true;
 	}
 
 	public String getToken() {
-		return context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).getString("authToken", null);
+		return context.getSharedPreferences(PREFERENCES_FILE,
+				Context.MODE_PRIVATE).getString("authToken", null);
 	}
 
 	public ArrayList<Game> getGames() throws RPCException {
 		return getGames(null, null);
 	}
-	
-	public ArrayList<Game> getGames(Double latitude, Double longitude) throws RPCException {
-		MyRequest request = new MyRequest(MyRequest.GET,
-				GAME_LIST_ADDRESS + (latitude == null ? "" : "&latitude=" + latitude + "&longitude=" + longitude));
+
+	public ArrayList<Game> getGames(Double latitude, Double longitude)
+			throws RPCException {
+		MyRequest request = new MyRequest(MyRequest.GET, GAME_LIST_ADDRESS
+				+ (latitude == null ? "" : "&latitude=" + latitude
+						+ "&longitude=" + longitude));
 		Header authHeader;
 		/*
-		try {
-			authHeader = new BasicScheme().authenticate(new UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET), request.getRequest());
-		} catch (AuthenticationException e) {
-			throw new RPCException(e.getMessage());
-		}
-		
-		request.addHeaders(authHeader);
-		*/
+		 * try { authHeader = new BasicScheme().authenticate(new
+		 * UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET),
+		 * request.getRequest()); } catch (AuthenticationException e) { throw
+		 * new RPCException(e.getMessage()); }
+		 * 
+		 * request.addHeaders(authHeader);
+		 */
 		JSONObject response = send(request);
 		try {
 			JSONArray gamesArray = response.getJSONArray("games");
@@ -128,23 +148,27 @@ public class MapAttackClient implements GeoloqiConstants {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
-	 * Get the best guess intersection name for the given latitude and longitude.
+	 * Get the best guess intersection name for the given latitude and
+	 * longitude.
 	 * 
 	 * @param latitude
 	 * @param longitude
 	 * @return The nearest intersection as a String or null.
 	 */
-	public String getNearestIntersection(final Double latitude, final Double longitude) {
+	public String getNearestIntersection(final Double latitude,
+			final Double longitude) {
 		// Build the request
-		final MyRequest request = new MyRequest(MyRequest.GET,
-				String.format("%slocation/context?latitude=%s&longitude=%s", URL_BASE, latitude, longitude));
+		final MyRequest request = new MyRequest(MyRequest.GET, String.format(
+				"%slocation/context?latitude=%s&longitude=%s", URL_BASE,
+				latitude, longitude));
 
 		try {
 			// Sign the request
-			Header authHeader = new BasicScheme().authenticate(
-					new UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET), request.getRequest());
+			Header authHeader = new BasicScheme()
+					.authenticate(new UsernamePasswordCredentials(GEOLOQI_ID,
+							GEOLOQI_SECRET), request.getRequest());
 			request.addHeaders(authHeader);
 
 			try {
@@ -152,56 +176,94 @@ public class MapAttackClient implements GeoloqiConstants {
 				JSONObject response = send(request);
 				return response.getString("best_name");
 			} catch (RPCException e) {
-				Log.e(TAG, "Got an RPCException when fetching the nearest intersection name!", e);
+				Log.e(TAG,
+						"Got an RPCException when fetching the nearest intersection name!",
+						e);
 			} catch (JSONException e) {
-				Log.e(TAG, "Got a JSONException when fetching the nearest intersection name!", e);
+				Log.e(TAG,
+						"Got a JSONException when fetching the nearest intersection name!",
+						e);
 			}
 		} catch (AuthenticationException e) {
-			Log.e(TAG, "Got an AuthenticationException when fetching the nearest intersection name!", e);
+			Log.e(TAG,
+					"Got an AuthenticationException when fetching the nearest intersection name!",
+					e);
 		}
 
 		return null;
 	}
 
-	public void joinGame(String id) throws RPCException {
-		Log.i(TAG, "trying to join game " + id);
-		String token, email, initials;
-		{// Initialize variables
-			SharedPreferences prefs = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
-			token = prefs.getString("authToken", null);
+	public void setRole() {
+		String imei = ((TelephonyManager) context
+				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+		mMyRoleId = RoleMapping.imeiMap.get(imei);
+		if (mMyRoleId == null) {
+			mMyRoleId = 3;
+		}
+		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
+	}
+
+	public void joinGame(String game_id) throws RPCException {
+		String email;
+		{// Initialise variables
+			SharedPreferences prefs = context.getSharedPreferences(
+					PREFERENCES_FILE, Context.MODE_PRIVATE);
+			//token = prefs.getString("authToken", null);
 			email = prefs.getString("email", "default@example.com");
-			initials = prefs.getString("initials", "DOE");
 		}
 		MyRequest request;
-		{// Initialize the request.
-			String url = URL_BASE + "game/" + id + "/join";
+		{// Initialise the request.
+			String url = URL_BASE + "game/" + game_id + "/join";
 			request = new MyRequest(MyRequest.POST, url);
 			Log.i(TAG, "joining at " + url);
-			request.addEntityParams(pair("email", email), pair("name", initials));
+			request.addEntityParams(
+					pair("email", email),
+					pair("role_id", mMyRoleId.toString()),
+					pair("name", mMyRoleString)
+					);
 		}
 
-		try {// Send will throw a RuntimeException for the non-JSON return value.
+		String user_id = context.getSharedPreferences(PREFERENCES_FILE,
+				Context.MODE_PRIVATE).getString("userID", null);
+		String old_game_id = context.getSharedPreferences(PREFERENCES_FILE,
+				Context.MODE_PRIVATE).getString("gameID", null);
+		if (user_id != null && old_game_id != game_id) {
+			request.addEntityParams(pair("id", user_id));
+			Log.i(TAG, "trying to re-join game " + game_id + " with user id " + user_id);
+		} else {
+			Log.i(TAG, "trying to join game " + game_id + " with role " + mMyRoleString + " (user id is " + user_id + ")");
+		}
+
+		try {// Send will throw a RuntimeException for the non-JSON return
+				// value.
 			JSONObject response = send(request);
-			Log.i(TAG, response.getString("user_id"));
-			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putString("userID", response.getString("user_id")).commit();
-			
-	        	
-		} catch (JSONException e){
-			ADB.log("JSONException in MapAttackClient/joinGame: " + e.getMessage());
+			Log.i(TAG, "you have been given user_id = " + response.getString("user_id"));
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+			.edit().putString("userID", response.getString("user_id"))
+			.commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+			.edit().putString("gameID", game_id)
+			.commit();
+		} catch (JSONException e) {
+			ADB.log("JSONException in MapAttackClient/joinGame: "
+					+ e.getMessage());
 		} catch (RuntimeException e) {
 		}
 	}
 
-	protected synchronized JSONObject send(MyRequest request) throws RPCException {
+	protected synchronized JSONObject send(MyRequest request)
+			throws RPCException {
 		ADB.log("param " + request.getRequest().getURI());
 		Log.i(TAG, "param " + request.getRequest().getURI());
 		JSONObject response;
 		try {
-			String response_str = EntityUtils.toString(client.execute(request.getRequest()).getEntity());
-			//Log.i("AAA", response_str);
+			String response_str = EntityUtils.toString(client.execute(
+					request.getRequest()).getEntity());
+			Log.e("AAA", response_str);
 			response = new JSONObject(response_str);
-			//response = new JSONObject(client.execute(request.getRequest()).toString());
-			//Log.i(TAG, "AAA" + response.toString());
+			// response = new
+			// JSONObject(client.execute(request.getRequest()).toString());
+			// Log.i(TAG, "AAA" + response.toString());
 		} catch (ParseException e) {
 			ADB.log("ParseException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());

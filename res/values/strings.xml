@@ -28,4 +28,5 @@
     <string name="help_button">Help!</string>
     <string name="orchid_www">Go to ORCHID website</string>
     <string name="help_page">Lost? Sorry, there is too little space here for a full game manual, so please call 07766 393 844.</string>
+    <string name="clear_history">Clear History</string>
 </resources>
