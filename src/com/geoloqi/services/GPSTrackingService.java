@@ -55,8 +55,8 @@ public class GPSTrackingService extends Service implements LocationListener,
 
 		// Register the listener with the Location Manager to receive location
 		// updates
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-				1000, 2f, this);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+				4000, 5f, this);
 
 	}
 
