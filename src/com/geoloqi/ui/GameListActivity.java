@@ -15,6 +15,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +29,7 @@ import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
+import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GeoloqiPositioning;
@@ -55,13 +57,14 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 	private Context context;
 
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.game_list_activity);
-		
 		this.context = getApplicationContext();
+
+		setContentView(R.layout.game_list_activity);
 
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
@@ -100,6 +103,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 					.execute();
 		}
 	}
+
 
 	@Override
 	public void onDestroy() {
@@ -186,19 +190,17 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 			new RequestGamesListTask(this, getLastKnownLocation()).execute();
 			break;
 		/*
-		case R.id.geoloqi:
-			final Intent geoloqiIntent = new Intent(Intent.ACTION_VIEW,
-					Uri.parse("http://orchid.ac.uk/"));
-			geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-			geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(geoloqiIntent);
-			break;
-		*/
+		 * case R.id.geoloqi: final Intent geoloqiIntent = new
+		 * Intent(Intent.ACTION_VIEW, Uri.parse("http://orchid.ac.uk/"));
+		 * geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		 * geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		 * startActivity(geoloqiIntent); break;
+		 */
 		case R.id.clear_button:
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().remove("userID").commit();
+					.edit().remove("userID").commit();
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().remove("gameID").commit();
+					.edit().remove("gameID").commit();
 			showDialog(CLEAR_HISTORY_DIALOG);
 			break;
 		case R.id.help_button:
@@ -239,15 +241,17 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 			dialog = builder.create();
 			break;
 		case CLEAR_HISTORY_DIALOG:
-			builder.setMessage(R.string.clear_history_dialog).setPositiveButton("OK",
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int id) {
-							;
-						}
-					});
+			builder.setMessage(R.string.clear_history_dialog)
+					.setPositiveButton("OK",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									;
+								}
+							});
 
 			dialog = builder.create();
-			break;			
+			break;
 		}
 		return dialog;
 	}
@@ -260,7 +264,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private static class RequestGamesListTask extends
 			AsyncTask<Void, Void, ArrayList<Game>> {
 		private final Context mContext;
-		//private final Location mLocation;
+		// private final Location mLocation;
 
 		private String mIntersection = null;
 		private ProgressDialog mProgressDialog = null;
@@ -273,7 +277,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		public RequestGamesListTask(final Context context,
 				final Location location, final boolean displayDialog) {
 			mContext = context;
-			//mLocation = location;
+			// mLocation = location;
 
 			// Build a progress dialog
 			if (displayDialog) {

@@ -31,6 +31,7 @@ import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
+import com.geoloqi.ui.GameListActivity;
 
 public class MapAttackClient implements GeoloqiConstants {
 	private final String TAG = "MapAttackClient";
@@ -42,9 +43,13 @@ public class MapAttackClient implements GeoloqiConstants {
 	private static MapAttackClient singleton = null;
 	private Context context;
 
-	private Integer mMyRoleId = 3;
-	private String mMyRoleString = "";
-	
+	private Integer mMyRoleId;
+
+	private String mMyRoleString;
+
+	// private Integer mMyRoleId = 3;
+	// private String mMyRoleString = "";
+
 	public final static String PARAM_USER_ROLE = "userRole";
 
 	public static MapAttackClient getApplicationClient(Context context) {
@@ -54,12 +59,25 @@ public class MapAttackClient implements GeoloqiConstants {
 		return singleton;
 	}
 
+	private void setRole() {
+		String imei = ((TelephonyManager) context
+				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+
+		mMyRoleId = RoleMapping.imeiMap.get(imei);
+		if (mMyRoleId == null) {
+			mMyRoleId = 3;
+		}
+		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
+
+	}
+
 	private MapAttackClient(Context context) {
 		this.context = context;
+		setRole();
 		HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
 		HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
 		client = new DefaultHttpClient(httpParams);
-		setRole();
+
 	}
 
 	public void createAnonymousAccount() throws RPCException {
@@ -195,22 +213,15 @@ public class MapAttackClient implements GeoloqiConstants {
 		return null;
 	}
 
-	public void setRole() {
-		String imei = ((TelephonyManager) context
-				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-		mMyRoleId = RoleMapping.imeiMap.get(imei);
-		if (mMyRoleId == null) {
-			mMyRoleId = 3;
-		}
-		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-	}
-
 	public void joinGame(String game_id) throws RPCException {
 		String email;
 		{// Initialise variables
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
+			Log.i("Role", "Saving " + mMyRoleString);
 			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString);
+			// skill = mMyRoleString;
+
 			// token = prefs.getString("authToken", null);
 			email = prefs.getString("email", "default@example.com");
 		}

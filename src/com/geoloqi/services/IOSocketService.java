@@ -13,12 +13,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
+import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.MapAttackActivity;
@@ -37,6 +39,10 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	private String mUserID;
 
+	private String mMyRoleString;
+
+	// private String skill;
+
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
@@ -44,14 +50,37 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	@Override
 	public void onStart(Intent intent, int startId) {
+		setRole(getApplicationContext());
+
 		System.setProperty("java.net.preferIPv6Addresses", "false");
 		String url = "http://" + IOSOCKET_ADDRESS + ":" + IOSOCKET_PORT + "/";
 		Log.i(TAG, "Starting IO socket service at " + url);
 		socket = new IOSocket(url, this);
 		mGameID = intent.getStringExtra(GameListActivity.PARAM_GAME_ID);
 		mUserID = intent.getStringExtra(MapAttackActivity.PARAM_USER_ID);
+
+		// skill = getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE,
+		// Context.MODE_PRIVATE).getString(
+		// MapAttackClient.PARAM_USER_ROLE, "unknown");
+
+		// skill = MapAttackClient.skill;
+
+		// Log.i("Role", "My skill is " + skill);
+
 		registerGPSReceiver();
 		connectSocket();
+	}
+
+	private void setRole(Context context) {
+		String imei = ((TelephonyManager) context
+				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+
+		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
+		if (mMyRoleId == null) {
+			mMyRoleId = 3;
+		}
+		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
+
 	}
 
 	private void connectSocket() {
@@ -207,8 +236,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 						GPSTrackingService.PARAM_LONGITUDE);
 				double latitude = intent.getExtras().getDouble(
 						GPSTrackingService.PARAM_LATITUDE);
-				String skill = intent.getExtras().getString(
-						MapAttackClient.PARAM_USER_ROLE);
+
 				Log.i("Testing IO", String.format(
 						"Received from local GPS: long:%f, lat:%f", longitude,
 						latitude));
@@ -217,9 +245,13 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 				try {
 					object.put("longitude", longitude);
 					object.put("latitude", latitude);
+					String skill = mMyRoleString;
 					object.put("skill", skill);
 					object.put("player_id", mUserID);
 					if (connected && socket != null) {
+						Log.i("Testing IO", String.format(
+								"Sending location-push %s. Skill is %s.",
+								object, skill));
 						socket.emit("location-push", object);
 					}
 

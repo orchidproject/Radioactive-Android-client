@@ -43,9 +43,9 @@ public class GPSTrackingService extends Service implements LocationListener,
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
-		SharedPreferences prefs = getApplicationContext().getSharedPreferences(
-				PREFERENCES_FILE, Context.MODE_PRIVATE);
-		myRole = prefs.getString(MapAttackClient.PARAM_USER_ROLE, "unknown");
+//		SharedPreferences prefs = getApplicationContext().getSharedPreferences(
+//				PREFERENCES_FILE, Context.MODE_PRIVATE);
+//		myRole = prefs.getString(MapAttackClient.PARAM_USER_ROLE, "unknown");
 
 		createLogFile();
 
@@ -96,7 +96,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 		Intent intent = new Intent(GPS_INTENT);
 		intent.putExtra(PARAM_LONGITUDE, location.getLongitude());
 		intent.putExtra(PARAM_LATITUDE, location.getLatitude());
-		intent.putExtra("skill", myRole);
+		//intent.putExtra("skill", myRole);
 		sendBroadcast(intent);
 		if (fileOut != null) {
 			Date now = new Date();
