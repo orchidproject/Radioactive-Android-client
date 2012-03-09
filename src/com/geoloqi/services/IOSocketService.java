@@ -1,6 +1,7 @@
 package com.geoloqi.services;
 
 import java.io.IOException;
+import java.nio.channels.NotYetConnectedException;
 import java.util.Arrays;
 
 import org.json.JSONException;
@@ -48,8 +49,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		socket = new IOSocket(url, this);
 		mGameID = intent.getStringExtra(GameListActivity.PARAM_GAME_ID);
 		mUserID = intent.getStringExtra(MapAttackActivity.PARAM_USER_ID);
-		registerReceiver(mGPSReceiver, new IntentFilter(
-				GPSTrackingService.GPS_INTENT));
+		registerGPSReceiver();
 		connectSocket();
 	}
 
@@ -96,11 +96,10 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		return Service.START_REDELIVER_INTENT;
 	}
 
-
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		unregisterReceiver(mGPSReceiver);
+		unregisterGPSReceiver();
 		destroyed = true;
 		if (socket != null) {
 			socket.disconnect();
@@ -122,14 +121,29 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		if (event == null) {
 			Log.e(TAG, "Received null event.");
 		} else {
-			Log.i(TAG, String.format("Received event %s from Web socket with objects %s",
-					event, Arrays.toString(data)));
+			Log.i(TAG, String.format(
+					"Received event %s from Web socket with objects %s", event,
+					Arrays.toString(data)));
 			if (event.equals("data")) {
 				for (JSONObject jsonObject : data) {
 					forward(jsonObject.toString());
 				}
 			} else if (event.equals("game")) {
-				joinGame();
+				int counter = 0;
+				boolean done = false;
+				while (!done) {
+					try {
+						joinGame();
+						Thread.sleep(1000);
+						done = true;
+					} catch (NotYetConnectedException nye) {
+						if (counter++ > 10) {
+							throw nye;
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 			} else {
 				Log.w(TAG, "Could not handle event " + event);
 			}
@@ -163,7 +177,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	@Override
 	public void onDisconnect() {
-		unregisterReceiver(mGPSReceiver);
+		unregisterGPSReceiver();
 		connected = false;
 		if (!destroyed) {
 			Log.e(TAG, "Lost connection to socket. Re-connecting.");
@@ -173,30 +187,51 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		}
 	}
 
-	/** The broadcast receiver used to push game data to the server. */
-	private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context ctxt, Intent intent) {
-			double longitude = intent.getExtras().getDouble(
-					GPSTrackingService.PARAM_LONGITUDE);
-			double latitude = intent.getExtras().getDouble(
-					GPSTrackingService.PARAM_LATITUDE);
-			Log.i("Testing IO", String.format(
-					"Received from local GPS: long:%f, lat:%f", longitude,
-					latitude));
-			JSONObject object = new JSONObject();
-
-			try {
-				object.put("longitude", longitude);
-				object.put("latitude", latitude);
-				object.put("player_id", mUserID);
-				socket.emit("location-push", object);
-			} catch (JSONException e) {
-				Log.e(TAG, "JSONException in gps push: " + e);
-			} catch (IOException e) {
-				Log.e(TAG, "IOException in gps push: " + e);
-			}
+	private synchronized void unregisterGPSReceiver() {
+		if (mGPSReceiver == null) {
+			return;
 		}
-	};
+		unregisterReceiver(mGPSReceiver);
+		mGPSReceiver = null;
+	}
+
+	private synchronized void registerGPSReceiver() {
+		if (mGPSReceiver != null) {
+			return;
+		}
+		mGPSReceiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context ctxt, Intent intent) {
+				double longitude = intent.getExtras().getDouble(
+						GPSTrackingService.PARAM_LONGITUDE);
+				double latitude = intent.getExtras().getDouble(
+						GPSTrackingService.PARAM_LATITUDE);
+				Log.i("Testing IO", String.format(
+						"Received from local GPS: long:%f, lat:%f", longitude,
+						latitude));
+				JSONObject object = new JSONObject();
+
+				try {
+					object.put("longitude", longitude);
+					object.put("latitude", latitude);
+					object.put("player_id", mUserID);
+					if (connected && socket != null) {
+						socket.emit("location-push", object);
+					}
+
+				} catch (JSONException e) {
+					Log.e(TAG, "JSONException in gps push: " + e);
+				} catch (IOException e) {
+					Log.e(TAG, "IOException in gps push: " + e);
+				}
+			}
+		};
+		registerReceiver(mGPSReceiver, new IntentFilter(
+				GPSTrackingService.GPS_INTENT));
+
+	}
+
+	/** The broadcast receiver used to push game data to the server. */
+	private BroadcastReceiver mGPSReceiver = null;
 
 }

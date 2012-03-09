@@ -50,6 +50,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private Intent mPushNotificationIntent;
 	private String mQrCodeReturn = "";
 	private Intent mGPSIntent;
+	private boolean servicesRunning = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -104,9 +105,8 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		} else {
 			try {
 				// Stop any previously started services and broadcast receivers
-				unregisterReceiver(mPushReceiver);
-				stopService(mPushNotificationIntent);
-				stopService(mGPSIntent);
+				stopServicesIfRunning();
+
 			} catch (IllegalArgumentException e) {
 				Log.w(TAG, "Trying to unregister an inactive push receiver.");
 			}
@@ -124,9 +124,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				Log.i("AAA", "joined the game");
 
 				// Start our services
-				registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
-				startService(mPushNotificationIntent);
-				startService(mGPSIntent);
+				startServicesIfNotRunning();
 
 				// Load the game into the WebView
 				String webUrl = String.format("%s?id=%s", mGameUrl, userID);
@@ -144,29 +142,41 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		}
 	}
 
+	private synchronized void stopServicesIfRunning() {
+		if (servicesRunning) {
+			unregisterReceiver(mPushReceiver);
+			stopService(mPushNotificationIntent);
+			stopService(mGPSIntent);
+			servicesRunning = false;
+		}
+	}
+
+	private synchronized void startServicesIfNotRunning() {
+		if (!servicesRunning) {
+			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
+			startService(mPushNotificationIntent);
+			startService(mGPSIntent);
+			servicesRunning = true;
+		}
+	}
+
 	@Override
 	protected void onPause() {
 		super.onPause();
-		unregisterReceiver(mPushReceiver);
-		stopService(mPushNotificationIntent);
-		stopService(mGPSIntent);
+		stopServicesIfRunning();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
-		startService(mPushNotificationIntent);
-		startService(mGPSIntent);
+		startServicesIfNotRunning();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 		try {
-			unregisterReceiver(mPushReceiver);
-			stopService(mPushNotificationIntent);
-			stopService(mGPSIntent);
+			stopServicesIfRunning();
 		} catch (IllegalArgumentException e) {
 			Log.w(TAG, "Trying to unregister an inactive push receiver.");
 		}
@@ -306,8 +316,8 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private BroadcastReceiver mPushReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context ctxt, Intent intent) {
-			Log.i("Testing IO", "Received JSON: "
-					+ intent.getExtras().getString("json"));
+			Log.i("Testing IO", String.format("Received JSON: %s", intent
+					.getExtras().getString("json")));
 
 			mWebView.loadUrl(String.format("javascript:handleSocketData(%s)",
 					intent.getExtras().getString("json")));
