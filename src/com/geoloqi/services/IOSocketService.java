@@ -96,6 +96,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		return Service.START_REDELIVER_INTENT;
 	}
 
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();

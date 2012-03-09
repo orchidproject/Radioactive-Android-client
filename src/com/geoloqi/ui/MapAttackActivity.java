@@ -115,7 +115,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				client.joinGame(mGameId);
 
 				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
-				
+
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 
@@ -140,6 +140,22 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				finish();
 			}
 		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterReceiver(mPushReceiver);
+		stopService(mPushNotificationIntent);
+		stopService(mGPSIntent);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
+		startService(mPushNotificationIntent);
+		startService(mGPSIntent);
 	}
 
 	@Override
@@ -197,9 +213,9 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			if (requestCode == IntentIntegrator.REQUEST_CODE) {
 				if (resultCode == RESULT_OK) {
 					mQrCodeReturn = intent.getStringExtra("SCAN_RESULT");
-					//showDialog(DIALOG_QRCODE_SUCCESS);
-					Uri uri = Uri.parse( mQrCodeReturn );
-					startActivity( new Intent( Intent.ACTION_VIEW, uri ) );
+					// showDialog(DIALOG_QRCODE_SUCCESS);
+					Uri uri = Uri.parse(mQrCodeReturn);
+					startActivity(new Intent(Intent.ACTION_VIEW, uri));
 				} else if (resultCode == RESULT_CANCELED) {
 					showDialog(DIALOG_QRCODE_CANCEL);
 				}
@@ -278,8 +294,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		public void onReceive(Context ctxt, Intent intent) {
 			Log.i("Testing IO", "Received JSON: "
 					+ intent.getExtras().getString("json"));
-				
-			
+
 			mWebView.loadUrl(String.format("javascript:handleSocketData(%s)",
 					intent.getExtras().getString("json")));
 
