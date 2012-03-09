@@ -196,9 +196,9 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		*/
 		case R.id.clear_button:
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().remove("user_id").commit();
+			.edit().remove("userID").commit();
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().remove("game_id").commit();
+			.edit().remove("gameID").commit();
 			showDialog(CLEAR_HISTORY_DIALOG);
 			break;
 		case R.id.help_button:
