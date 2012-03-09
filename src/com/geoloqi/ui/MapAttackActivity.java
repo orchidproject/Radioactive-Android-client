@@ -305,9 +305,22 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			Log.i("Testing IO", String.format("Received JSON: %s", intent
 					.getExtras().getString("json")));
 
-			mWebView.loadUrl(String.format("javascript:handleSocketData(%s)",
-					intent.getExtras().getString("json")));
+			String toSend = String.format(
+					"javascript:handleSocketData('%s');", intent.getExtras()
+							.getString("json"));
+							
+							
+							//.replace('"', '\''));
 
+			// "javascript:handleSocketData(\"hello\")";
+
+			//toSend = toSend.replace('"', '\'');
+
+			Log.i("Testing IO", "URL to open: " + toSend);
+			// String.format("javascript:handleSocketData(\"%s\")",
+			// intent.getExtras().getString("json"))
+
+			mWebView.loadUrl(toSend);
 		}
 	};
 }
