@@ -3,6 +3,7 @@ package com.geoloqi.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,6 +40,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	public static final int SCAN_QR_CODE = 0;
 	private static final int DIALOG_QRCODE_SUCCESS = 0;
 	private static final int DIALOG_QRCODE_CANCEL = 1;
+	private static final int DIALOG_QRCODE_MISSING = 2;
 	private static final String QRTAG = "QR_CODE_TAG";
 	public static final String PARAM_USER_ID = "user_id";
 
@@ -201,38 +203,49 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			finish();
 			return true;
 		case R.id.qrscan:
-			Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-			intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-			intent.putExtra("SCAN_FORMATS", "QR_CODE");
+			try {
+				Intent intent = new Intent(
+						"com.google.zxing.client.android.SCAN");
+				intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+				intent.putExtra("SCAN_FORMATS", "QR_CODE");
 
-			// intent.putExtra("SCAN_WIDTH", 800);
-			// intent.putExtra("SCAN_HEIGHT", 200);
-			intent.putExtra("RESULT_DISPLAY_DURATION_MS", 1000L);
-			intent.putExtra("PROMPT_MESSAGE", "Scan the QR Code on the Box");
+				// intent.putExtra("SCAN_WIDTH", 800);
+				// intent.putExtra("SCAN_HEIGHT", 200);
+				intent.putExtra("RESULT_DISPLAY_DURATION_MS", 1000L);
+				intent.putExtra("PROMPT_MESSAGE", "Scan the QR Code on the Box");
 
-			startActivityForResult(intent, IntentIntegrator.REQUEST_CODE);
-			return true;
+				startActivityForResult(intent, IntentIntegrator.REQUEST_CODE);
+				Log.i(QRTAG, "QR app started successfully");
+				return true;
+			} catch (ActivityNotFoundException e) {
+				Log.e(QRTAG, "QR code app missing");
+				showDialog(DIALOG_QRCODE_MISSING);
+				return true;
+			}
 		}
 		return false;
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		IntentResult scanResult = IntentIntegrator.parseActivityResult(
-				requestCode, resultCode, intent);
-		if (scanResult != null) {
-			if (requestCode == IntentIntegrator.REQUEST_CODE) {
-				if (resultCode == RESULT_OK) {
-					mQrCodeReturn = intent.getStringExtra("SCAN_RESULT");
-					// showDialog(DIALOG_QRCODE_SUCCESS);
-					Uri uri = Uri.parse(mQrCodeReturn);
-					startActivity(new Intent(Intent.ACTION_VIEW, uri));
-				} else if (resultCode == RESULT_CANCELED) {
-					showDialog(DIALOG_QRCODE_CANCEL);
+		if (resultCode == Activity.RESULT_OK) {
+			IntentResult scanResult = IntentIntegrator.parseActivityResult(
+					requestCode, resultCode, intent);
+			Log.i(QRTAG, "result code is: " + resultCode);
+			if (scanResult != null) {
+				if (requestCode == IntentIntegrator.REQUEST_CODE) {
+					if (resultCode == RESULT_OK) {
+						mQrCodeReturn = intent.getStringExtra("SCAN_RESULT");
+						// showDialog(DIALOG_QRCODE_SUCCESS);
+						Uri uri = Uri.parse(mQrCodeReturn);
+						startActivity(new Intent(Intent.ACTION_VIEW, uri));
+					} else if (resultCode == RESULT_CANCELED) {
+						showDialog(DIALOG_QRCODE_CANCEL);
+					}
 				}
+			} else {
+				// else continue with any other code you need in the method
+				Log.i(QRTAG, "scan result was null");
 			}
-		} else {
-			// else continue with any other code you need in the method
-			Log.i(QRTAG, "scan result was null");
 		}
 	}
 
@@ -243,27 +256,28 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		switch (id) {
 		case DIALOG_QRCODE_SUCCESS:
 			builder.setMessage("The QR Code says: " + mQrCodeReturn)
-					.setPositiveButton("OK",
-							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int id) {
-									;
-								}
-							});
+					.setPositiveButton("OK", null);
 
 			dialog = builder.create();
 			break;
 		case DIALOG_QRCODE_CANCEL:
 			builder.setMessage(
-					"You cancelled the QR Code scan. Your results"
+					"You cancelled the QR Code scan. Your results "
 							+ "cannot be saved. Please try again.")
-					.setPositiveButton("OK",
-							new DialogInterface.OnClickListener() {
-								public void onClick(DialogInterface dialog,
-										int id) {
-									;
-								}
-							});
+					.setPositiveButton("OK", null);
+			dialog = builder.create();
+			break;
+		case DIALOG_QRCODE_MISSING:
+			builder.setMessage(
+					"There is no QR reader application in your system."
+							+ "\nPlease install one.").setPositiveButton("OK",
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							;
+						}
+					});
+			dialog = builder.create();
+			break;
 		}
 		return dialog;
 	}
