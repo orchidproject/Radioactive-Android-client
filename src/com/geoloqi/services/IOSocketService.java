@@ -100,12 +100,12 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		unregisterReceiver(mGPSReceiver);
 		destroyed = true;
 		if (socket != null) {
 			socket.disconnect();
 		}
 		connected = false;
-		unregisterReceiver(mGPSReceiver);
 	}
 
 	public void forward(String json) {
@@ -163,6 +163,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	@Override
 	public void onDisconnect() {
+		unregisterReceiver(mGPSReceiver);
 		connected = false;
 		if (!destroyed) {
 			Log.e(TAG, "Lost connection to socket. Re-connecting.");
