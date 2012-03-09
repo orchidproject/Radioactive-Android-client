@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
     <application
         android:icon="@drawable/app_icon"
@@ -50,9 +51,12 @@
         </activity>
         <activity
             android:name="com.geoloqi.ui.MapAttackActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop" >
         </activity>
-        <activity android:name="com.geoloqi.ui.QRCodeScannerActivity" >
+        <activity 
+            android:name="com.geoloqi.ui.QRCodeScannerActivity" 
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

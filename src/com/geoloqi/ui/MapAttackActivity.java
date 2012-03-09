@@ -74,7 +74,9 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 
 		// Prepare the web view
 		mWebView.clearCache(false);
-		mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		mWebView.setVerticalScrollBarEnabled(false);
+		mWebView.setHorizontalScrollBarEnabled(false);
+
 		mWebView.getSettings().setJavaScriptEnabled(true);
 		mWebView.setWebViewClient(mWebViewClient);
 		mWebView.setWebChromeClient(new WebChromeClient());
