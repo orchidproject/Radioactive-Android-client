@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
+import com.geoloqi.rpc.MapAttackClient;
 
 public class GPSTrackingService extends Service implements LocationListener,
 		GeoloqiConstants {
@@ -44,7 +45,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 		super.onStart(intent, startId);
 		SharedPreferences prefs = getApplicationContext().getSharedPreferences(
 				PREFERENCES_FILE, Context.MODE_PRIVATE);
-		myRole = prefs.getString("userRole", "unknown");
+		myRole = prefs.getString(MapAttackClient.PARAM_USER_ROLE, "unknown");
 
 		createLogFile();
 

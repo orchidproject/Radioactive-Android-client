@@ -44,6 +44,8 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	private Integer mMyRoleId = 3;
 	private String mMyRoleString = "";
+	
+	public final static String PARAM_USER_ROLE = "userRole";
 
 	public static MapAttackClient getApplicationClient(Context context) {
 		if (singleton == null) {
@@ -208,7 +210,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		{// Initialise variables
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
-			prefs.edit().putString("userRole", mMyRoleString);
+			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString);
 			// token = prefs.getString("authToken", null);
 			email = prefs.getString("email", "default@example.com");
 		}

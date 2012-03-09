@@ -19,6 +19,7 @@ import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
+import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.MapAttackActivity;
 
@@ -207,7 +208,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 				double latitude = intent.getExtras().getDouble(
 						GPSTrackingService.PARAM_LATITUDE);
 				String skill = intent.getExtras().getString(
-						"userRole");
+						MapAttackClient.PARAM_USER_ROLE);
 				Log.i("Testing IO", String.format(
 						"Received from local GPS: long:%f, lat:%f", longitude,
 						latitude));
