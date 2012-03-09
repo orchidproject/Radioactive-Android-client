@@ -17,13 +17,14 @@ import android.util.Log;
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.MapAttackActivity;
 
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
 
-	protected static final String TAG = "Socket";
+	protected static final String TAG = LoggingConstants.RECORDING_TAG;
 
 	private IOSocket socket;
 
@@ -120,7 +121,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		if (event == null) {
 			Log.e(TAG, "Received null event.");
 		} else {
-			Log.i(TAG, String.format("Received event %s with objects %s ",
+			Log.i(TAG, String.format("Received event %s from Web socket with objects %s",
 					event, Arrays.toString(data)));
 			if (event.equals("data")) {
 				for (JSONObject jsonObject : data) {
@@ -178,8 +179,9 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					GPSTrackingService.PARAM_LONGITUDE);
 			double latitude = intent.getExtras().getDouble(
 					GPSTrackingService.PARAM_LATITUDE);
-			Log.i("Testing IO", String.format("Received GPS: long:%f, lat:%f",
-					longitude, latitude));
+			Log.i("Testing IO", String.format(
+					"Received from local GPS: long:%f, lat:%f", longitude,
+					latitude));
 			JSONObject object = new JSONObject();
 
 			try {

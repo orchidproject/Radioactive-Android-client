@@ -23,6 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.AccountMonitor;
@@ -113,6 +114,8 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				// Join the game
 				client.joinGame(mGameId);
 
+				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
+				
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 
