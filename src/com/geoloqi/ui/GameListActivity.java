@@ -1,6 +1,11 @@
 package com.geoloqi.ui;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -26,11 +31,11 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.geoloqi.mapattack.R;
 import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
+import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GeoloqiPositioning;
 import com.geoloqi.widget.GameListArrayAdapter;
@@ -57,6 +62,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.game_list_activity);
 
 		// Find our views
