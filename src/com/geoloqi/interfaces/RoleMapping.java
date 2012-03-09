@@ -30,11 +30,11 @@ public class RoleMapping {
 			imeiMap.put("" + mappings[i], (int)mappings[i+1]);
 		}
 		
-		roleMap = new HashMap<Integer,String>();
-		roleMap.put(1 , "medic");
+		roleMap = new HashMap<Integer, String>();
+		roleMap.put(1, "medic");
 		roleMap.put(2, "ambulance");
-		roleMap.put(3 , "soldier");
-		roleMap.put(4 , "transporter");
+		roleMap.put(3, "soldier");
+		roleMap.put(4, "transporter");
 		
 	}	
 }

@@ -208,7 +208,8 @@ public class MapAttackClient implements GeoloqiConstants {
 		{// Initialise variables
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
-			//token = prefs.getString("authToken", null);
+			prefs.edit().putString("userRole", mMyRoleString);
+			// token = prefs.getString("authToken", null);
 			email = prefs.getString("email", "default@example.com");
 		}
 		MyRequest request;
@@ -216,11 +217,9 @@ public class MapAttackClient implements GeoloqiConstants {
 			String url = URL_BASE + "game/" + game_id + "/join";
 			request = new MyRequest(MyRequest.POST, url);
 			Log.i(TAG, "joining at " + url);
-			request.addEntityParams(
-					pair("email", email),
+			request.addEntityParams(pair("email", email),
 					pair("role_id", mMyRoleId.toString()),
-					pair("name", mMyRoleString)
-					);
+					pair("name", mMyRoleString));
 		}
 
 		String user_id = context.getSharedPreferences(PREFERENCES_FILE,
@@ -229,21 +228,24 @@ public class MapAttackClient implements GeoloqiConstants {
 				Context.MODE_PRIVATE).getString("gameID", null);
 		if (user_id != null && old_game_id != game_id) {
 			request.addEntityParams(pair("id", user_id));
-			Log.i(TAG, "trying to re-join game " + game_id + " with user id " + user_id);
+			Log.i(TAG, "trying to re-join game " + game_id + " with user id "
+					+ user_id);
 		} else {
-			Log.i(TAG, "trying to join game " + game_id + " with role " + mMyRoleString + " (user id is " + user_id + ")");
+			Log.i(TAG, "trying to join game " + game_id + " with role "
+					+ mMyRoleString + " (user id is " + user_id + ")");
 		}
 
 		try {// Send will throw a RuntimeException for the non-JSON return
 				// value.
 			JSONObject response = send(request);
-			Log.i(TAG, "you have been given user_id = " + response.getString("user_id"));
+			Log.i(TAG,
+					"you have been given user_id = "
+							+ response.getString("user_id"));
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().putString("userID", response.getString("user_id"))
-			.commit();
+					.edit().putString("userID", response.getString("user_id"))
+					.commit();
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-			.edit().putString("gameID", game_id)
-			.commit();
+					.edit().putString("gameID", game_id).commit();
 		} catch (JSONException e) {
 			ADB.log("JSONException in MapAttackClient/joinGame: "
 					+ e.getMessage());

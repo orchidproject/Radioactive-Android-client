@@ -32,7 +32,8 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 		if (isConnected()) {
 			fixSocket = UDPClient.getApplicationClient(this);
 		} else {
-			// TODO: This is a crude check. Should probably be rolled into UDPClient class directly.
+			// TODO: This is a crude check. Should probably be rolled into
+			// UDPClient class directly.
 			Log.w(TAG, "Network unavailable! Stopping positioning service.");
 			stopSelf();
 		}
@@ -45,24 +46,29 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 
 	@Override
 	public void onStart(Intent intent, int startid) {
-		registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-		for (String provider : ((LocationManager) getSystemService(LOCATION_SERVICE)).getAllProviders()) {
+		registerReceiver(batteryReceiver, new IntentFilter(
+				Intent.ACTION_BATTERY_CHANGED));
+		for (String provider : ((LocationManager) getSystemService(LOCATION_SERVICE))
+				.getAllProviders()) {
 			if (!provider.equals("passive")) {
 				ADB.log("Registering for updates with " + provider);
-				((LocationManager) getSystemService(LOCATION_SERVICE)).requestLocationUpdates(provider, 0, 0, this);
+				((LocationManager) getSystemService(LOCATION_SERVICE))
+						.requestLocationUpdates(provider, 0, 0, this);
 			}
 		}
 	}
 
 	public void onStop() {
 		unregisterReceiver(batteryReceiver);
-		((LocationManager) getSystemService(LOCATION_SERVICE)).removeUpdates(this);
+		((LocationManager) getSystemService(LOCATION_SERVICE))
+				.removeUpdates(this);
 	}
 
 	@Override
 	public void onDestroy() {
 		unregisterReceiver(batteryReceiver);
-		((LocationManager) getSystemService(LOCATION_SERVICE)).removeUpdates(this);
+		((LocationManager) getSystemService(LOCATION_SERVICE))
+				.removeUpdates(this);
 	}
 
 	@Override
@@ -74,12 +80,14 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 	@Override
 	public void onLocationChanged(Location location) {
 		@SuppressWarnings("unchecked")
-		Fix lqLocation = new Fix(location, new Pair<String, String>("battery", "" + batteryLevel));
-		
+		Fix lqLocation = new Fix(location, new Pair<String, String>("battery",
+				"" + batteryLevel));
+
 		if (isConnected()) {
 			fixSocket.pushFix(lqLocation);
 		} else {
-			// TODO: This is a crude check. Should probably be rolled into UDPClient class directly.
+			// TODO: This is a crude check. Should probably be rolled into
+			// UDPClient class directly.
 			Log.w(TAG, "Network unavailable, failed to push location fix!");
 		}
 	}
@@ -103,13 +111,13 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 			batteryLevel = intent.getIntExtra("level", 0);
 		}
 	};
-	
+
 	/** Determine if the network is connected and available. */
 	private boolean isConnected() {
 		ConnectivityManager manager = (ConnectivityManager) getApplicationContext()
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
-		
+
 		return (activeNetwork != null && activeNetwork.isConnected());
 	}
 }

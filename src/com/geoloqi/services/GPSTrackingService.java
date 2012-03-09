@@ -9,6 +9,7 @@ import java.util.Date;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,9 +17,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 
-public class GPSTrackingService extends Service implements LocationListener {
+public class GPSTrackingService extends Service implements LocationListener,
+		GeoloqiConstants {
 
 	public static final String GPS_INTENT = "GPS";
 
@@ -29,6 +32,8 @@ public class GPSTrackingService extends Service implements LocationListener {
 
 	private LocationManager locationManager;
 
+	private String myRole;
+
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
@@ -37,6 +42,9 @@ public class GPSTrackingService extends Service implements LocationListener {
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
+		SharedPreferences prefs = getApplicationContext().getSharedPreferences(
+				PREFERENCES_FILE, Context.MODE_PRIVATE);
+		myRole = prefs.getString("userRole", "unknown");
 
 		createLogFile();
 
@@ -47,7 +55,7 @@ public class GPSTrackingService extends Service implements LocationListener {
 		// Register the listener with the Location Manager to receive location
 		// updates
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-				1000, 0.5f, this);
+				1000, 2f, this);
 
 	}
 
@@ -83,14 +91,17 @@ public class GPSTrackingService extends Service implements LocationListener {
 
 	@Override
 	public void onLocationChanged(Location location) {
+		// if (location.getA)
 		Intent intent = new Intent(GPS_INTENT);
 		intent.putExtra(PARAM_LONGITUDE, location.getLongitude());
 		intent.putExtra(PARAM_LATITUDE, location.getLatitude());
+		intent.putExtra("skill", myRole);
 		sendBroadcast(intent);
 		if (fileOut != null) {
 			Date now = new Date();
-			String logString = String.format("%d,%f,%f\n", now.getTime(),
-					location.getLatitude(), location.getLongitude());
+			String logString = String.format("%d,%f,%f,%f\n", now.getTime(),
+					location.getLatitude(), location.getLongitude(),
+					location.getAccuracy());
 			try {
 				fileOut.write(logString);
 				fileOut.flush();
