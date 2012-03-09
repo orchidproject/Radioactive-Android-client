@@ -206,6 +206,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 						GPSTrackingService.PARAM_LONGITUDE);
 				double latitude = intent.getExtras().getDouble(
 						GPSTrackingService.PARAM_LATITUDE);
+				String skill = intent.getExtras().getString(
+						"userRole");
 				Log.i("Testing IO", String.format(
 						"Received from local GPS: long:%f, lat:%f", longitude,
 						latitude));
@@ -214,6 +216,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 				try {
 					object.put("longitude", longitude);
 					object.put("latitude", latitude);
+					object.put("skill", skill);
 					object.put("player_id", mUserID);
 					if (connected && socket != null) {
 						socket.emit("location-push", object);
