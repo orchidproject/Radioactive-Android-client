@@ -40,6 +40,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private String mUserID;
 
 	private String mMyRoleString;
+	
+	private Thread connector;
 
 	// private String skill;
 
@@ -75,9 +77,10 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		String imei = ((TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
-		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
+//		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
+		Integer mMyRoleId = 1;
 		if (mMyRoleId == null) {
-			mMyRoleId = 3;
+			mMyRoleId = 1;
 		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
 
@@ -85,7 +88,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	private void connectSocket() {
 
-		Thread connector = new Thread(new Runnable() {
+		connector = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
@@ -133,6 +136,10 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		destroyed = true;
 		if (socket != null) {
 			socket.disconnect();
+		}
+		if (connector != null) {
+			connector.stop();
+			Log.d(TAG, "thread stopped");
 		}
 		connected = false;
 	}
@@ -253,6 +260,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 								"Sending location-push %s. Skill is %s.",
 								object, skill));
 						socket.emit("location-push", object);
+						socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
 					}
 
 				} catch (JSONException e) {

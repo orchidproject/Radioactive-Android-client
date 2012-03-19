@@ -59,7 +59,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			mGameId = getIntent().getExtras().getString(PARAM_GAME_ID);
-			Log.i("BBB", "mGameId is " + mGameId);
+			Log.i(TAG, "extras!=null and mGameId is " + mGameId);
 		}
 
 		// Keep the screen lit while this Activity is visible
@@ -67,7 +67,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 
 		// Build game
 		mGameUrl = String.format(GAME_URL_BASE + mGameId);
-		Log.i("AAA", "Game id is: " + mGameId);
+		Log.i(TAG, "Game id is: " + mGameId);
 		mWebView = (WebView) findViewById(R.id.webView);
 		mPushNotificationIntent = new Intent(this, IOSocketService.class);
 		mPushNotificationIntent.putExtra(GameListActivity.PARAM_GAME_ID,
@@ -97,7 +97,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		// Check for a valid account token
 		if (!client.hasToken()) {
 			// Kick user out to the sign in activity
-			Log.i("AAA", "you dont have a token!");
+			Log.i(TAG, "client has no token!");
 			Intent intent = new Intent(this, SignInActivity.class);
 			intent.putExtra(MapAttackActivity.PARAM_GAME_ID, mGameId);
 			startActivity(intent);
@@ -112,7 +112,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 			}
 
 			try {
-				Log.i("AAA", "starting the MapAttackActivity");
+				Log.i(TAG, "starting the MapAttackActivity");
 				// Join the game
 				client.joinGame(mGameId);
 
@@ -121,16 +121,16 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 
-				Log.i("AAA", "joined the game");
+				Log.i(TAG, "joined the game");
 
 				// Start our services
 				startServicesIfNotRunning();
 
 				// Load the game into the WebView
 				String webUrl = String.format("%s?id=%s", mGameUrl, userID);
-				Log.i("AAA", webUrl);
+				Log.i(TAG, webUrl);
 				mWebView.loadUrl(webUrl);
-				Log.i("AAA", "web view loaded");
+				Log.i(TAG, "web view loaded");
 
 			} catch (RPCException e) {
 				Log.e(TAG, "Got an RPCException when trying to join the game!",
@@ -154,6 +154,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private synchronized void startServicesIfNotRunning() {
 		if (!servicesRunning) {
 			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
+			Log.d(TAG, "STARTING GPS TRACKING SERVICE");
 			startService(mPushNotificationIntent);
 			startService(mGPSIntent);
 			servicesRunning = true;
@@ -164,6 +165,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	protected void onPause() {
 		super.onPause();
 		stopServicesIfRunning();
+		this.finish();
 	}
 
 	@Override
@@ -180,6 +182,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		} catch (IllegalArgumentException e) {
 			Log.w(TAG, "Trying to unregister an inactive push receiver.");
 		}
+		this.finish();
 	}
 
 	@Override

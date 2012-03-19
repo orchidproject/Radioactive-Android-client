@@ -24,6 +24,7 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 	public static final String TAG = "GeoloqiPositioning";
 
 	private int batteryLevel = 0;
+	private final static int MIN_TIME = 1000;
 
 	GeoloqiFixSocket fixSocket;
 
@@ -53,7 +54,7 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 			if (!provider.equals("passive")) {
 				ADB.log("Registering for updates with " + provider);
 				((LocationManager) getSystemService(LOCATION_SERVICE))
-						.requestLocationUpdates(provider, 0, 0, this);
+						.requestLocationUpdates(provider, MIN_TIME, 0, this);
 			}
 		}
 	}
@@ -82,6 +83,8 @@ public class GeoloqiPositioning extends Service implements LocationListener {
 		@SuppressWarnings("unchecked")
 		Fix lqLocation = new Fix(location, new Pair<String, String>("battery",
 				"" + batteryLevel));
+		
+		Log.d(TAG, "LOCATION FIX: lat: " + location.getLatitude() +", long: "+location.getLongitude());
 
 		if (isConnected()) {
 			fixSocket.pushFix(lqLocation);

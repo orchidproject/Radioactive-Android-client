@@ -24,6 +24,7 @@ import com.geoloqi.rpc.MapAttackClient;
 public class GPSTrackingService extends Service implements LocationListener,
 		GeoloqiConstants {
 
+	public static final String TAG = "GPSTrackingService";
 	public static final String GPS_INTENT = "GPS";
 
 	public static final String PARAM_LONGITUDE = "longitude";
@@ -55,7 +56,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 
 		// Register the listener with the Location Manager to receive location
 		// updates
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 				4000, 5f, this);
 
 	}
@@ -97,6 +98,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 		intent.putExtra(PARAM_LONGITUDE, location.getLongitude());
 		intent.putExtra(PARAM_LATITUDE, location.getLatitude());
 		//intent.putExtra("skill", myRole);
+		Log.d(TAG, "BROADCAST lat: " +location.getLatitude() +", long: "+location.getLongitude() );
 		sendBroadcast(intent);
 		if (fileOut != null) {
 			Date now = new Date();

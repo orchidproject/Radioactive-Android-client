@@ -63,10 +63,11 @@ public class MapAttackClient implements GeoloqiConstants {
 		String imei = ((TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
-		mMyRoleId = RoleMapping.imeiMap.get(imei);
-		if (mMyRoleId == null) {
-			mMyRoleId = 3;
-		}
+		mMyRoleId = 1;
+//		mMyRoleId = RoleMapping.imeiMap.get(imei);
+//		if (mMyRoleId == null) {
+//			mMyRoleId = 3;
+//		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
 
 	}

@@ -77,7 +77,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		helpButton.setOnClickListener(this);
 
 		// Reference our positioning service Intent
-		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
+//		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
 
 		if (savedInstanceState != null) {
 			// Restore our saved instance state
@@ -93,9 +93,9 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 
 		if (mSyncOnStart || mGameList.isEmpty()) {
-			// Start our positioning service
-			stopService(mPositioningIntent);
-			startService(mPositioningIntent);
+//			// Start our positioning service
+//			stopService(mPositioningIntent);
+//			startService(mPositioningIntent);
 
 			// Search for nearby games
 			setLoading(true);
