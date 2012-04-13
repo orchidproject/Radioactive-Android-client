@@ -4,6 +4,7 @@ import com.geoloqi.data.Game;
 import com.geoloqi.mapattack.R;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,6 +64,11 @@ public class GameListArrayAdapter extends ArrayAdapter<Game> {
 		// Populate our game data
 		final Game game = mGames[position];
 		holder.name.setText(game.name);
+		if (game.isActive == true) {
+			holder.name.setTextColor(Color.BLACK);
+		}
+		else 
+			holder.name.setTextColor(Color.LTGRAY);
 		holder.description.setText(game.description);
 
 		return convertView;

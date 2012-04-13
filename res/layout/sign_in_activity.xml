@@ -11,10 +11,10 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:padding="10dp"
-        android:gravity="center_horizontal">
+        android:layout_height="wrap_content"
+        android:padding="10dp">
         <TextView
+            android:paddingTop="20dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Your Initials" />
@@ -24,20 +24,30 @@
             android:layout_height="wrap_content"
             android:maxLength="2"
             android:inputType="textCapCharacters"
-            android:hint="First and last initial" />
+            android:hint="First and last initial (required)" />
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Your Email" />
+            android:text="Your Name" 
+            android:paddingTop="30dp"/>
         <EditText
-            android:id="@+id/email"
+            android:id="@+id/name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress" />
-        <Button
+            android:inputType="text"
+            android:hint="optional"/>
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:gravity="bottom">
+    <Button
+            android:layout_gravity="bottom"
             android:id="@+id/submit_button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Join Game" />
+            android:text="Log in"/>
     </LinearLayout>
 </LinearLayout>

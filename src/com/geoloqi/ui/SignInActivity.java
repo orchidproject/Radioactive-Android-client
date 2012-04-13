@@ -48,10 +48,10 @@ public class SignInActivity extends Activity implements OnClickListener {
 				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 		if (sharedPreferences != null) {
 			final TextView initialsView = (TextView) findViewById(R.id.initials);
-			final TextView emailView = (TextView) findViewById(R.id.email);
+			final TextView nameView = (TextView) findViewById(R.id.name);
 			
 			initialsView.setText(sharedPreferences.getString("initials", ""));
-			emailView.setText(sharedPreferences.getString("email", ""));
+			nameView.setText(sharedPreferences.getString("name", ""));
 		}
 
 		// Listen for form submission
@@ -63,30 +63,25 @@ public class SignInActivity extends Activity implements OnClickListener {
 		switch (view.getId()) {
 		case R.id.submit_button:
 			final EditText initialsField = (EditText) findViewById(R.id.initials);
-			final EditText emailField = (EditText) findViewById(R.id.email);
+			final EditText nameField = (EditText) findViewById(R.id.name);
 
 			final String initials = initialsField.getText().toString();
-			final String email = emailField.getText().toString().toLowerCase();
+			final String name = nameField.getText().toString();
 
-			/*
-			// Validate input
-			if (initials.length() == 2) {
-				if (EMAIL_PATTERN.matcher(email).matches()) {
-					new CreateAnonymousAccountTask(this, initials, email).execute();
-				} else {
-					Toast.makeText(this, R.string.error_email,
-							Toast.LENGTH_LONG).show();
-				}
-			} else {
-				Toast.makeText(this, R.string.error_initials,
-						Toast.LENGTH_LONG).show();
-			}
-			*/
-			try {
-				finishLogin(true);
-			} catch (ClassCastException e) {
-				Log.w(TAG, "Got a ClassCastException when trying to finish login!", e);
-			}
+			Editor prefs = (Editor) this.getSharedPreferences(
+					GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+			prefs.putString("initials", initials);
+			prefs.putString("name", name);
+			prefs.commit();
+			
+			Intent intent = new Intent(this, GameListActivity.class);
+			startActivity(intent);
+			
+//			try {
+//				finishLogin(true);
+//			} catch (ClassCastException e) {
+//				Log.w(TAG, "Got a ClassCastException when trying to finish login!", e);
+//			}
 		}
 	}
 

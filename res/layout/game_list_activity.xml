@@ -7,8 +7,42 @@
     <!-- Logo and header layout -->
 
     <include layout="@layout/main_header" />
-
+	
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:background="#666"
+        android:paddingBottom="0dp"
+        android:orientation="horizontal" >
     <TextView
+        android:id="@+id/logged_in_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#666"
+        android:ellipsize="marquee"
+        android:gravity="right"
+        android:paddingTop="10dp"
+        android:singleLine="true"
+        android:textColor="#FFF"
+        android:textSize="12sp" />
+    <Button
+            android:id="@+id/logout_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:text="@string/logout_button" 
+            android:layout_toRightOf="@id/logged_in_label"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:orientation="vertical" >
+
+        <TextView
         android:id="@+id/game_list_label"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -19,15 +53,8 @@
         android:singleLine="true"
         android:text="@string/game_list_label"
         android:textColor="#FFF"
-        android:textSize="12sp" />
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical" >
-
+        android:textSize="14sp" />
+        
         <ListView
             android:id="@+android:id/list"
             android:layout_width="fill_parent"
@@ -40,6 +67,7 @@
             android:id="@+id/loading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:visibility="gone" />
 
         <!-- Displayed if list is empty -->
@@ -47,7 +75,7 @@
         <LinearLayout
             android:id="@+android:id/empty"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="20dp"
             android:visibility="gone" >
@@ -64,7 +92,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#EEE"
-        android:orientation="horizontal" >
+        android:orientation="horizontal" 
+        android:layout_gravity="bottom">
 
         <!-- 
         <ImageButton

@@ -10,6 +10,7 @@ public class Game implements Parcelable {
 	public String id;
 	public String name;
 	public String description;
+	public boolean isActive;
 
 	public static final Parcelable.Creator<Game> CREATOR = new Parcelable.Creator<Game>() {
 		public Game createFromParcel(Parcel in) {
@@ -45,5 +46,13 @@ public class Game implements Parcelable {
 		out.writeString(id);
 		out.writeString(name);
 		out.writeString(description);
+	}
+	
+	public void setAsActive() {
+		this.isActive = true;
+	}
+	
+	public void setAsInactive() {
+		this.isActive = false;
 	}
 }

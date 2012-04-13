@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -97,6 +98,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		// Check for a valid account token
 		if (!client.hasToken()) {
 			// Kick user out to the sign in activity
+			//TODO might not make sense as SignInActivity changed... @jef
 			Log.i(TAG, "client has no token!");
 			Intent intent = new Intent(this, SignInActivity.class);
 			intent.putExtra(MapAttackActivity.PARAM_GAME_ID, mGameId);
@@ -117,6 +119,11 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				client.joinGame(mGameId);
 
 				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
+				//note game id in prefs
+				Editor prefs = (Editor) this.getSharedPreferences(
+						GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+				prefs.putString("gameId", mGameId);
+				prefs.commit();
 
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);

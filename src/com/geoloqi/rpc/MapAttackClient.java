@@ -46,6 +46,8 @@ public class MapAttackClient implements GeoloqiConstants {
 	private Integer mMyRoleId;
 
 	private String mMyRoleString;
+	private String mUserName;
+	private String mInitials;
 
 	// private Integer mMyRoleId = 3;
 	// private String mMyRoleString = "";
@@ -63,13 +65,15 @@ public class MapAttackClient implements GeoloqiConstants {
 		String imei = ((TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
-		mMyRoleId = 1;
-//		mMyRoleId = RoleMapping.imeiMap.get(imei);
-//		if (mMyRoleId == null) {
-//			mMyRoleId = 3;
-//		}
+//		mMyRoleId = 1;
+		Log.d(TAG, "IMEI: "+imei);
+		mMyRoleId = RoleMapping.imeiMap.get(imei);
+		Log.d(TAG, "roleId: "+mMyRoleId);
+		if (mMyRoleId == null) {
+			mMyRoleId = 3;
+		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-
+		Log.d(TAG, "role: "+mMyRoleString);
 	}
 
 	private MapAttackClient(Context context) {
@@ -219,21 +223,28 @@ public class MapAttackClient implements GeoloqiConstants {
 		{// Initialise variables
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
-			Log.i("Role", "Saving " + mMyRoleString);
+			Log.i(TAG, "Saving " + mMyRoleString);
 			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString);
 			// skill = mMyRoleString;
 
 			// token = prefs.getString("authToken", null);
-			email = prefs.getString("email", "default@example.com");
+			mUserName = prefs.getString("name", "");
+			mInitials = prefs.getString("initials", "");
+			email = prefs.getString("email", "default@some.com");
+			
 		}
 		MyRequest request;
 		{// Initialise the request.
 			String url = URL_BASE + "game/" + game_id + "/join";
 			request = new MyRequest(MyRequest.POST, url);
 			Log.i(TAG, "joining at " + url);
-			request.addEntityParams(pair("email", email),
+			request.addEntityParams(
 					pair("role_id", mMyRoleId.toString()),
-					pair("name", mMyRoleString));
+					pair("role", mMyRoleString),
+					pair("name", mUserName),
+					pair("initials", mInitials),
+					pair("email", email));
+			
 		}
 
 		String user_id = context.getSharedPreferences(PREFERENCES_FILE,
@@ -262,6 +273,35 @@ public class MapAttackClient implements GeoloqiConstants {
 					.edit().putString("gameID", game_id).commit();
 		} catch (JSONException e) {
 			ADB.log("JSONException in MapAttackClient/joinGame: "
+					+ e.getMessage());
+		} catch (RuntimeException e) {
+		}
+	}
+	
+	public void logoutGame(String game_id) throws RPCException {
+		
+		SharedPreferences prefs = context.getSharedPreferences(
+				PREFERENCES_FILE, Context.MODE_PRIVATE);	
+		Log.i(TAG, "Logging out game" + game_id);	
+		String user_id = prefs.getString("userID", null);
+		
+		MyRequest request;
+		{
+			String url = URL_BASE + "game/" + game_id + "/logout";
+			request = new MyRequest(MyRequest.POST, url);
+			Log.i(TAG, "logging out at " + url);
+			if (user_id != null)
+				request.addEntityParams(pair("id", user_id));
+		}
+
+		try {// Send will throw a RuntimeException for the non-JSON return
+				// value.
+			JSONObject response = send(request);
+			Log.i(TAG,
+					"logout status = "
+							+ response.getString("status"));
+		} catch (JSONException e) {
+			ADB.log("JSONException in MapAttackClient/logoutGame: "
 					+ e.getMessage());
 		} catch (RuntimeException e) {
 		}

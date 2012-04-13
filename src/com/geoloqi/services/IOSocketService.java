@@ -138,8 +138,12 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			socket.disconnect();
 		}
 		if (connector != null) {
-			connector.stop();
-			Log.d(TAG, "thread stopped");
+			try { 
+				connector.stop();
+				Log.d(TAG, "thread stopped");
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage());
+			}
 		}
 		connected = false;
 	}

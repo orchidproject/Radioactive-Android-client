@@ -11,6 +11,7 @@
         connect to the server.\n
         \nPlease check your Internet connection and refresh the list of games. 
     </string>
+    <string name="logout_button">Log out</string>
     <string name="game_list_loading_text">Searching for games...</string>
     
     <!-- Sign In -->

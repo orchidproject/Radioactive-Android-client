@@ -10,6 +10,8 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -24,6 +26,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
@@ -56,6 +59,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private String mNearestIntersection = null;
 
 	private Context context;
+	private SharedPreferences sharedPreferences;
 
 	
 	@Override
@@ -63,6 +67,9 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		super.onCreate(savedInstanceState);
 
 		this.context = getApplicationContext();
+		
+		sharedPreferences  = getSharedPreferences(
+				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 
 		setContentView(R.layout.game_list_activity);
 
@@ -70,11 +77,15 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
 		final Button clearHistoryButton = (Button) findViewById(R.id.clear_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
+		final Button logoutButton = (Button) findViewById(R.id.logout_button);
+		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
+		loginView.setText(getLoggedInText());
 
 		// Set our on click listeners
 		refreshButton.setOnClickListener(this);
 		clearHistoryButton.setOnClickListener(this);
 		helpButton.setOnClickListener(this);
+		logoutButton.setOnClickListener(this);
 
 		// Reference our positioning service Intent
 //		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
@@ -104,11 +115,35 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 	}
 
+	private String getLoggedInText() {
+		String text = "";
+		String initials = "";
+
+		if (sharedPreferences != null) {
+			initials = sharedPreferences.getString("initials", "");
+			text = "Logged in as "+initials;
+		}
+		if (initials.equals("") || sharedPreferences == null) {   
+			text = "Not logged in.";
+			Intent logInActivity = new Intent(this, SignInActivity.class);
+			startActivity(logInActivity);
+		}
+		return text;
+	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		stopService(mPositioningIntent);
+		if (mPositioningIntent != null)
+			stopService(mPositioningIntent);
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		if (mGameList != null) {
+			populateGameList(mGameList);
+		}
 	}
 
 	@Override
@@ -131,7 +166,16 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		Log.d(ORCHID_TAG, "Populated list of games: " + games);
 		setLoading(false);
 		if (games != null) {
+			String activeGame = sharedPreferences.getString("gameId", "");
+			Log.d(TAG, "activeGame: "+activeGame);
 			mGameList = games;
+			for (int i = 0; i<mGameList.size();  i++) {
+				String id = mGameList.get(i).id;
+				if (id.equals(activeGame))
+					mGameList.get(i).setAsActive();
+				else 
+					mGameList.get(i).setAsInactive();
+			}
 			setListAdapter(new GameListArrayAdapter(this,
 					R.layout.game_list_element,
 					mGameList.toArray(new Game[mGameList.size()])));
@@ -170,17 +214,23 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		final Game selection = (Game) l.getItemAtPosition(position);
 
-		// Start the MapAttackActivity for the indicated game
-		/*
-		 * final Intent intent = new Intent(this, MapAttackActivity.class);
-		 * intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
-		 * Thread t = new Thread(){ public void run(){ startActivity(intent); }
-		 * }; t.start();
-		 */
+		// Initialise the MapAttackActivity for the indicated game
 		Intent intent = new Intent(this, MapAttackActivity.class);
 		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
-
-		startActivity(intent);
+		
+		if (sharedPreferences != null) {
+			//check whether we have to logout of an existing game first.
+			String currentId = sharedPreferences.getString("gameId", "");
+			if (!currentId.equals(selection.id)) {
+				//logout first
+				Thread initialiseLogout = new LogoutServer();
+				initialiseLogout.run();
+				startActivity(intent);
+			}
+			else 
+				startActivity(intent);
+		}
+		
 	}
 
 	@Override
@@ -201,12 +251,29 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 					.edit().remove("userID").commit();
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
 					.edit().remove("gameID").commit();
+			sharedPreferences.edit().remove("gameId").commit();
 			showDialog(CLEAR_HISTORY_DIALOG);
 			break;
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
 			break;
+		case R.id.logout_button:
+			logout();
+			break;
 		}
+	}
+	
+	private void logout() {
+		Editor prefs = (Editor) this.getSharedPreferences(
+				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+		prefs.putString("initials", "");
+		prefs.putString("name", "");
+		sharedPreferences.edit().remove("userID").commit();
+		sharedPreferences.edit().remove("gameID").commit();
+		sharedPreferences.edit().remove("gameId").commit();
+		prefs.commit();
+		Intent logInActivity = new Intent(this, SignInActivity.class);
+		startActivity(logInActivity);
 	}
 
 	/** Show or hide the loading indicator. */
@@ -255,6 +322,28 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 		return dialog;
 	}
+	
+	private class LogoutServer extends Thread {
+		
+		@Override
+		public void run() {
+			final MapAttackClient client = MapAttackClient
+					.getApplicationClient(GameListActivity.this);
+			try {
+				String currentId = sharedPreferences.getString("gameId", "");
+				client.logoutGame(currentId);
+			} catch (RPCException e) {
+				Log.e(TAG, "Got an RPCException when trying to join the game!",
+						e);
+				Toast.makeText(GameListActivity.this, R.string.error_join_game,
+						Toast.LENGTH_LONG).show();
+				finish();
+			}
+			sharedPreferences.edit().remove("userID").commit();
+			sharedPreferences.edit().remove("gameID").commit();
+		}
+		
+	}
 
 	/**
 	 * A simple AsyncTask to request the game list from the server.
@@ -295,6 +384,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 				mProgressDialog.show();
 			}
 		}
+		
+		
 
 		@Override
 		protected ArrayList<Game> doInBackground(Void... params) {

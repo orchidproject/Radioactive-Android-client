@@ -22,8 +22,10 @@ public class RoleMapping {
 				355310042381271l , 3,
 				351822050905126l , 3,
 				354957031707824l , 3, // not setup yet
-				355310042607741l , 3
+				355310042607741l , 3,
+				355310042629695l , 1
 		};
+
 		
 		imeiMap = new HashMap<String, Integer>();
 		for (int i = 0; i < mappings.length; i = i + 2) {
