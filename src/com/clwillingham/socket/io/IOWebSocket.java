@@ -7,6 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 import net.tootallnate.websocket.WebSocketClient;
 
 public class IOWebSocket extends WebSocketClient {
@@ -25,8 +27,8 @@ public class IOWebSocket extends WebSocketClient {
 	@Override
 	public void onIOError(IOException arg0) {
 		// TODO Auto-generated method stub
-
 	}
+
 
 	@Override
 	public void onMessage(String arg0) {
@@ -108,6 +110,7 @@ public class IOWebSocket extends WebSocketClient {
 
 	@Override
 	public void onClose() {
+		Log.d("IOWebSocket", "ioSocket.onClose()");
 		ioSocket.onClose();
 		ioSocket.onDisconnect();
 	}
@@ -122,7 +125,11 @@ public class IOWebSocket extends WebSocketClient {
 	}
 
 	public void sendMessage(IOMessage message) throws IOException {
-		send(message.toString());
+		try {
+			send(message.toString());
+		} catch (Exception e) {
+			Log.e("IOWebSocket", e.getMessage());
+		}
 	}
 
 	public void sendMessage(String message) throws IOException {

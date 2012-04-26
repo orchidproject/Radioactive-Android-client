@@ -65,7 +65,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		String imei = ((TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
-//		mMyRoleId = 1;
+//		mMyRoleId = 4;
 		Log.d(TAG, "IMEI: "+imei);
 		mMyRoleId = RoleMapping.imeiMap.get(imei);
 		Log.d(TAG, "roleId: "+mMyRoleId);
@@ -305,6 +305,41 @@ public class MapAttackClient implements GeoloqiConstants {
 					+ e.getMessage());
 		} catch (RuntimeException e) {
 		}
+	}
+	
+	public void sendMessage(String game_id, String message) {
+		
+
+		SharedPreferences prefs = context.getSharedPreferences(
+				PREFERENCES_FILE, Context.MODE_PRIVATE);	
+		Log.i(TAG, "Sending message" + message);	
+		String user_id = prefs.getString("userID", null);
+		
+		MyRequest request;
+		
+		{
+			String url = URL_BASE + "game/mobile/" + game_id + "/message";
+			request = new MyRequest(MyRequest.POST, url);
+			Log.i(TAG, "Posting to handler " + url);
+			if (user_id != null)
+				request.addEntityParams(pair("id", user_id));
+			request.addEntityParams(pair("content", message.toString()));
+		}
+
+		try {// Send will throw a RuntimeException for the non-JSON return
+				// value.
+			JSONObject response = send(request);
+			Log.i(TAG,
+					"message response = "
+							+ response);
+		} catch (RuntimeException e) {
+			ADB.log("RuntimeException in MapAttackClient/sendMessage: "
+					+ e.getMessage());
+		} catch (RPCException e) {
+			ADB.log("RPCException in MapAttackClient/sendMessage: "
+					+ e.getMessage());
+		}
+		
 	}
 
 	protected synchronized JSONObject send(MyRequest request)

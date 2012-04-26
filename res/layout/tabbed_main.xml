@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <TabWidget
+            android:id="@android:id/tabs"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:id="@android:id/tabcontent"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+    <!-- Game view -->
+    <LinearLayout
+   			     android:orientation="vertical"
+   			     android:layout_width="fill_parent"
+   			     android:layout_height="wrap_content"
+   			     android:gravity="center">
+   			 <WebView
+        		android:id="@+id/webView"
+        		android:layout_width="fill_parent" 
+        		android:layout_height="fill_parent"/>
+   			 <ProgressBar
+        		android:id="@+id/loading"
+        		android:layout_width="wrap_content"
+        		android:layout_height="wrap_content"
+        		android:layout_gravity="center" />
+   			 </LinearLayout>
+   			 <LinearLayout
+   			     android:id="@+id/msgView"
+   			     android:orientation="vertical"
+   			     android:layout_width="fill_parent"
+   			     android:layout_height="wrap_content">
+   				 <WebView
+        			android:id="@+id/msgWebView"
+        			android:layout_width="fill_parent" 
+        			android:layout_height="fill_parent"/>
+   			 	<EditText
+   			 	    android:id="@+id/msgEditor"
+   			 	    android:editable="true"
+   			 	    android:layout_width="fill_parent"
+   			 	    android:layout_height="wrap_content"
+   			 	    android:lines="2"
+   			 	    android:inputType="textMultiLine"   			 	    
+   			 	    android:hint="@string/msgHint"
+   			 	    />
+        		<Button android:id="@+id/send_btn"
+			        android:layout_width="wrap_content" 
+			        android:layout_height="wrap_content" 
+			        android:text="@string/send">
+        			<requestFocus/>
+    			</Button>
+        	</LinearLayout>
+    	</FrameLayout>
+    </LinearLayout>
+</TabHost>

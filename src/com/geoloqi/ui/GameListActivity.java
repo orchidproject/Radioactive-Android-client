@@ -75,7 +75,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
-		final Button clearHistoryButton = (Button) findViewById(R.id.clear_button);
+//		final Button clearHistoryButton = (Button) findViewById(R.id.clear_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
 		final Button logoutButton = (Button) findViewById(R.id.logout_button);
 		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
@@ -83,7 +83,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 		// Set our on click listeners
 		refreshButton.setOnClickListener(this);
-		clearHistoryButton.setOnClickListener(this);
+//		clearHistoryButton.setOnClickListener(this);
 		helpButton.setOnClickListener(this);
 		logoutButton.setOnClickListener(this);
 
@@ -214,9 +214,9 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		final Game selection = (Game) l.getItemAtPosition(position);
 
-		// Initialise the MapAttackActivity for the indicated game
-		Intent intent = new Intent(this, MapAttackActivity.class);
-		intent.putExtra(MapAttackActivity.PARAM_GAME_ID, selection.id);
+		// Initialise the TabbedMapActivity for the indicated game
+		Intent intent = new Intent(this, TabbedMapActivity.class);
+		intent.putExtra(TabbedMapActivity.PARAM_GAME_ID, selection.id);
 		
 		if (sharedPreferences != null) {
 			//check whether we have to logout of an existing game first.
@@ -246,14 +246,14 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		 * geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		 * startActivity(geoloqiIntent); break;
 		 */
-		case R.id.clear_button:
-			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-					.edit().remove("userID").commit();
-			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-					.edit().remove("gameID").commit();
-			sharedPreferences.edit().remove("gameId").commit();
-			showDialog(CLEAR_HISTORY_DIALOG);
-			break;
+//		case R.id.clear_button:
+//			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+//					.edit().remove("userID").commit();
+//			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+//					.edit().remove("gameID").commit();
+//			sharedPreferences.edit().remove("gameId").commit();
+//			showDialog(CLEAR_HISTORY_DIALOG);
+//			break;
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
 			break;

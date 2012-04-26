@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 public class IOSocket {
 
 	private IOWebSocket webSocket;
@@ -99,6 +101,7 @@ public class IOSocket {
 				if (open) {
 					webSocket.sendMessage(new IOMessage(IOMessage.DISCONNECT,
 							"", ""));
+					Log.d("IOSocket", "disconnect()");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -113,6 +116,7 @@ public class IOSocket {
 	}
 
 	synchronized void onClose() {
+		Log.d("IOSocket", "onClose()");
 		open = false;
 	}
 

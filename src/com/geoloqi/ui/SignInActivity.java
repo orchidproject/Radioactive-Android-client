@@ -40,7 +40,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
-			mGameId = extras.getString(MapAttackActivity.PARAM_GAME_ID);
+			mGameId = extras.getString(TabbedMapActivity.PARAM_GAME_ID);
 		}
 
 		// Load saved user information
@@ -92,8 +92,8 @@ public class SignInActivity extends Activity implements OnClickListener {
 				// Launch the map attack activity
 
 				Log.i("AAA", "finishing login");
-				Intent intent = new Intent(this, MapAttackActivity.class);
-				intent.putExtra(MapAttackActivity.PARAM_GAME_ID, mGameId);
+				Intent intent = new Intent(this, TabbedMapActivity.class);
+				intent.putExtra(TabbedMapActivity.PARAM_GAME_ID, mGameId);
 				startActivity(intent);
 			} else {
 				Log.e(TAG, "Got an empty game ID when trying to finish login!");

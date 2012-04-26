@@ -12,6 +12,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -21,9 +22,8 @@ import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RoleMapping;
-import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.ui.GameListActivity;
-import com.geoloqi.ui.MapAttackActivity;
+import com.geoloqi.ui.TabbedMapActivity;
 
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
@@ -32,17 +32,19 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	private IOSocket socket;
 
+//	private ConnectSocketTask connector;
+	private volatile ConnectorThread connector;
+
 	private boolean connected = false;
 	private boolean destroyed = false;
 
 	private String mGameID;
 
 	private String mUserID;
+	private String mInitials;
 
 	private String mMyRoleString;
 	
-	private Thread connector;
-
 	// private String skill;
 
 	@Override
@@ -59,7 +61,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		Log.i(TAG, "Starting IO socket service at " + url);
 		socket = new IOSocket(url, this);
 		mGameID = intent.getStringExtra(GameListActivity.PARAM_GAME_ID);
-		mUserID = intent.getStringExtra(MapAttackActivity.PARAM_USER_ID);
+		mUserID = intent.getStringExtra(TabbedMapActivity.PARAM_USER_ID);
+		mInitials = intent.getStringExtra(TabbedMapActivity.PARAM_INITIALS);
 
 		// skill = getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE,
 		// Context.MODE_PRIVATE).getString(
@@ -78,50 +81,120 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
 //		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
-		Integer mMyRoleId = 1;
-		if (mMyRoleId == null) {
-			mMyRoleId = 1;
-		}
+		Integer mMyRoleId = 4;
+//		if (mMyRoleId == null) {
+//			mMyRoleId = 2;
+//		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
 
 	}
-
-	private void connectSocket() {
-
-		connector = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				int counter = 0;
-				connected = false;
-				while (!connected) {
-					try {
-						counter++;
-						socket.connect();
-						connected = true;
-						Log.i(TAG, "Connected to " + socket);
-					} catch (IOException e) {
-						e.printStackTrace();
+	
+	private class ConnectSocketTask extends AsyncTask<Void, Void, Void> {
+	     protected Void doInBackground(Void... params) {
+	    	 int counter = 0;
+			connected = false;
+					while (!connected) {
+						try {
+							counter++;
+							socket.connect();
+							connected = true;
+							Log.i(TAG, "Connected to " + socket);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						if (counter % 30 == 0) {
+							Log.e(TAG,
+									String.format(
+											"Tried to connect for %d seconds, but no connection yet.",
+											counter));
+						}
 					}
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					if (counter % 30 == 0) {
-						Log.e(TAG,
-								String.format(
-										"Tried to connect for %d seconds, but no connection yet.",
-										counter));
-					}
+					return params[0];
+	     }
+
+	     protected void onProgressUpdate(Void progress) {
+//	         setProgressPercent(progress[0]);
+	     }
+
+	     protected void onPostExecute(Void result) {
+	         //
+	     }
+	 }
+	
+	class ConnectorThread extends Thread {
+		public boolean running;
+		
+		@Override
+		public void run() {
+			int counter = 0;
+			connected = false;
+			running = true;
+			
+			while ((!connected) && running) {
+				try {
+					counter++;
+					socket.connect();
+					connected = true;
+					Log.i(TAG, "Connected to " + socket);
+				} catch (IOException e) {
+					e.getMessage();
 				}
-
+				
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.getMessage();
+				}
+				
+				if (counter % 30 == 0) {
+					Log.e(TAG,
+							String.format(
+									"Tried to connect for %d seconds, but no connection yet.",
+									counter));
+				}
 			}
-		});
-
-		connector.start();
-
+				
+		}
+		
 	}
+	
+	private synchronized void connectSocket() {
+		
+		//connect using AsyncTask instead of thread.
+//		if (connector == null) 
+//			connector = new ConnectSocketTask();
+		
+		if(connector == null){
+		    connector = new ConnectorThread(); 
+		}
+		
+		if (!connector.running)
+			connector.setDaemon(true);
+		connector.start();
+		  
+	}
+		
+	public synchronized void stopConnecting(){
+	  if(connector != null){
+	    connector.running = false;
+	    connector.interrupt();
+	    while (connector.isAlive()) {
+	    	try {
+				connector.join();
+			} catch (InterruptedException e) {
+				Log.e(TAG, e.getMessage());
+			}
+	    }
+	    connector = null;
+	  }
+	}
+
+
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -135,16 +208,27 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		unregisterGPSReceiver();
 		destroyed = true;
 		if (socket != null) {
-			socket.disconnect();
-		}
-		if (connector != null) {
-			try { 
-				connector.stop();
+			try {
+//				socket.disconnect();
+				stopConnecting();
+				socket.disconnect();
+				
+				
+//				connector.cancel(true);
 				Log.d(TAG, "thread stopped");
 			} catch (Exception e) {
-				Log.e(TAG, e.getMessage());
+				e.printStackTrace();
 			}
+			
 		}
+//		if (connector != null) {
+//			try { 
+//				connector.stop();
+//				
+//			} catch (Exception e) {
+//				Log.e(TAG, e.getMessage());
+//			}
+//		}
 		connected = false;
 	}
 
@@ -259,6 +343,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					String skill = mMyRoleString;
 					object.put("skill", skill);
 					object.put("player_id", mUserID);
+					object.put("initials", mInitials);
 					if (connected && socket != null) {
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",

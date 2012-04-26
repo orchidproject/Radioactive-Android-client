@@ -3,7 +3,7 @@
     <string name="app_name">AtomicOrchid</string>
     
     <!-- Game List -->
-    <string name="game_list_label">Games near your location</string>
+    <string name="game_list_label">Games - Tap to join</string>
     <string name="game_list_empty_text">Cannot load any Game. This could be caused
         by one of two problems.\n
         1. There are not games scheduled at the moment \n
@@ -11,6 +11,8 @@
         connect to the server.\n
         \nPlease check your Internet connection and refresh the list of games. 
     </string>
+    <string name="send">Send</string>
+    <string name="msgHint">Your message</string>
     <string name="logout_button">Log out</string>
     <string name="game_list_loading_text">Searching for games...</string>
     

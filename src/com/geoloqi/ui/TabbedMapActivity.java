@@ -3,6 +3,7 @@ package com.geoloqi.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.TabActivity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -21,7 +22,11 @@ import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TabHost;
+import android.widget.TabHost.TabContentFactory;
 import android.widget.Toast;
 
 import com.geoloqi.interfaces.GeoloqiConstants;
@@ -35,8 +40,13 @@ import com.geoloqi.services.IOSocketService;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-public class MapAttackActivity extends Activity implements GeoloqiConstants {
-	public static final String TAG = "MapAttackActivity";
+public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
+	
+	private TabHost mTabHost;
+	private TabContentFactory tf;
+	private EditText msgEditor;
+	
+	public static final String TAG = "TabbedMapActivity";
 	public static final String PARAM_GAME_ID = "game_id";
 	public static final int SCAN_QR_CODE = 0;
 	private static final int DIALOG_QRCODE_SUCCESS = 0;
@@ -47,17 +57,22 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	public static final String PARAM_INITIALS = "initials";
 
 	private String mGameId;
+	private String msgViewUrl;
 	private String mGameUrl;
 	private WebView mWebView;
+	private WebView msgsWebView;
 	private Intent mPushNotificationIntent;
 	private String mQrCodeReturn = "";
 	private Intent mGPSIntent;
 	private boolean servicesRunning = false;
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	private MapAttackClient client;
+	
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+		
+		setContentView(R.layout.tabbed_main);
+		mTabHost = getTabHost();
+		
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			mGameId = getIntent().getExtras().getString(PARAM_GAME_ID);
@@ -66,35 +81,100 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 
 		// Keep the screen lit while this Activity is visible
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
+		
+		// Show the loading indicator
+		setLoading(true);
+		
 		// Build game
 		mGameUrl = String.format(GAME_URL_BASE + mGameId);
+		msgViewUrl = String.format(GAME_URL_BASE + mGameId +"/messages");
+		
 		Log.i(TAG, "Game id is: " + mGameId);
-		mWebView = (WebView) findViewById(R.id.webView);
+		
 		mPushNotificationIntent = new Intent(this, IOSocketService.class);
 		mPushNotificationIntent.putExtra(GameListActivity.PARAM_GAME_ID,
 				mGameId);
 
 		mGPSIntent = new Intent(this, GPSTrackingService.class);
+		
+		tf = new TabHost.TabContentFactory() {
+			
+			@Override
+			public View createTabContent(String tag) {
+				
+				//webview
+				mWebView = (WebView) findViewById(R.id.webView);
+				
+				//TODO add load webview
+				// Prepare the web view
+				mWebView.clearCache(false);
+				mWebView.setVerticalScrollBarEnabled(false);
+				mWebView.setHorizontalScrollBarEnabled(false);
 
-		// Prepare the web view
-		mWebView.clearCache(false);
-		mWebView.setVerticalScrollBarEnabled(false);
-		mWebView.setHorizontalScrollBarEnabled(false);
+				mWebView.getSettings().setJavaScriptEnabled(true);
+				mWebView.setWebViewClient(mWebViewClient);
+				mWebView.setWebChromeClient(new WebChromeClient());
+				
+				return mWebView;
+			}
+		};
+		
+//		TabContentFactory msgTab = new TabHost.TabContentFactory() {
+//			
+//			@Override
+//			public View createTabContent(String tag) {
+//				// TODO 
+//				msgsWebView  = (WebView) findViewById(R.id.msgWebView);
+//				
+//				msgsWebView.clearCache(false);
+//				msgsWebView.setVerticalScrollBarEnabled(false);
+//				msgsWebView.setHorizontalScrollBarEnabled(false);
+//
+//				msgsWebView.getSettings().setJavaScriptEnabled(true);
+//				msgsWebView.setWebViewClient(mWebViewClient);
+//				msgsWebView.setWebChromeClient(new WebChromeClient());
+//				
+//				return msgsWebView;
+//			}
+//		};
+		
+		msgsWebView  = (WebView) findViewById(R.id.msgWebView);
+		
+		msgsWebView.clearCache(false);
+		msgsWebView.setVerticalScrollBarEnabled(false);
+		msgsWebView.setHorizontalScrollBarEnabled(false);
 
-		mWebView.getSettings().setJavaScriptEnabled(true);
-		mWebView.setWebViewClient(mWebViewClient);
-		mWebView.setWebChromeClient(new WebChromeClient());
+		msgsWebView.getSettings().setJavaScriptEnabled(true);
+		msgsWebView.setWebViewClient(mWebViewClient);
+		msgsWebView.setWebChromeClient(new WebChromeClient());
+		
+		mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(tf));
+		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Messages").setContent(R.id.msgView));
+		
+		mTabHost.setCurrentTab(0);
+		
+		msgEditor = (EditText) findViewById(R.id.msgEditor);
+		Button sendBtn = (Button) findViewById(R.id.send_btn);
+		sendBtn.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				//get the text
+				String msg = msgEditor.getText().toString();
+				//TODO: post to server
+				if (client != null) {
+					if (!msg.equals("")) 
+						client.sendMessage(mGameId, msg);
+				}
+			}
+		});
 
-		// Show the loading indicator
-		setLoading(true);
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		final MapAttackClient client = MapAttackClient
+		client = MapAttackClient
 				.getApplicationClient(this);
 		// Check for a valid account token
 		if (!client.hasToken()) {
@@ -140,7 +220,11 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				String webUrl = String.format("%s?id=%s", mGameUrl, userID);
 //				String webUrl = "http://holt.mrl.nott.ac.uk:49992/game/mobile/4";
 				Log.i(TAG, webUrl);
+//				if (mWebView == null)
+//					mWebView = (WebView) findViewById(R.id.webView);
 				mWebView.loadUrl(webUrl);
+				String msgUrl = String.format("%s?id=%s", msgViewUrl, userID);
+				msgsWebView.loadUrl(msgUrl);
 				Log.i(TAG, "web view loaded");
 
 			} catch (RPCException e) {
@@ -302,9 +386,11 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 
 		if (loading) {
 			spinner.setVisibility(View.VISIBLE);
+//			mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(R.id.loading));
 //			mWebView.setVisibility(View.GONE);
 		} else {
 			spinner.setVisibility(View.GONE);
+//			mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(tf));
 //			mWebView.setVisibility(View.VISIBLE);
 		}
 	}
