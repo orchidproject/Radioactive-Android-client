@@ -39,6 +39,7 @@ import com.geoloqi.services.GPSTrackingService;
 import com.geoloqi.services.IOSocketService;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.geoloqi.ui.JavaScriptInterface;
 
 public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	
@@ -114,6 +115,8 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				mWebView.getSettings().setJavaScriptEnabled(true);
 				mWebView.setWebViewClient(mWebViewClient);
 				mWebView.setWebChromeClient(new WebChromeClient());
+				
+				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext()), "Android");
 				
 				return mWebView;
 			}
