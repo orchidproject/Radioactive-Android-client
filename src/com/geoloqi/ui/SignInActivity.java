@@ -91,7 +91,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			if (!TextUtils.isEmpty(mGameId)) {
 				// Launch the map attack activity
 
-				Log.i("AAA", "finishing login");
+				//Log.i("AAA", "finishing login");
 				Intent intent = new Intent(this, TabbedMapActivity.class);
 				intent.putExtra(TabbedMapActivity.PARAM_GAME_ID, mGameId);
 				startActivity(intent);

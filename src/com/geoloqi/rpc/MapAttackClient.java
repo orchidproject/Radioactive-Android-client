@@ -163,7 +163,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		JSONObject response = send(request);
 		try {
 			JSONArray gamesArray = response.getJSONArray("games");
-			Log.i(TAG, "AAAAAAAA" + response.getString("games"));
+			//Log.i(TAG, "AAAAAAAA" + response.getString("games"));
 			ArrayList<Game> games = new ArrayList<Game>();
 			for (int i = 0; i < gamesArray.length(); i++) {
 				games.add(new Game(gamesArray.getJSONObject(i)));
@@ -350,7 +350,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		try {
 			String response_str = EntityUtils.toString(client.execute(
 					request.getRequest()).getEntity());
-			Log.e("AAA", response_str);
+			//Log.e("AAA", response_str);
 			response = new JSONObject(response_str);
 			// response = new
 			// JSONObject(client.execute(request.getRequest()).toString());

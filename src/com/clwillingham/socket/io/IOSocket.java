@@ -138,7 +138,7 @@ public class IOSocket {
 		if (open) {
 			try {
 				webSocket.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

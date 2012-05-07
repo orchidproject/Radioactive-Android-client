@@ -178,6 +178,11 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		connector.start();
 		  
 	}
+	
+	private synchronized void reconnectSocket() {
+		stopConnecting();
+		connectSocket();
+	}
 		
 	public synchronized void stopConnecting(){
 	  if(connector != null){
@@ -212,8 +217,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 //				socket.disconnect();
 				stopConnecting();
 				socket.disconnect();
-				
-				
+				                              				
 //				connector.cancel(true);
 				Log.d(TAG, "thread stopped");
 			} catch (Exception e) {
@@ -302,11 +306,12 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	@Override
 	public void onDisconnect() {
+		//why on unregisterGPS?
 		unregisterGPSReceiver();
 		connected = false;
 		if (!destroyed) {
 			Log.e(TAG, "Lost connection to socket. Re-connecting.");
-			connectSocket();
+			reconnectSocket();
 		} else {
 			Log.i(TAG, "Connection closed on destroy.");
 		}

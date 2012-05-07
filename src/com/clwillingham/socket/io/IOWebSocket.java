@@ -2,6 +2,7 @@ package com.clwillingham.socket.io;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.channels.NotYetConnectedException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,7 +10,8 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-import net.tootallnate.websocket.WebSocketClient;
+import org.java_websocket.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 
 public class IOWebSocket extends WebSocketClient {
 
@@ -24,11 +26,9 @@ public class IOWebSocket extends WebSocketClient {
 		this.ioSocket = ioSocket;
 	}
 
-	@Override
-	public void onIOError(IOException arg0) {
-		// TODO Auto-generated method stub
-	}
-
+	
+	
+	
 
 	@Override
 	public void onMessage(String arg0) {
@@ -41,7 +41,7 @@ public class IOWebSocket extends WebSocketClient {
 			try {
 				send("2::");
 				System.out.println("HeartBeat written to server");
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -97,7 +97,7 @@ public class IOWebSocket extends WebSocketClient {
 	}
 
 	@Override
-	public void onOpen() {
+	public void onOpen(ServerHandshake s){
 		try {
 			if (namespace != "")
 				init(namespace);
@@ -109,17 +109,26 @@ public class IOWebSocket extends WebSocketClient {
 	}
 
 	@Override
-	public void onClose() {
+	//fake the interface by wenchaojiang
+	public void onClose(int value1,String value2,boolean value3) {
 		Log.d("IOWebSocket", "ioSocket.onClose()");
 		ioSocket.onClose();
 		ioSocket.onDisconnect();
 	}
 
 	public void init(String path) throws IOException {
-		send("1::" + path);
+		try {
+			send("1::" + path);
+		} catch (NotYetConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public void init(String path, String query) throws IOException {
+	public void init(String path, String query) throws Exception {
 		this.send("1::" + path + "?" + query);
 
 	}
@@ -132,7 +141,7 @@ public class IOWebSocket extends WebSocketClient {
 		}
 	}
 
-	public void sendMessage(String message) throws IOException {
+	public void sendMessage(String message) throws Exception {
 		send(new Message(message).toString());
 	}
 
@@ -148,6 +157,13 @@ public class IOWebSocket extends WebSocketClient {
 
 	public String getNamespace() {
 		return namespace;
+	}
+
+
+	@Override
+	public void onError(Exception arg0) {
+		// TODO Auto-generated method stub
+		arg0.printStackTrace();
 	}
 
 }
