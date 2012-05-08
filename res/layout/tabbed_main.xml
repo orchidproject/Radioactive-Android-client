@@ -36,25 +36,25 @@
    			     android:orientation="vertical"
    			     android:layout_width="fill_parent"
    			     android:layout_height="wrap_content">
-   				 <WebView
-        			android:id="@+id/msgWebView"
-        			android:layout_width="fill_parent" 
-        			android:layout_height="fill_parent"/>
    			 	<EditText
    			 	    android:id="@+id/msgEditor"
    			 	    android:editable="true"
    			 	    android:layout_width="fill_parent"
    			 	    android:layout_height="wrap_content"
-   			 	    android:lines="2"
-   			 	    android:inputType="textMultiLine"   			 	    
+   			 	    android:lines="1"
+   			 	    android:inputType="text"   			 	    
    			 	    android:hint="@string/msgHint"
+   			 	    android:imeOptions="actionDone"
    			 	    />
-        		<Button android:id="@+id/send_btn"
+   			 	<Button android:id="@+id/send_btn"
 			        android:layout_width="wrap_content" 
 			        android:layout_height="wrap_content" 
 			        android:text="@string/send">
-        			<requestFocus/>
     			</Button>
+   				 <WebView
+        			android:id="@+id/msgWebView"
+        			android:layout_width="fill_parent" 
+        			android:layout_height="wrap_content"/>
         	</LinearLayout>
     	</FrameLayout>
     </LinearLayout>

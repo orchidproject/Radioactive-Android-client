@@ -19,6 +19,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -66,9 +67,12 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private Intent mGPSIntent;
 	private boolean servicesRunning = false;
 	private MapAttackClient client;
+	private InputMethodManager inputManager;
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		inputManager = (InputMethodManager) TabbedMapActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE); 
 		
 		setContentView(R.layout.tabbed_main);
 		mTabHost = getTabHost();
@@ -162,8 +166,12 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				String msg = msgEditor.getText().toString();
 				//TODO: post to server
 				if (client != null) {
-					if (!msg.equals("")) 
+					if (!msg.equals("")) { 
 						client.sendMessage(mGameId, msg);
+						msgEditor.setText("");
+						msgEditor.clearFocus();
+						inputManager.hideSoftInputFromWindow(TabbedMapActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+					}
 				}
 			}
 		});
@@ -435,6 +443,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 			// intent.getExtras().getString("json"))
 
 			mWebView.loadUrl(toSend);
+			msgsWebView.loadUrl(toSend);
 		}
 	};
 }
