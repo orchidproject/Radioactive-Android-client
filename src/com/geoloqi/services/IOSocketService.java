@@ -256,7 +256,14 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			if (event.equals("data")) {
 				for (JSONObject jsonObject : data) {
 					forward(jsonObject.toString());
+					try{
+						sendBackAck(jsonObject.getString("ackid"));
+					}
+					catch(Exception e){
+						e.printStackTrace();
+					}
 				}
+				
 			} else if (event.equals("game")) {
 				int counter = 0;
 				boolean done = false;
@@ -276,9 +283,19 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			} else {
 				Log.w(TAG, "Could not handle event " + event);
 			}
+			
+			
 		}
 	}
-
+	private void sendBackAck(String ackid){
+		try {
+		socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+"}"));
+		} catch (IOException e) {
+			Log.e(TAG, "IOException in sendBackAck: " + e);
+		}catch (JSONException e){
+			Log.e(TAG, "JSON parse error in sendBackAck: " + e);
+		}
+	}
 	private void joinGame() {
 		try {
 			socket.emit("game-join", mGameID);
