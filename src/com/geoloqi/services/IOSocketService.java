@@ -27,7 +27,15 @@ import com.geoloqi.ui.TabbedMapActivity;
 
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
-
+	//singleton
+	
+	private static IOSocketService mInstance;
+	
+	public static IOSocketService getInstance(){
+		return mInstance;
+	}
+	
+	
 	protected static final String TAG = LoggingConstants.RECORDING_TAG;
 
 	private IOSocket socket;
@@ -46,12 +54,30 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private String mMyRoleString;
 	
 	// private String skill;
+	
 
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
 	}
 
+	@Override
+	public void onCreate(){
+		//assign singleton
+		try {
+			if (mInstance == null){
+				mInstance=this;
+			}
+			else{
+				throw new Exception("");
+			}
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	
 	@Override
 	public void onStart(Intent intent, int startId) {
 		setRole(getApplicationContext());
@@ -256,12 +282,14 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			if (event.equals("data")) {
 				for (JSONObject jsonObject : data) {
 					forward(jsonObject.toString());
+
 					try{
 						sendBackAck(jsonObject.getString("ackid"));
 					}
 					catch(Exception e){
 						e.printStackTrace();
 					}
+
 				}
 				
 			} else if (event.equals("game")) {
@@ -334,6 +362,17 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		} else {
 			Log.i(TAG, "Connection closed on destroy.");
 		}
+	}
+	
+	public synchronized void sendMsg(String msg){
+		//must be json, no check here
+		try {
+			socket.send(msg);
+			Log.i(TAG, "information sent " + msg);
+		} catch (IOException e) {
+			Log.e(TAG, "IOException in sending: " + e);
+		}
+		
 	}
 
 	private synchronized void unregisterGPSReceiver() {
