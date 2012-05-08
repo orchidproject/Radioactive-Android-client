@@ -318,7 +318,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	
 	private void sendBackAck(String ackid){
 		try {
-		socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+"}"));
+			socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+"}"));
 		} catch (IOException e) {
 			Log.e(TAG, "IOException in sendBackAck: " + e);
 		}catch (JSONException e){
