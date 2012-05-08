@@ -287,6 +287,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			
 		}
 	}
+	
 	private void sendBackAck(String ackid){
 		try {
 		socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+"}"));
@@ -296,6 +297,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			Log.e(TAG, "JSON parse error in sendBackAck: " + e);
 		}
 	}
+	
 	private void joinGame() {
 		try {
 			socket.emit("game-join", mGameID);
