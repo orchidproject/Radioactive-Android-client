@@ -6,13 +6,16 @@ import android.app.Dialog;
 import android.app.TabActivity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,6 +41,7 @@ import com.geoloqi.rpc.AccountMonitor;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GPSTrackingService;
 import com.geoloqi.services.IOSocketService;
+import com.geoloqi.services.IOSocketService.LocalBinder;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.geoloqi.ui.JavaScriptInterface;
@@ -69,7 +73,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private boolean servicesRunning = false;
 	private MapAttackClient client;
 	private InputMethodManager inputManager;
-	
+	private IOSocketService mService;
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -120,7 +124,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				mWebView.setWebViewClient(mWebViewClient);
 				mWebView.setWebChromeClient(new WebChromeClient());
 				
-				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext()), "Android");
+				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext(),mService), "Android");
 				
 				return mWebView;
 			}
@@ -221,7 +225,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 				mPushNotificationIntent.putExtra(PARAM_INITIALS, initials);
-
+				bindService(mPushNotificationIntent, mConnection, Context.BIND_AUTO_CREATE);
 				Log.i(TAG, "joined the game");
 
 				// Start our services
@@ -239,14 +243,24 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				Log.i(TAG, "web view loaded");
 
 			} catch (RPCException e) {
-				Log.e(TAG, "Got an RPCException when trying to join the game!",
-						e);
+				Log.e(TAG, "Got an RPCException when trying to join the game!",e);
 				Toast.makeText(this, R.string.error_join_game,
 						Toast.LENGTH_LONG).show();
 				finish();
 			}
 		}
 	}
+	
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+	      public void onServiceConnected(ComponentName className, IBinder service) {
+	    	  mService=((IOSocketService.LocalBinder)service).getService();
+	      }
+	      
+	      public void onServiceDisconnected(ComponentName className) {
+	            // As our service is in the same process, this should never be called
+	      }
+	};
 
 	private synchronized void stopServicesIfRunning() {
 		if (servicesRunning) {
@@ -284,6 +298,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	public void onStop() {
 		super.onStop();
 		try {
+			unbindService(mConnection);
 			stopServicesIfRunning();
 		} catch (IllegalArgumentException e) {
 			Log.w(TAG, "Trying to unregister an inactive push receiver.");

@@ -22,10 +22,10 @@
             android:name="com.geoloqi.services.AndroidPushNotifications"
             android:enabled="true"
             android:process=":lqRemote" />
-        <service
+       <!--  <service
             android:name="com.geoloqi.services.IOSocketService"
             android:enabled="true"
-            android:process=":lqRemote" />
+            android:process=":lqRemote" /> -->
         <service
             android:name="com.geoloqi.services.GPSTrackingService"
             android:enabled="true"

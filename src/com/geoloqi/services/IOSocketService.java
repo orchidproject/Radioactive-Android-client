@@ -25,11 +25,13 @@ import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.TabbedMapActivity;
 
+import android.os.Binder;
+
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
 	//singleton
 	
-	private static IOSocketService mInstance;
+	public static IOSocketService mInstance;
 	
 	public static IOSocketService getInstance(){
 		return mInstance;
@@ -56,20 +58,30 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	// private String skill;
 	
 
+	public class LocalBinder extends Binder {
+		public IOSocketService getService() {
+            return IOSocketService.this;
+        }
+    }
 	@Override
 	public IBinder onBind(Intent arg0) {
-		return null;
+		return mBinder;
 	}
 
+	private final IBinder mBinder = new LocalBinder();
 	@Override
 	public void onCreate(){
 		//assign singleton
+		Log.i(TAG, "onCreate hit");
 		try {
 			if (mInstance == null){
+				Log.i(TAG, "onCreate hit 2"+this.toString());
 				mInstance=this;
+				Log.i(TAG, "onCreate hit 3"+mInstance.toString());
+				
 			}
 			else{
-				throw new Exception("");
+				throw new Exception("more then one instance of socket.io");
 			}
 		}
 		catch (Exception e){
@@ -81,7 +93,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	@Override
 	public void onStart(Intent intent, int startId) {
 		setRole(getApplicationContext());
-
+		
 		System.setProperty("java.net.preferIPv6Addresses", "false");
 		String url = "http://" + IOSOCKET_ADDRESS + ":" + IOSOCKET_PORT + "/";
 		Log.i(TAG, "Starting IO socket service at " + url);
@@ -100,6 +112,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 		registerGPSReceiver();
 		connectSocket();
+		Log.i(TAG, "onCreate hit 4"+mInstance.toString());
 	}
 
 	private void setRole(Context context) {
@@ -251,6 +264,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			}
 			
 		}
+		//mInstance=null;
+		Log.i(TAG, "onCreate hit 5"+mInstance.toString());
 //		if (connector != null) {
 //			try { 
 //				connector.stop();
