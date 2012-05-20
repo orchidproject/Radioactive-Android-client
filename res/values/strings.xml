@@ -12,7 +12,11 @@
         \nPlease check your Internet connection and refresh the list of games. 
     </string>
     <string name="send">Send</string>
+    <string name="start">start</string>
     <string name="msgHint">Your message</string>
+    <string name="lng">test Longitude</string>
+     <string name="lat">test Latitude</string>
+     <string name="testInterval">interval (in sec)</string>
     <string name="logout_button">Log out</string>
     <string name="game_list_loading_text">Searching for games...</string>
     

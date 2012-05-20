@@ -14,8 +14,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
@@ -58,24 +60,9 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	@Override
 	public IBinder onBind(Intent arg0) {
-		return null;
+		return mBinder;
 	}
 
-	@Override
-	public void onCreate(){
-		//assign singleton
-		try {
-			if (mInstance == null){
-				mInstance=this;
-			}
-			else{
-				throw new Exception("");
-			}
-		}
-		catch (Exception e){
-			e.printStackTrace();
-		}
-	}
 	
 	
 	@Override
@@ -106,11 +93,11 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		String imei = ((TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 
-//		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
-		Integer mMyRoleId = 4;
-//		if (mMyRoleId == null) {
-//			mMyRoleId = 2;
-//		}
+		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
+		//Integer mMyRoleId = 4;
+		if (mMyRoleId == null) {
+			mMyRoleId = 3;
+		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
 
 	}
@@ -318,7 +305,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	
 	private void sendBackAck(String ackid){
 		try {
-			socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+"}"));
+			socket.emit("ack",new JSONObject("{ackid:"+ackid+",channel:"+mGameID+",userID:"+mUserID+"}"));
 		} catch (IOException e) {
 			Log.e(TAG, "IOException in sendBackAck: " + e);
 		}catch (JSONException e){
@@ -328,10 +315,15 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	
 	private void joinGame() {
 		try {
-			socket.emit("game-join", mGameID);
+			socket.emit("game-join", new JSONObject("{channel:"+mGameID+",id:"+mUserID+"}") );
+			Log.i(TAG, "Connected to game " + mGameID);
+			
+			//socket.emit("register", mUserID);
 			Log.i(TAG, "Connected to game " + mGameID);
 		} catch (IOException e) {
 			Log.e(TAG, "IOException in joinGame: " + e);
+		}catch (JSONException e){
+			Log.e(TAG, "JSON parse error in sendBackAck: " + e);
 		}
 
 	}
@@ -412,7 +404,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 								"Sending location-push %s. Skill is %s.",
 								object, skill));
 						socket.emit("location-push", object);
-						socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
+						//socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
 					}
 
 				} catch (JSONException e) {
@@ -429,5 +421,105 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	/** The broadcast receiver used to push game data to the server. */
 	private BroadcastReceiver mGPSReceiver = null;
+	
+	//test section
+	private boolean testing=false;
+	
+	private final IOSocketInterface.Stub mBinder = new IOSocketInterface.Stub() {
+	   public void startTest(float lat,float lng,int time){
+		   
+		   Log.i("Testing IO","starting");
+		   if(connected){
+			   if(testing){
+				   Log.i("Testing IO","test already started");
+			   }
+			   else{
+				   testing=true;
+				   TestThread tt= new TestThread();
+				   tt.setLat(lat);
+				   tt.setLng(lng);
+				   tt.setInterval(time);
+				   tt.start();
+			   }
+			   
+		   }
+		   else{
+			   Log.i("Testing IO","socket io connection not estabilshed, test aborted");
+		   }
+		   
+		   
+		   
+	   }
+	   
+	   @Override
+	   public void stopTest() throws RemoteException {
+		   // TODO Auto-generated method stub
+		   testing=false;
+	   }
+	};
+	
+	class TestThread extends Thread {
+		float lat;
+		float lng;
+		int interval;
+		public void setLat(float la){
+			lat=la;
+		}
+		public void setLng(float ln){
+			lng=ln;
+		}
+		public void setInterval(int inter){
+			interval=inter;
+		}
+		
+		@Override
+		public void run() {
+			while(testing){
+				try {
+					Log.i("Testing IO",String.format(
+							"will sleep  %d.",
+							interval));
+					unregisterGPSReceiver();
+					Thread.sleep(interval);
+					Log.i("Testing IO","after sleep");
+					
+					JSONObject object = new JSONObject();
+					object.put("longitude", lng);
+					object.put("latitude", lat);
+					String skill = mMyRoleString;
+					object.put("skill", skill);
+					object.put("player_id", mUserID);
+					object.put("initials", mInitials);
+					if (connected && socket != null) {
+						Log.i("Testing IO", String.format(
+								"Sending location-push %s. Skill is %s.",
+								object, skill));
+						socket.emit("location-push", object);
+						//socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
+					}else{
+						testing=false;
+						registerGPSReceiver();
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					testing=false;
+					registerGPSReceiver();
+					e.printStackTrace();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					testing=false;
+					registerGPSReceiver();
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					testing=false;
+					registerGPSReceiver();
+					e.printStackTrace();
+				}
+			}
+			registerGPSReceiver();
+		}
+		
+	}
 
 }

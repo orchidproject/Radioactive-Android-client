@@ -22,7 +22,7 @@
             android:name="com.geoloqi.services.AndroidPushNotifications"
             android:enabled="true"
             android:process=":lqRemote" />
-        <service
+       <service
             android:name="com.geoloqi.services.IOSocketService"
             android:enabled="true"
             android:process=":lqRemote" />

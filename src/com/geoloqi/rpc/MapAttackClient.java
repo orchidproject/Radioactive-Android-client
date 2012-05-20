@@ -73,7 +73,8 @@ public class MapAttackClient implements GeoloqiConstants {
 			mMyRoleId = 3;
 		}
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-		Log.d(TAG, "role: "+mMyRoleString);
+		Log.i(TAG, "role: "+mMyRoleString);
+		Log.i(TAG, "id: "+mMyRoleId);
 	}
 
 	private MapAttackClient(Context context) {
