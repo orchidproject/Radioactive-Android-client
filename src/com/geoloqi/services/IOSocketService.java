@@ -3,6 +3,7 @@ package com.geoloqi.services;
 import java.io.IOException;
 import java.nio.channels.NotYetConnectedException;
 import java.util.Arrays;
+import java.util.Date;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +27,7 @@ import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.TabbedMapActivity;
+import com.geoloqi.widget.LogWriter;
 
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
@@ -48,14 +50,16 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private boolean connected = false;
 	private boolean destroyed = false;
 
+	
+	//game information
 	private String mGameID;
-
 	private String mUserID;
 	private String mInitials;
-
 	private String mMyRoleString;
 	
 	// private String skill;
+	//log writer
+	private LogWriter logWriter = new LogWriter();
 	
 
 	@Override
@@ -272,6 +276,9 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 					try{
 						sendBackAck(jsonObject.getString("ackid"));
+						jsonObject.put("time_stamp", (new Date()).getTime());
+						logWriter.appendLog(jsonObject.toString());
+						
 					}
 					catch(Exception e){
 						e.printStackTrace();

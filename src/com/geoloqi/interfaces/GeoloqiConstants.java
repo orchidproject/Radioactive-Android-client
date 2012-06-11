@@ -11,8 +11,8 @@ public abstract interface GeoloqiConstants {
 	public static final String GEOLOQI_SECRET = "";
 
 	// public static final String URL_BASE = "https://api.geoloqi.com/1/";
-	//public static final String URL_BASE = "http://holt.mrl.nott.ac.uk:49992/";
-	public static final String URL_BASE = "http://192.168.43.79:49992/";
+	public static final String URL_BASE = "http://holt.mrl.nott.ac.uk:49992/";
+	//public static final String URL_BASE = "http://192.168.43.79:49992/";
 	
 	public static final String GAME_URL_BASE = URL_BASE +  "game/mobile/";
 	
@@ -25,8 +25,8 @@ public abstract interface GeoloqiConstants {
 	public static final String UPLOAD_ADDRESS = "loki.geoloqi.com";
 	public static final String DOWNLOAD_ADDRESS = "loki.geoloqi.com";
 
-	//public static final String IOSOCKET_ADDRESS = "holt.mrl.nott.ac.uk";
-	public static final String IOSOCKET_ADDRESS = "192.168.43.79";
+	public static final String IOSOCKET_ADDRESS = "holt.mrl.nott.ac.uk";
+	//public static final String IOSOCKET_ADDRESS = "192.168.43.79";
 	public static final int IOSOCKET_PORT = 49991;
 
 	//public static final int UPLOAD_PORT = 49991;
