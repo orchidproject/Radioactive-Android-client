@@ -16,6 +16,9 @@ import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+
+import android.os.RemoteException;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,17 +43,23 @@ import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.AccountMonitor;
 import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GPSTrackingService;
+import com.geoloqi.services.IOSocketInterface;
 import com.geoloqi.services.IOSocketService;
 import com.geoloqi.services.IOSocketService.LocalBinder;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.geoloqi.ui.JavaScriptInterface;
+import java.lang.Float;
 
 public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	
 	private TabHost mTabHost;
 	private TabContentFactory tf;
 	private EditText msgEditor;
+	
+	private EditText testLatEditor;
+	private EditText testLngEditor;
+	private EditText testInterval;
 	
 	public static final String TAG = "TabbedMapActivity";
 	public static final String PARAM_GAME_ID = "game_id";
@@ -161,9 +170,17 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		
 		mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(tf));
 		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Messages").setContent(R.id.msgView));
+		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Test").setContent(R.id.testView));
 		
 		mTabHost.setCurrentTab(0);
 		
+		setupMessage();
+		
+		setupTest();
+
+	}
+	
+	private void setupMessage(){
 		msgEditor = (EditText) findViewById(R.id.msgEditor);
 		Button sendBtn = (Button) findViewById(R.id.send_btn);
 		sendBtn.setOnClickListener(new View.OnClickListener() {
@@ -182,8 +199,74 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				}
 			}
 		});
-
+		
 	}
+	
+	private void setupTest(){
+		testLatEditor = (EditText) findViewById(R.id.testLng);
+		testLngEditor = (EditText) findViewById(R.id.testLat);
+		testInterval = (EditText) findViewById(R.id.testInter);
+		//deflault values
+		testLatEditor.setText("52.9550");
+		testLngEditor.setText("-1.18840");
+		testInterval.setText("3000");
+		
+		Button startBtn = (Button) findViewById(R.id.test_btn);
+		startBtn.setOnClickListener(new View.OnClickListener() {
+			boolean started=false;
+			@Override
+			public void onClick(View v) {
+				//get the text
+				String lat = testLatEditor.getText().toString();
+				String lng = testLngEditor.getText().toString();
+				String time = testInterval.getText().toString();
+				
+				//TODO: post to server
+				if (!started) {
+					//validate
+					float flat;
+					float flng;
+					int   itime;
+					try{
+						flat=new Float(lat);
+						flng=new Float(lng);
+						itime=new Integer(time);
+						
+						iIOSocket.startTest(flat, flng, itime);
+					}catch(NumberFormatException e){
+						Toast.makeText(getApplicationContext(), "wrong lat/lng/time format", Toast.LENGTH_SHORT).show();
+						
+						return;
+					}catch(RemoteException e){
+						Toast.makeText(getApplicationContext(), "remote exception", Toast.LENGTH_SHORT).show();
+						return;
+					}
+					
+					((Button)v).setText("stop");
+					testLatEditor.setEnabled(false);
+					testLngEditor.setEnabled(false);
+					testInterval.setEnabled(false);
+					started=true;
+				}
+				else{
+					try {
+						iIOSocket.stopTest();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					((Button)v).setText("start");
+					testLatEditor.setEnabled(true);
+					testLngEditor.setEnabled(true);
+					testInterval.setEnabled(true);
+					started=false;
+				}
+			}
+		});
+	}
+	
+	
+	
 
 	@Override
 	public void onStart() {
@@ -252,15 +335,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	}
 	
 	
-	private ServiceConnection mConnection = new ServiceConnection() {
-	      public void onServiceConnected(ComponentName className, IBinder service) {
-	    	  mService=((IOSocketService.LocalBinder)service).getService();
-	      }
-	      
-	      public void onServiceDisconnected(ComponentName className) {
-	            // As our service is in the same process, this should never be called
-	      }
-	};
+	
 
 	private synchronized void stopServicesIfRunning() {
 		if (servicesRunning) {
@@ -276,10 +351,26 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
 			Log.d(TAG, "STARTING GPS TRACKING SERVICE");
 			startService(mPushNotificationIntent);
+			bindService(mPushNotificationIntent,mConnection,BIND_AUTO_CREATE);
 			startService(mGPSIntent);
 			servicesRunning = true;
 		}
 	}
+	
+	IOSocketInterface iIOSocket;
+	private ServiceConnection mConnection = new ServiceConnection() {
+	   // Called when the connection with the service disconnects unexpectedly
+	    public void onServiceDisconnected(ComponentName className) {
+	        Log.e(TAG, "Service has unexpectedly disconnected");
+	        iIOSocket = null;
+	    }
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			// TODO Auto-generated method stub
+			iIOSocket = IOSocketInterface.Stub.asInterface(service);
+		}
+	};
 
 	@Override
 	protected void onPause() {

@@ -56,6 +56,47 @@
         			android:layout_width="fill_parent" 
         			android:layout_height="wrap_content"/>
         	</LinearLayout>
+        	<LinearLayout
+   			     android:id="@+id/testView"
+   			     android:orientation="vertical"
+   			     android:layout_width="fill_parent"
+   			     android:layout_height="wrap_content">
+   			 	<EditText
+   			 	    android:id="@+id/testLat"
+   			 	    android:editable="true"
+   			 	    android:layout_width="fill_parent"
+   			 	    android:layout_height="wrap_content"
+   			 	    android:lines="1"
+   			 	    android:inputType="text"   			 	    
+   			 	    android:hint="@string/lng"
+   			 	    android:imeOptions="actionDone"
+   			 	    />
+   			 	<EditText
+   			 	    android:id="@+id/testLng"
+   			 	    android:editable="true"
+   			 	    android:layout_width="fill_parent"
+   			 	    android:layout_height="wrap_content"
+   			 	    android:lines="1"
+   			 	    android:inputType="text"   			 	    
+   			 	    android:hint="@string/lat"
+   			 	    android:imeOptions="actionDone"
+   			 	    />
+   			 	<EditText
+   			 	    android:id="@+id/testInter"
+   			 	    android:editable="true"
+   			 	    android:layout_width="fill_parent"
+   			 	    android:layout_height="wrap_content"
+   			 	    android:lines="1"
+   			 	    android:inputType="text"   			 	    
+   			 	    android:hint="@string/testInterval"
+   			 	    android:imeOptions="actionDone"
+   			 	    />
+   			 	<Button android:id="@+id/test_btn"
+			        android:layout_width="wrap_content" 
+			        android:layout_height="wrap_content" 
+			        android:text="@string/start">
+    			</Button>
+   			</LinearLayout>
     	</FrameLayout>
     </LinearLayout>
 </TabHost>
