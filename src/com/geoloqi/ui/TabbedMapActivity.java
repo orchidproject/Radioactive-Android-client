@@ -133,8 +133,6 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				mWebView.setWebViewClient(mWebViewClient);
 				mWebView.setWebChromeClient(new WebChromeClient());
 				
-				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext(),mService), "Android");
-				
 				return mWebView;
 			}
 		};
@@ -271,7 +269,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	@Override
 	public void onStart() {
 		super.onStart();
-
+		
 		client = MapAttackClient
 				.getApplicationClient(this);
 		// Check for a valid account token
@@ -340,6 +338,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private synchronized void stopServicesIfRunning() {
 		if (servicesRunning) {
 			unregisterReceiver(mPushReceiver);
+			unregisterReceiver(mStateReceiver);
 			stopService(mPushNotificationIntent);
 			stopService(mGPSIntent);
 			servicesRunning = false;
@@ -349,6 +348,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private synchronized void startServicesIfNotRunning() {
 		if (!servicesRunning) {
 			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
+			registerReceiver(mStateReceiver, new IntentFilter("STATE"));
 			Log.d(TAG, "STARTING GPS TRACKING SERVICE");
 			startService(mPushNotificationIntent);
 			bindService(mPushNotificationIntent,mConnection,BIND_AUTO_CREATE);
@@ -369,6 +369,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			// TODO Auto-generated method stub
 			iIOSocket = IOSocketInterface.Stub.asInterface(service);
+			mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext(),iIOSocket), "Android");
 		}
 	};
 
@@ -533,26 +534,48 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private BroadcastReceiver mPushReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context ctxt, Intent intent) {
-			Log.i("Testing IO", String.format("Received JSON: %s", intent
+			Log.d("Testing IO", String.format("Received JSON: %s", intent
 					.getExtras().getString("json")));
+			Log.d("Testing IO", String.format("Received JSON: %s", intent
+					.getExtras().getString("event")));
 
 			String toSend = String.format(
-					"javascript:handleSocketData('%s');", intent.getExtras()
-							.getString("json"));
+					"javascript:handleSocketData('%s','%s');",intent
+					.getExtras().getString("event"),
+					intent.getExtras().getString("json"));
 							
-							
-							//.replace('"', '\''));
-
-			// "javascript:handleSocketData(\"hello\")";
-
-			//toSend = toSend.replace('"', '\'');
 
 			Log.i("Testing IO", "URL to open: " + toSend);
 			// String.format("javascript:handleSocketData(\"%s\")",
 			// intent.getExtras().getString("json"))
 
 			mWebView.loadUrl(toSend);
-			msgsWebView.loadUrl(toSend);
+			//msgsWebView.loadUrl(toSend);
 		}
 	};
+	
+	private BroadcastReceiver mStateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context ctxt, Intent intent) {
+			Log.d("Testing IO", String.format("Received JSON: %s", intent
+					.getExtras().getString("keys")));
+			Log.d("Testing IO", String.format("Received JSON: %s", intent
+					.getExtras().getString("values")));
+
+			String toSend = String.format(
+					"javascript:setState('%s','%s');",intent
+					.getExtras().getString("keys"),
+					intent.getExtras().getString("values"));
+							
+
+			Log.i("Testing IO", "URL to open: " + toSend);
+			// String.format("javascript:handleSocketData(\"%s\")",
+			// intent.getExtras().getString("json"))
+
+			mWebView.loadUrl(toSend);
+			//msgsWebView.loadUrl(toSend);
+		}
+	};
+	
+	
 }

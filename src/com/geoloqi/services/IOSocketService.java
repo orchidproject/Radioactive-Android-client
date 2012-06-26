@@ -8,6 +8,7 @@ import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -83,7 +84,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		
 		System.setProperty("java.net.preferIPv6Addresses", "false");
 		String url = "http://" + IOSOCKET_ADDRESS + ":" + IOSOCKET_PORT + "/";
-		Log.i(TAG, "Starting IO socket service at " + url);
+		//Log.i(TAG, "Starting IO socket service at " + url);
 		socket = new IOSocket(url, this);
 		mGameID = intent.getStringExtra(GameListActivity.PARAM_GAME_ID);
 		mUserID = intent.getStringExtra(TabbedMapActivity.PARAM_USER_ID);
@@ -97,9 +98,9 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 		// Log.i("Role", "My skill is " + skill);
 
-		registerGPSReceiver();
-		connectSocket();
-		Log.i(TAG, "onCreate hit 4"+mInstance.toString());
+		//registerGPSReceiver();
+		//connectSocket();
+		//Log.i(TAG, "onCreate hit 4"+mInstance.toString());
 	}
 
 	private void setRole(Context context) {
@@ -115,42 +116,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	}
 	
-	private class ConnectSocketTask extends AsyncTask<Void, Void, Void> {
-	     protected Void doInBackground(Void... params) {
-	    	 int counter = 0;
-			connected = false;
-					while (!connected) {
-						try {
-							counter++;
-							socket.connect();
-							connected = true;
-							Log.i(TAG, "Connected to " + socket);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						if (counter % 30 == 0) {
-							Log.e(TAG,
-									String.format(
-											"Tried to connect for %d seconds, but no connection yet.",
-											counter));
-						}
-					}
-					return params[0];
-	     }
-
-	     protected void onProgressUpdate(Void progress) {
-//	         setProgressPercent(progress[0]);
-	     }
-
-	     protected void onPostExecute(Void result) {
-	         //
-	     }
-	 }
+	
 	
 	class ConnectorThread extends Thread {
 		public boolean running;
@@ -251,75 +217,31 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 			}
 			
 		}
-		//mInstance=null;
-		Log.i(TAG, "onCreate hit 5"+mInstance.toString());
-//		if (connector != null) {
-//			try { 
-//				connector.stop();
-//				
-//			} catch (Exception e) {
-//				Log.e(TAG, e.getMessage());
-//			}
-//		}
+		
+
 		connected = false;
 	}
 
-	public void forward(String json) {
+	
+	
+	public void forwardUbiserver(String event, String json) {
 		Intent notifyPush = new Intent("PUSH");
 		notifyPush.putExtra("json", json);
+		notifyPush.putExtra("event", event);
 		Log.i(TAG, "Pushing notification to UI: " + json);
 		sendBroadcast(notifyPush);
 	}
-
-	// ////// SOCKET CALLBACK METHODS ///////
-
-	@Override
-	public void on(String event, JSONObject... data) {
-		if (event == null) {
-			Log.e(TAG, "Received null event.");
-		} else {
-			Log.i(TAG, String.format(
-					"Received event %s from Web socket with objects %s", event,
-					Arrays.toString(data)));
-			if (event.equals("data")) {
-				for (JSONObject jsonObject : data) {
-					forward(jsonObject.toString());
-
-					try{
-						sendBackAck(jsonObject.getString("ackid"));
-						jsonObject.put("time_stamp", (new Date()).getTime());
-						logWriter.appendLog(jsonObject.toString());
-						
-					}
-					catch(Exception e){
-						e.printStackTrace();
-					}
-
-				}
-				
-			} else if (event.equals("game")) {
-				int counter = 0;
-				boolean done = false;
-				while (!done) {
-					try {
-						joinGame();
-						Thread.sleep(1000);
-						done = true;
-					} catch (NotYetConnectedException nye) {
-						if (counter++ > 10) {
-							throw nye;
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			} else {
-				Log.w(TAG, "Could not handle event " + event);
-			}
-			
-			
-		}
+	
+	public void forwardStateChange(String key, String value) {
+		Intent notifyState = new Intent("STATE");
+		//delimiter is ","
+		notifyState.putExtra("values", value);
+		notifyState.putExtra("keys", key);
+		Log.i(TAG, "Pushing notification to state: " + value);
+		sendBroadcast(notifyState);
 	}
+
+	
 	
 	private void sendBackAck(String ackid){
 		try {
@@ -331,39 +253,30 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		}
 	}
 	
-	private void joinGame() {
-		try {
-			socket.emit("game-join", new JSONObject("{channel:"+mGameID+",id:"+mUserID+"}") );
-			Log.i(TAG, "Connected to game " + mGameID);
-			
-			//socket.emit("register", mUserID);
-			Log.i(TAG, "Connected to game " + mGameID);
-		} catch (IOException e) {
-			Log.e(TAG, "IOException in joinGame: " + e);
-		}catch (JSONException e){
-			Log.e(TAG, "JSON parse error in sendBackAck: " + e);
-		}
-
-	}
+	
 
 	@Override
 	public void onMessage(String message) {
-		Log.i(TAG, String.format("Received message %s.", message));
+		forwardUbiserver("message",message);
+		
 	}
 
 	@Override
 	public void onMessage(JSONObject json) {
-		Log.i(TAG, String.format("Received JSON %s.", json));
+		forwardUbiserver("message",json.toString());
 	}
 
+	
+	
 	@Override
 	public void onConnect() {
-		Log.i(TAG, "Socket onConnect() called.");
+		//forwardUbiserver("connect","{skill:"+ mMyRoleString+",initials:"+mInitials+",gameID:"+mGameID+",userID:"+mUserID+"}");
+		forwardUbiserver("connect","");
 	}
 
 	@Override
 	public void onDisconnect() {
-		//why on unregisterGPS?
+		forwardUbiserver("disconnect","{}");
 		unregisterGPSReceiver();
 		connected = false;
 		if (!destroyed) {
@@ -374,16 +287,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		}
 	}
 	
-	public synchronized void sendMsg(String msg){
-		//must be json, no check here
-		try {
-			socket.send(msg);
-			Log.i(TAG, "information sent " + msg);
-		} catch (IOException e) {
-			Log.e(TAG, "IOException in sending: " + e);
-		}
-		
-	}
+	
 
 	private synchronized void unregisterGPSReceiver() {
 		if (mGPSReceiver == null) {
@@ -421,15 +325,15 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",
 								object, skill));
-						socket.emit("location-push", object);
+						forwardStateChange("latitude"+","+"longitude",latitude+","+longitude);
+						//socket.emit("location-push", object);
 						//socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
 					}
 
 				} catch (JSONException e) {
 					Log.e(TAG, "JSONException in gps push: " + e);
-				} catch (IOException e) {
-					Log.e(TAG, "IOException in gps push: " + e);
-				}
+				} 
+				
 			}
 		};
 		registerReceiver(mGPSReceiver, new IntentFilter(
@@ -471,9 +375,52 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	   
 	   @Override
 	   public void stopTest() throws RemoteException {
-		   // TODO Auto-generated method stub
 		   testing=false;
 	   }
+	   
+	   public void sendMsg(String msg){
+		
+		try {
+			Log.i(TAG, "information sent " + msg);
+			
+			socket.emit("message", new JSONObject(msg));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		   
+	   }
+	   
+	   public String connect() throws RemoteException{
+		   	connectSocket();
+			return "true";
+	   }
+	   public String disconnect(){
+		return "true";
+		   
+	   }
+	   
+	   public String get_info(){
+			return "{skill:"+ mMyRoleString+",initials:"+mInitials+",gameID:"+mGameID+",userID:"+mUserID+"}";
+		}
+	   
+	   public String get_skill(){
+			return mMyRoleString;
+		}
+	   
+	   public String get_initials(){
+			return mInitials;
+		}
+	   
+	   public String get_userID(){
+			return mUserID;
+		}
+	   
+	   
 	};
 	
 	class TestThread extends Thread {
@@ -512,7 +459,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",
 								object, skill));
-						socket.emit("location-push", object);
+						forwardStateChange("latitude"+","+"longitude"+","+"skill"+","+"initials"
+								,lat+","+lng+","+mMyRoleString+","+mInitials);
 						//socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
 					}else{
 						testing=false;
@@ -528,15 +476,15 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					testing=false;
 					registerGPSReceiver();
 					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					testing=false;
-					registerGPSReceiver();
-					e.printStackTrace();
-				}
+				} 
 			}
 			registerGPSReceiver();
 		}
+		
+	}
+	@Override
+	public void on(String event, JSONObject... data) {
+		// TODO Auto-generated method stub
 		
 	}
 
