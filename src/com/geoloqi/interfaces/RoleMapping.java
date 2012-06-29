@@ -34,7 +34,7 @@ public class RoleMapping {
 		
 		roleMap = new HashMap<Integer, String>();
 		roleMap.put(1, "medic");
-		roleMap.put(2, "ambulance");
+		roleMap.put(2, "firefighter");
 		roleMap.put(3, "soldier");
 		roleMap.put(4, "transporter");
 		

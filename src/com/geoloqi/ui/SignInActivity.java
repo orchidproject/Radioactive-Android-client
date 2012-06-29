@@ -3,8 +3,10 @@ package com.geoloqi.ui;
 import java.util.regex.Pattern;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -21,6 +23,7 @@ import android.widget.Toast;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
+import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.rpc.MapAttackClient;
 
 public class SignInActivity extends Activity implements OnClickListener {
@@ -32,19 +35,21 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 	/** The id of the game to launch when finished. */
 	private String mGameId;
-
+	private String mRoleSting="medic";
+	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sign_in_activity);
-
+		
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			mGameId = extras.getString(TabbedMapActivity.PARAM_GAME_ID);
 		}
 
 		// Load saved user information
-		final SharedPreferences sharedPreferences = getSharedPreferences(
+		final SharedPreferences sharedPreferences = this.getSharedPreferences(
 				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 		if (sharedPreferences != null) {
 			final TextView initialsView = (TextView) findViewById(R.id.initials);
@@ -52,8 +57,10 @@ public class SignInActivity extends Activity implements OnClickListener {
 			
 			initialsView.setText(sharedPreferences.getString("initials", ""));
 			nameView.setText(sharedPreferences.getString("name", ""));
+			mRoleSting = sharedPreferences.getString("role_string", null);
+			Log.i("role", "assign "+ mRoleSting);
 		}
-
+		
 		// Listen for form submission
 		findViewById(R.id.submit_button).setOnClickListener(this);
 	}
@@ -72,18 +79,50 @@ public class SignInActivity extends Activity implements OnClickListener {
 					GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 			prefs.putString("initials", initials);
 			prefs.putString("name", name);
+			
+			//test the secret code
+			if (name.equals("changerole")) {
+				AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+				
+				alertDialog.setTitle("Chose a role");
+				final String[] items = {"medic","firefighter","soldier","transporter"};
+				
+			    alertDialog.setSingleChoiceItems(items , -1, new DialogInterface.OnClickListener() {
+			    	public void onClick(DialogInterface dialog, int item){
+			    		mRoleSting=RoleMapping.roleMap.get(item+1);
+			    		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(item+1);
+			    		dialog.dismiss();
+			        }
+			    });
+			    
+			    alertDialog.create().show();
+				return;
+			}else if (name.equals("testmode")){
+				if(TabbedMapActivity.testMode==false){
+					Toast.makeText(this, "tese mode enabled",
+							Toast.LENGTH_SHORT).show();
+					TabbedMapActivity.testMode=true;
+				}else{
+					Toast.makeText(this, "tese mode disbled",
+							Toast.LENGTH_SHORT).show();
+					TabbedMapActivity.testMode=false;
+				}
+				
+				
+				return;
+			}
+			
+			prefs.putString("role_string", mRoleSting);
+			Log.i("role", "save role string"+ mRoleSting);
 			prefs.commit();
 			
 			Intent intent = new Intent(this, GameListActivity.class);
 			startActivity(intent);
 			
-//			try {
-//				finishLogin(true);
-//			} catch (ClassCastException e) {
-//				Log.w(TAG, "Got a ClassCastException when trying to finish login!", e);
-//			}
+
 		}
 	}
+	
 
 	/** Stub */
 	private void finishLogin(boolean result) {
@@ -107,61 +146,5 @@ public class SignInActivity extends Activity implements OnClickListener {
 		finish();
 	}
 
-	/** TODO: Move this to an external class file. */
-	private static class CreateAnonymousAccountTask extends AsyncTask<String, Void, Boolean> {
-		private final ProgressDialog mProgressDialog;
-		private final Context mContext;
-		private final String mInitials;
-		private final String mEmail;
-
-		public CreateAnonymousAccountTask(final Context context, final String initials,
-				final String email) {
-			mProgressDialog = new ProgressDialog(context);
-			mProgressDialog.setTitle(null);
-			mProgressDialog.setMessage(context.getString(R.string.sign_in_loading_text));
-			
-			mContext = context;
-			mInitials = initials;
-			mEmail = email;
-		}
-
-		@Override
-		public void onPreExecute() {
-			mProgressDialog.show();
-		}
-
-		@Override
-		protected Boolean doInBackground(String... params) {
-			// TODO: Use the default shared preferences here:
-			//PreferenceManager.getDefaultSharedPreferences(this)
-			Editor prefs = (Editor) mContext.getSharedPreferences(
-					GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
-			prefs.putString("initials", mInitials);
-			prefs.putString("email", mEmail);
-			prefs.commit();
-			
-			try {
-				// Start login.
-				final MapAttackClient client = MapAttackClient.getApplicationClient(mContext);
-				//client.createAnonymousAccount();
-			//} catch (RPCException e) {
-			} catch (Exception e) {
-				Log.e(TAG, "Got an RPCException when trying to create an anonymous account.", e);
-				return false;
-			}
-			
-			return true;
-		}
-
-		@Override
-		public void onPostExecute(Boolean result) {
-			mProgressDialog.dismiss();
-			
-			try {
-				((SignInActivity) mContext).finishLogin(result);
-			} catch (ClassCastException e) {
-				Log.w(TAG, "Got a ClassCastException when trying to finish login!", e);
-			}
-		}
-	}
+	
 }

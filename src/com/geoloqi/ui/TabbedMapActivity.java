@@ -50,6 +50,8 @@ import java.lang.Float;
 
 public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	
+	public static boolean testMode=false;
+	
 	private TabHost mTabHost;
 	private TabContentFactory tf;
 	private EditText msgEditor;
@@ -68,6 +70,8 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	public static final String PARAM_USER_ID = "user_id";
 	public static final String PARAM_INITIALS = "initials";
 
+	public static final String PARAM_ROLEID = "role_id";
+
 	private String mGameId;
 	private String msgViewUrl;
 	private String mGameUrl;
@@ -82,7 +86,10 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		//clean cache
+		/*getApplicationContext().deleteDatabase("webview.db");
+		getApplicationContext().deleteDatabase("webviewCache.db");
+		*/
 		inputManager = (InputMethodManager) TabbedMapActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE); 
 		
 		setContentView(R.layout.tabbed_main);
@@ -122,7 +129,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				
 				//TODO add load webview
 				// Prepare the web view
-				mWebView.clearCache(false);
+				mWebView.clearCache(true);
 				mWebView.setVerticalScrollBarEnabled(false);
 				mWebView.setHorizontalScrollBarEnabled(false);
 
@@ -167,13 +174,19 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		
 		mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(tf));
 		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Messages").setContent(R.id.msgView));
+		setupMessage();
 		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Test").setContent(R.id.testView));
+		setupTest();
+		if(testMode==false){
+			getTabWidget().getChildAt(2).setVisibility(View.GONE);
+		}
+		
 		
 		mTabHost.setCurrentTab(0);
 		
-		setupMessage();
 		
-		setupTest();
+		
+		
 
 	}
 	
@@ -293,7 +306,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				Log.i(TAG, "starting the MapAttackActivity");
 				// Join the game
 				client.joinGame(mGameId);
-
+				
 				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
 				//note game id in prefs
 				Editor prefs = (Editor) this.getSharedPreferences(
@@ -302,21 +315,30 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				prefs.commit();
 				
 				String initials = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("initials", "");
+				
+				//BEGIN FROM HERE
+				String roleString = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("role_string", "medic");
+				
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 				mPushNotificationIntent.putExtra(PARAM_INITIALS, initials);
-
+				mPushNotificationIntent.putExtra(MapAttackClient.PARAM_USER_ROLE, roleString);
+				
+				Log.i("Role", "The role is " + roleString);
+				
 				Log.i(TAG, "joined the game");
 
+				
+				
+				
 				// Start our services
 				startServicesIfNotRunning();
 
 				// Load the game into the WebView
 				String webUrl = String.format("%s?id=%s", mGameUrl, userID);
-//				String webUrl = "http://holt.mrl.nott.ac.uk:49992/game/mobile/4";
+
 				Log.i(TAG, webUrl);
-//				if (mWebView == null)
-//					mWebView = (WebView) findViewById(R.id.webView);
+
 				mWebView.loadUrl(webUrl);
 				String msgUrl = String.format("%s?id=%s", msgViewUrl, userID);
 				msgsWebView.loadUrl(msgUrl);

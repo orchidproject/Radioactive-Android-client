@@ -25,6 +25,7 @@ import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RoleMapping;
+import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.TabbedMapActivity;
 import com.geoloqi.widget.LogWriter;
@@ -56,6 +57,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private String mUserID;
 	private String mInitials;
 	private String mMyRoleString;
+	private String mRoleId;
 	
 	// private String skill;
 	//log writer
@@ -71,8 +73,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	
 	@Override
 	public void onStart(Intent intent, int startId) {
-		setRole(getApplicationContext());
-
+	
 		System.setProperty("java.net.preferIPv6Addresses", "false");
 		String url = "http://" + IOSOCKET_ADDRESS + ":" + IOSOCKET_PORT + "/";
 		Log.i(TAG, "Starting IO socket service at " + url);
@@ -80,31 +81,16 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		mGameID = intent.getStringExtra(GameListActivity.PARAM_GAME_ID);
 		mUserID = intent.getStringExtra(TabbedMapActivity.PARAM_USER_ID);
 		mInitials = intent.getStringExtra(TabbedMapActivity.PARAM_INITIALS);
-
-		// skill = getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE,
-		// Context.MODE_PRIVATE).getString(
-		// MapAttackClient.PARAM_USER_ROLE, "unknown");
-
-		// skill = MapAttackClient.skill;
-
-		// Log.i("Role", "My skill is " + skill);
+		mMyRoleString = intent.getStringExtra(MapAttackClient.PARAM_USER_ROLE);
+		
+		
+		Log.i("Role", "The role is an " + mMyRoleString);
 
 		registerGPSReceiver();
 		connectSocket();
 	}
 
-	private void setRole(Context context) {
-		String imei = ((TelephonyManager) context
-				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-
-		Integer mMyRoleId = RoleMapping.imeiMap.get(imei);
-		//Integer mMyRoleId = 4;
-		if (mMyRoleId == null) {
-			mMyRoleId = 3;
-		}
-		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-
-	}
+	
 	
 	private class ConnectSocketTask extends AsyncTask<Void, Void, Void> {
 	     protected Void doInBackground(Void... params) {
@@ -463,6 +449,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		   // TODO Auto-generated method stub
 		   testing=false;
 	   }
+
+	
 	};
 	
 	class TestThread extends Thread {

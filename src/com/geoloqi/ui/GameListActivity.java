@@ -268,8 +268,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 		prefs.putString("initials", "");
 		prefs.putString("name", "");
-		sharedPreferences.edit().remove("userID").commit();
-		sharedPreferences.edit().remove("gameID").commit();
+		//sharedPreferences.edit().remove("userID").commit();
+		//sharedPreferences.edit().remove("gameID").commit();
 		sharedPreferences.edit().remove("gameId").commit();
 		prefs.commit();
 		Intent logInActivity = new Intent(this, SignInActivity.class);

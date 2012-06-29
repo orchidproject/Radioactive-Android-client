@@ -22,8 +22,10 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.geoloqi.ADB;
 import com.geoloqi.Installation;
@@ -43,7 +45,7 @@ public class MapAttackClient implements GeoloqiConstants {
 	private static MapAttackClient singleton = null;
 	private Context context;
 
-	private Integer mMyRoleId;
+	private Integer mMyRoleId=0;
 
 	private String mMyRoleString;
 	private String mUserName;
@@ -56,30 +58,28 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	public static MapAttackClient getApplicationClient(Context context) {
 		if (singleton == null) {
+			//why no lock??
 			singleton = new MapAttackClient(context);
 		}
 		return singleton;
 	}
 
-	private void setRole() {
-		String imei = ((TelephonyManager) context
-				.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-
-//		mMyRoleId = 4;
-		Log.d(TAG, "IMEI: "+imei);
-		mMyRoleId = RoleMapping.imeiMap.get(imei);
-		Log.d(TAG, "roleId: "+mMyRoleId);
-		if (mMyRoleId == null) {
-			mMyRoleId = 3;
-		}
+	public int getRoleId(){
+		
+		return mMyRoleId;
+		
+	}
+	
+	
+	public void setRole(int role_id){
+		//make sure it index begin with 0
+		mMyRoleId = role_id;
 		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-		Log.i(TAG, "role: "+mMyRoleString);
-		Log.i(TAG, "id: "+mMyRoleId);
+		Log.i(TAG, "client" + "set+"+mMyRoleString+mMyRoleId);
 	}
 
 	private MapAttackClient(Context context) {
 		this.context = context;
-		setRole();
 		HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
 		HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
 		client = new DefaultHttpClient(httpParams);
@@ -221,6 +221,7 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	public void joinGame(String game_id) throws RPCException {
 		String email;
+		
 		{// Initialise variables
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
@@ -234,6 +235,7 @@ public class MapAttackClient implements GeoloqiConstants {
 			email = prefs.getString("email", "default@some.com");
 			
 		}
+		
 		MyRequest request;
 		{// Initialise the request.
 			String url = URL_BASE + "game/" + game_id + "/join";

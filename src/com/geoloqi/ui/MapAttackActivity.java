@@ -45,6 +45,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 	private static final String QRTAG = "QR_CODE_TAG";
 	public static final String PARAM_USER_ID = "user_id";
 	public static final String PARAM_INITIALS = "initials";
+	
 
 	private String mGameId;
 	private String mGameUrl;
@@ -118,19 +119,21 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 				Log.i(TAG, "starting the MapAttackActivity");
 				// Join the game
 				client.joinGame(mGameId);
-
+				
 				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
 				//note game id in prefs
 				Editor prefs = (Editor) this.getSharedPreferences(
 						GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 				prefs.putString("gameId", mGameId);
+				
 				prefs.commit();
 				
 				String initials = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("initials", "");
 				String userID = AccountMonitor.getUserID(this);
 				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
 				mPushNotificationIntent.putExtra(PARAM_INITIALS, initials);
-
+				
+				
 				Log.i(TAG, "joined the game");
 
 				// Start our services
