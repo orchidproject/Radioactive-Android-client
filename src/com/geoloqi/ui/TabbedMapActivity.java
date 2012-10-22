@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -511,6 +512,24 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 			break;
 		}
 		return dialog;
+	}
+	
+	//confirmation to quit game
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    if (keyCode == KeyEvent.KEYCODE_BACK)
+	    {
+	        new AlertDialog.Builder(this).setMessage("Do you want to exit the game?")
+	        .setPositiveButton("YES", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int which) {
+	                // TODO Auto-generated method stub
+	                finish();
+	            }
+	        }).setNegativeButton("NO", null).show();
+
+	    }
+	    return super.onKeyDown(keyCode, event);
+
 	}
 
 	/** Show or hide the loading indicator. */

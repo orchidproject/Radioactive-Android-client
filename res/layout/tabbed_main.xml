@@ -16,10 +16,10 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
     <!-- Game view -->
-    <LinearLayout
+    		<LinearLayout
    			     android:orientation="vertical"
    			     android:layout_width="fill_parent"
-   			     android:layout_height="wrap_content"
+   			     android:layout_height="fill_parent"
    			     android:gravity="center">
    			 <WebView
         		android:id="@+id/webView"
@@ -51,7 +51,7 @@
 			        android:layout_height="wrap_content" 
 			        android:text="@string/send">
     			</Button>
-   				 <WebView
+   				<WebView
         			android:id="@+id/msgWebView"
         			android:layout_width="fill_parent" 
         			android:layout_height="wrap_content"/>

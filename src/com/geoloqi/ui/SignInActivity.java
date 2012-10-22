@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -58,7 +59,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			initialsView.setText(sharedPreferences.getString("initials", ""));
 			nameView.setText(sharedPreferences.getString("name", ""));
 			mRoleSting = sharedPreferences.getString("role_string", null);
-			Log.i("role", "assign "+ mRoleSting);
+			
 		}
 		
 		// Listen for form submission
@@ -67,6 +68,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View view) {
+		Log.i("model", "model "+ Build.PRODUCT);
 		switch (view.getId()) {
 		case R.id.submit_button:
 			final EditText initialsField = (EditText) findViewById(R.id.initials);

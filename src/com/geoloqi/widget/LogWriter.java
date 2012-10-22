@@ -5,15 +5,21 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 
+import android.os.Build;
 import android.util.Log;
 
 public class LogWriter {
-	File logFile= new File("sdcard/log-"+(new Date()).getTime()+".txt" );
+	File logFile;
+	
+	public LogWriter(){
+		Date d= new Date();
+		String file_name="sdcard/log-"+d.getSeconds()+"-"+d.getMinutes()+"-"+d.getHours()+"-"+d.getDate()+"-"+d.getMonth()+".txt";
+		logFile= new File(file_name );
+	}
 	
 	public void appendLog(String text)
 	{    
 		
-	   
 	   if (!logFile.exists())
 	   {
 	      try
