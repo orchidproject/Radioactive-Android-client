@@ -29,6 +29,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 
 	public static final String PARAM_LONGITUDE = "longitude";
 	public static final String PARAM_LATITUDE = "latitude";
+	public static final String PARAM_ACCURACY = "accuracy";
 
 	private OutputStreamWriter fileOut;
 
@@ -57,7 +58,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 		// Register the listener with the Location Manager to receive location
 		// updates
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-				4000, 5f, this);
+				2000, 2f, this);
 
 	}
 
@@ -97,14 +98,15 @@ public class GPSTrackingService extends Service implements LocationListener,
 		Intent intent = new Intent(GPS_INTENT);
 		intent.putExtra(PARAM_LONGITUDE, location.getLongitude());
 		intent.putExtra(PARAM_LATITUDE, location.getLatitude());
+		intent.putExtra(PARAM_ACCURACY, location.getAccuracy());
 		//intent.putExtra("skill", myRole);
 		Log.d(TAG, "BROADCAST lat: " +location.getLatitude() +", long: "+location.getLongitude() );
 		sendBroadcast(intent);
 		if (fileOut != null) {
 			Date now = new Date();
 			String logString = String.format("%d,%f,%f,%f\n", now.getTime(),
-					location.getLatitude(), location.getLongitude(),
-					location.getAccuracy());
+			location.getLatitude(), location.getLongitude(),
+			location.getAccuracy());
 			try {
 				fileOut.write(logString);
 				fileOut.flush();

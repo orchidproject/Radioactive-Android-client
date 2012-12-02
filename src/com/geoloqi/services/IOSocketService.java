@@ -369,8 +369,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private synchronized void registerSensors() {
 		if(mSensorLogWriter==null){
 			//extra sensor log
-			//mSensorLogWriter= new SensorLogWriter(this);
-			//mSensorLogWriter.start_update();
+			mSensorLogWriter= new SensorLogWriter(this);
+			mSensorLogWriter.start_update();
 		}
 		
 		
@@ -407,6 +407,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 						GPSTrackingService.PARAM_LONGITUDE);
 				double latitude = intent.getExtras().getDouble(
 						GPSTrackingService.PARAM_LATITUDE);
+				double accuracy = intent.getExtras().getDouble(
+						GPSTrackingService.PARAM_ACCURACY);
 
 				Log.i("Testing IO", String.format(
 						"Received from local GPS: long:%f, lat:%f", longitude,
@@ -416,10 +418,23 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 				try {
 					object.put("longitude", longitude);
 					object.put("latitude", latitude);
+					object.put("accuracy", accuracy);
+					
 					String skill = mMyRoleString;
 					object.put("skill", skill);
 					object.put("player_id", mUserID);
 					object.put("initials", mInitials);
+					
+					if(mSensorLogWriter!=null){
+						object.put("megnatic", mSensorLogWriter.getMagnetic()[0]+","+
+								mSensorLogWriter.getMagnetic()[1]+","+
+								mSensorLogWriter.getMagnetic()[2]);
+						object.put("accelerate", mSensorLogWriter.getAccelerUpdate()[0]+","+
+								mSensorLogWriter.getAccelerUpdate()[1]+","+
+								mSensorLogWriter.getAccelerUpdate()[2]);
+					}
+					
+					
 					if (connected && socket != null) {
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",
@@ -503,7 +518,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 							"will sleep  %d.",
 							interval));
 					unregisterGPSReceiver();
-					unregisterSensors();
+					//unregisterSensors();
 					
 					Thread.sleep(interval);
 					Log.i("Testing IO","after sleep");
@@ -511,10 +526,22 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					JSONObject object = new JSONObject();
 					object.put("longitude", lng);
 					object.put("latitude", lat);
+					object.put("accuracy", 1);
+					
+					
 					String skill = mMyRoleString;
 					object.put("skill", skill);
 					object.put("player_id", mUserID);
 					object.put("initials", mInitials);
+					
+					if(mSensorLogWriter!=null){
+						object.put("megnatic", mSensorLogWriter.getMagnetic()[0]+","+
+								mSensorLogWriter.getMagnetic()[1]+","+
+								mSensorLogWriter.getMagnetic()[2]);
+						object.put("accelerate", mSensorLogWriter.getAccelerUpdate()[0]+","+
+								mSensorLogWriter.getAccelerUpdate()[1]+","+
+								mSensorLogWriter.getAccelerUpdate()[2]);
+					}
 					
 					
 					if (connected && socket != null) {
@@ -522,7 +549,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 								"Sending location-push %s. Skill is %s.",
 								object, skill));
 						socket.emit("location-push", object);
-						//socket.send("LOCATION EMITTED WITH LAT: "+latitude +", LONG: "+longitude);
+						
 					}else{
 						testing=false;
 						registerGPSReceiver();
