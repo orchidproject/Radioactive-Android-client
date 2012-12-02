@@ -1,0 +1,1 @@
+./aidl -I/home/wenchao/Projects/Radioactive-Android-client/src/ -p/home/wenchao/adt-bundle-linux/sdk/platforms/android-10/framework.aidl -o/home/wenchao/Projects/Radioactive-Android-client/gen /home/wenchao/Projects/Radioactive-Android-client/src/com/geoloqi/services/IOSocketInterface.aidl
