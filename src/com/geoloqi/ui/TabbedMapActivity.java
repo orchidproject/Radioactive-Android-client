@@ -31,8 +31,10 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TabHost.TabContentFactory;
+import android.widget.TabWidget;
 import android.widget.Toast;
 
 import com.geoloqi.interfaces.GeoloqiConstants;
@@ -48,6 +50,7 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.geoloqi.ui.JavaScriptInterface;
 import java.lang.Float;
+import android.widget.TextView;
 
 public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	
@@ -84,6 +87,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private boolean servicesRunning = false;
 	private MapAttackClient client;
 	private InputMethodManager inputManager;
+	
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -138,30 +142,13 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				mWebView.setWebViewClient(mWebViewClient);
 				mWebView.setWebChromeClient(new WebChromeClient());
 				
-				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext()), "Android");
+				mWebView.addJavascriptInterface(new JavaScriptInterface(getApplicationContext(),TabbedMapActivity.this), "Android");
 				
 				return mWebView;
 			}
 		};
 		
-//		TabContentFactory msgTab = new TabHost.TabContentFactory() {
-//			
-//			@Override
-//			public View createTabContent(String tag) {
-//				// TODO 
-//				msgsWebView  = (WebView) findViewById(R.id.msgWebView);
-//				
-//				msgsWebView.clearCache(false);
-//				msgsWebView.setVerticalScrollBarEnabled(false);
-//				msgsWebView.setHorizontalScrollBarEnabled(false);
-//
-//				msgsWebView.getSettings().setJavaScriptEnabled(true);
-//				msgsWebView.setWebViewClient(mWebViewClient);
-//				msgsWebView.setWebChromeClient(new WebChromeClient());
-//				
-//				return msgsWebView;
-//			}
-//		};
+
 		
 		msgsWebView  = (WebView) findViewById(R.id.msgWebView);
 		
@@ -176,19 +163,38 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		mTabHost.addTab(mTabHost.newTabSpec("webtab").setIndicator("Map").setContent(tf));
 		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Messages").setContent(R.id.msgView));
 		setupMessage();
-		mTabHost.addTab(mTabHost.newTabSpec("msgtab").setIndicator("Test").setContent(R.id.testView));
+		mTabHost.addTab(mTabHost.newTabSpec("testab").setIndicator("Test").setContent(R.id.testView));
 		setupTest();
+		
+		
 		if(testMode==false){
 			getTabWidget().getChildAt(2).setVisibility(View.GONE);
 		}
 		
+		mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+
+		       @Override
+		       public void onTabChanged(String arg0) {
+		    	   if(arg0=="msgtab" || arg0=="webtab"){
+		    		   String toSend = "javascript:clearNewMessage();";
+		   				mWebView.loadUrl(toSend);
+		    	   }
+		    	   
+		       }
+		});
+		
 		
 		mTabHost.setCurrentTab(0);
 		
-		
-		
-		
 
+	}
+	
+	public void newMessage(){
+		// a hooker used to hook msg event from webview
+		//change tab content
+		//TabWidget vTabs = getTabWidget();
+		//RelativeLayout rLayout = (RelativeLayout) vTabs.getChildAt(1);
+		//((TextView) rLayout.findViewById(android.R.id.title)).setText("NewTabText");
 	}
 	
 	private void setupMessage(){
@@ -325,7 +331,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				mPushNotificationIntent.putExtra(PARAM_INITIALS, initials);
 				mPushNotificationIntent.putExtra(MapAttackClient.PARAM_USER_ROLE, roleString);
 				
-				Log.i("Role", "The role is " + roleString);
+			
 				
 				Log.i(TAG, "joined the game");
 

@@ -32,8 +32,7 @@ import com.geoloqi.widget.LogWriter;
 
 public class IOSocketService extends Service implements GeoloqiConstants,
 		MessageCallback {
-	//singleton
-	
+	//singleton but not working
 	private static IOSocketService mInstance;
 	
 	public static IOSocketService getInstance(){
@@ -57,7 +56,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private String mUserID;
 	private String mInitials;
 	private String mMyRoleString;
-	private String mRoleId;
+	private SensorLogWriter mSensorLogWriter=null;
 	
 	// private String skill;
 	//log writer
@@ -87,6 +86,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		Log.i("Role", "The role is an " + mMyRoleString);
 
 		registerGPSReceiver();
+		registerSensors();
+		
 		connectSocket();
 	}
 
@@ -214,6 +215,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	public void onDestroy() {
 		super.onDestroy();
 		unregisterGPSReceiver();
+		unregisterSensors();
+		
 		destroyed = true;
 		if (socket != null) {
 			try {
@@ -340,6 +343,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	public void onDisconnect() {
 		//why on unregisterGPS?
 		unregisterGPSReceiver();
+		unregisterSensors();
+		
 		connected = false;
 		if (!destroyed) {
 			Log.e(TAG, "Lost connection to socket. Re-connecting.");
@@ -360,6 +365,29 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		
 	}
 
+	
+	private synchronized void registerSensors() {
+		if(mSensorLogWriter==null){
+			//extra sensor log
+			//mSensorLogWriter= new SensorLogWriter(this);
+			//mSensorLogWriter.start_update();
+		}
+		
+		
+	}
+	
+	private synchronized void unregisterSensors() {
+		if(mSensorLogWriter!=null){
+			//extra sensor log
+			
+			mSensorLogWriter.stop_update();
+			mSensorLogWriter=null;
+		}
+		
+		
+	}
+	
+	
 	private synchronized void unregisterGPSReceiver() {
 		if (mGPSReceiver == null) {
 			return;
@@ -475,6 +503,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 							"will sleep  %d.",
 							interval));
 					unregisterGPSReceiver();
+					unregisterSensors();
+					
 					Thread.sleep(interval);
 					Log.i("Testing IO","after sleep");
 					
@@ -485,6 +515,8 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					object.put("skill", skill);
 					object.put("player_id", mUserID);
 					object.put("initials", mInitials);
+					
+					
 					if (connected && socket != null) {
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",
@@ -494,25 +526,30 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 					}else{
 						testing=false;
 						registerGPSReceiver();
+						registerSensors();
 					}
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					testing=false;
 					registerGPSReceiver();
+					registerSensors();
 					e.printStackTrace();
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					testing=false;
 					registerGPSReceiver();
+					registerSensors();
 					e.printStackTrace();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					testing=false;
 					registerGPSReceiver();
+					registerSensors();
 					e.printStackTrace();
 				}
 			}
 			registerGPSReceiver();
+			registerSensors();
 		}
 		
 	}
