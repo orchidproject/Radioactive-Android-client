@@ -63,7 +63,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			mRoleString = sharedPreferences.getString("role_string", "medic");
 			
 		}
-		
+		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(RoleMapping.roleIdMap.get(mRoleString));
 		// Listen for form submission
 		setTextIndicaters();
 		findViewById(R.id.submit_button).setOnClickListener(this);
