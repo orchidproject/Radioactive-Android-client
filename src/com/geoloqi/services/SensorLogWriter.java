@@ -23,8 +23,8 @@ public class SensorLogWriter{
     
     
     protected void start_update() {
-        mSensorManager.registerListener(mAccListener, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(mMegnaticListener, mMagnetic, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(mAccListener, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(mMegnaticListener, mMagnetic, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     protected void stop_update() {

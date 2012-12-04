@@ -57,6 +57,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	private String mInitials;
 	private String mMyRoleString;
 	private SensorLogWriter mSensorLogWriter=null;
+	private boolean mSensorEnabled=false;
 	
 	// private String skill;
 	//log writer
@@ -81,6 +82,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		mUserID = intent.getStringExtra(TabbedMapActivity.PARAM_USER_ID);
 		mInitials = intent.getStringExtra(TabbedMapActivity.PARAM_INITIALS);
 		mMyRoleString = intent.getStringExtra(MapAttackClient.PARAM_USER_ROLE);
+		mSensorEnabled = intent.getBooleanExtra(TabbedMapActivity.PARAM_SENSOR_ENABLED, false);
 		
 		
 		Log.i("Role", "The role is an " + mMyRoleString);
@@ -367,7 +369,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 
 	
 	private synchronized void registerSensors() {
-		if(mSensorLogWriter==null){
+		if(mSensorEnabled&&mSensorLogWriter==null){
 			//extra sensor log
 			mSensorLogWriter= new SensorLogWriter(this);
 			mSensorLogWriter.start_update();
@@ -377,7 +379,7 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 	}
 	
 	private synchronized void unregisterSensors() {
-		if(mSensorLogWriter!=null){
+		if(mSensorEnabled&&mSensorLogWriter!=null){
 			//extra sensor log
 			
 			mSensorLogWriter.stop_update();

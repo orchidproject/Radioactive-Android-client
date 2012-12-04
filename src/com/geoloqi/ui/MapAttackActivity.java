@@ -206,42 +206,7 @@ public class MapAttackActivity extends Activity implements GeoloqiConstants {
 		return super.onCreateOptionsMenu(menu);
 	}
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.share:
-			Intent shareIntent = new Intent(Intent.ACTION_SEND);
-			shareIntent.setType("text/plain");
-			shareIntent.putExtra(Intent.EXTRA_TEXT,
-					String.format("Map Attack! %s #mapattack", mGameUrl));
-			startActivity(Intent.createChooser(shareIntent, "Share this map: "));
-			return true;
-		case R.id.quit:
-			finish();
-			return true;
-		case R.id.qrscan:
-			try {
-				Intent intent = new Intent(
-						"com.google.zxing.client.android.SCAN");
-				intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-				intent.putExtra("SCAN_FORMATS", "QR_CODE");
-
-				// intent.putExtra("SCAN_WIDTH", 800);
-				// intent.putExtra("SCAN_HEIGHT", 200);
-				intent.putExtra("RESULT_DISPLAY_DURATION_MS", 1000L);
-				intent.putExtra("PROMPT_MESSAGE", "Scan the QR Code on the Box");
-
-				startActivityForResult(intent, IntentIntegrator.REQUEST_CODE);
-				Log.i(QRTAG, "QR app started successfully");
-				return true;
-			} catch (ActivityNotFoundException e) {
-				Log.e(QRTAG, "QR code app missing");
-				showDialog(DIALOG_QRCODE_MISSING);
-				return true;
-			}
-		}
-		return false;
-	}
+	
 
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (resultCode == Activity.RESULT_OK) {

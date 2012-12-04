@@ -43,6 +43,23 @@
         android:layout_height="match_parent"
         android:padding="10dp"
         android:gravity="bottom">
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sensors disabled" />
+          <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test mode disabled" />
+          <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="role: medic" />
+
     <Button
             android:layout_gravity="bottom"
             android:id="@+id/submit_button"

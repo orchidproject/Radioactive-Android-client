@@ -33,10 +33,10 @@ public class RoleMapping {
 		}
 		
 		roleMap = new HashMap<Integer, String>();
-		roleMap.put(1, "medic");
-		roleMap.put(2, "firefighter");
-		roleMap.put(3, "soldier");
-		roleMap.put(4, "transporter");
+		roleMap.put(0, "medic");
+		roleMap.put(1, "firefighter");
+		roleMap.put(2, "soldier");
+		roleMap.put(3, "transporter");
 		
 	}	
 }

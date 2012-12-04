@@ -36,13 +36,14 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 	/** The id of the game to launch when finished. */
 	private String mGameId;
-	private String mRoleSting="medic";
+	private String mRoleString="medic";
 	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sign_in_activity);
+		
 		
 		final Bundle extras = getIntent().getExtras();
 		if (extras != null) {
@@ -56,14 +57,28 @@ public class SignInActivity extends Activity implements OnClickListener {
 			final TextView initialsView = (TextView) findViewById(R.id.initials);
 			final TextView nameView = (TextView) findViewById(R.id.name);
 			
+			
 			initialsView.setText(sharedPreferences.getString("initials", ""));
 			nameView.setText(sharedPreferences.getString("name", ""));
-			mRoleSting = sharedPreferences.getString("role_string", null);
+			mRoleString = sharedPreferences.getString("role_string", "medic");
 			
 		}
 		
 		// Listen for form submission
+		setTextIndicaters();
 		findViewById(R.id.submit_button).setOnClickListener(this);
+	}
+	private void setTextIndicaters(){
+		final TextView testView1 = (TextView) findViewById(R.id.textView1);
+		final TextView testView2 = (TextView) findViewById(R.id.textView2);
+		final TextView testView3 = (TextView) findViewById(R.id.textView3);
+		
+		
+		testView2.setText("extra sensors enabled: "+TabbedMapActivity.sensorEnabled);
+		testView1.setText("test mode enabled: "+TabbedMapActivity.testMode);
+		testView3.setText("role:"+mRoleString);
+		
+		
 	}
 
 	@Override
@@ -73,6 +88,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 		case R.id.submit_button:
 			final EditText initialsField = (EditText) findViewById(R.id.initials);
 			final EditText nameField = (EditText) findViewById(R.id.name);
+			
 
 			final String initials = initialsField.getText().toString();
 			final String name = nameField.getText().toString();
@@ -83,7 +99,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			prefs.putString("name", name);
 			
 			//test the secret code
-			if (name.equals("changerole")) {
+			if (name.equals("crole")) {
 				AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 				
 				alertDialog.setTitle("Chose a role");
@@ -91,13 +107,16 @@ public class SignInActivity extends Activity implements OnClickListener {
 				
 			    alertDialog.setSingleChoiceItems(items , -1, new DialogInterface.OnClickListener() {
 			    	public void onClick(DialogInterface dialog, int item){
-			    		mRoleSting=RoleMapping.roleMap.get(item+1);
-			    		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(item+1);
+			    		mRoleString=RoleMapping.roleMap.get(item);
+			    		//consider delete this line
+			    		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(item);
+			    		setTextIndicaters();
 			    		dialog.dismiss();
 			        }
 			    });
 			    
 			    alertDialog.create().show();
+			  
 				return;
 			}else if (name.equals("testmode")){
 				if(TabbedMapActivity.testMode==false){
@@ -110,12 +129,26 @@ public class SignInActivity extends Activity implements OnClickListener {
 					TabbedMapActivity.testMode=false;
 				}
 				
+				setTextIndicaters();
+				return;
+			}
+			else if (name.equals("sensors")){
+				if(TabbedMapActivity.sensorEnabled==false){
+					Toast.makeText(this, "extra sensor log enabled",
+							Toast.LENGTH_SHORT).show();
+					TabbedMapActivity.sensorEnabled=true;
+				}else{
+					Toast.makeText(this, "extra sensor log disabled",
+							Toast.LENGTH_SHORT).show();
+					TabbedMapActivity.sensorEnabled=false;
+				}
 				
+				setTextIndicaters();
 				return;
 			}
 			
-			prefs.putString("role_string", mRoleSting);
-			Log.i("role", "save role string"+ mRoleSting);
+			prefs.putString("role_string", mRoleString);
+			Log.i("role", "save role string"+ mRoleString);
 			prefs.commit();
 			
 			Intent intent = new Intent(this, GameListActivity.class);
