@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
-
-import android.os.Build;
 import android.util.Log;
 
 public class LogWriter {

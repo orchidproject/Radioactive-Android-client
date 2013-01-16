@@ -46,8 +46,6 @@ import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.services.GPSTrackingService;
 import com.geoloqi.services.IOSocketInterface;
 import com.geoloqi.services.IOSocketService;
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
 import com.geoloqi.ui.JavaScriptInterface;
 import java.lang.Float;
 import android.widget.TextView;
@@ -84,7 +82,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 	private String mGameUrl;
 	private WebView mWebView;
 	private WebView msgsWebView;
-	private Intent mPushNotificationIntent;
+	private Intent mSocketIoIntent;
 	private String mQrCodeReturn = "";
 	private Intent mGPSIntent;
 	private boolean servicesRunning = false;
@@ -121,10 +119,10 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		
 		Log.i(TAG, "Game id is: " + mGameId);
 		
-		mPushNotificationIntent = new Intent(this, IOSocketService.class);
-		mPushNotificationIntent.putExtra(GameListActivity.PARAM_GAME_ID,
+		mSocketIoIntent = new Intent(this, IOSocketService.class);
+		mSocketIoIntent.putExtra(GameListActivity.PARAM_GAME_ID,
 				mGameId);
-		mPushNotificationIntent.putExtra(TabbedMapActivity.PARAM_SENSOR_ENABLED,
+		mSocketIoIntent.putExtra(TabbedMapActivity.PARAM_SENSOR_ENABLED,
 				TabbedMapActivity.sensorEnabled);
 
 		mGPSIntent = new Intent(this, GPSTrackingService.class);
@@ -296,26 +294,17 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 
 		client = MapAttackClient
 				.getApplicationClient(this);
-		// Check for a valid account token
-		if (!client.hasToken()) {
-			// Kick user out to the sign in activity
-			
-			Log.i(TAG, "client has no token!");
-			Intent intent = new Intent(this, SignInActivity.class);
-			intent.putExtra(MapAttackActivity.PARAM_GAME_ID, mGameId);
-			startActivity(intent);
-			finish();
-		} else {
-			try {
+		
+		
+		try {
 				// Stop any previously started services and broadcast receivers
 				stopServicesIfRunning();
 
-			} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 				Log.w(TAG, "Trying to unregister an inactive push receiver.");
-			}
+		}
 
-			try {
-				Log.i(TAG, "starting the MapAttackActivity");
+		try {
 				// Join the game
 				client.joinGame(mGameId);
 				
@@ -332,17 +321,14 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				String roleString = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("role_string", "medic");
 				
 				String userID = AccountMonitor.getUserID(this);
-				mPushNotificationIntent.putExtra(PARAM_USER_ID, userID);
-				mPushNotificationIntent.putExtra(PARAM_INITIALS, initials);
-				mPushNotificationIntent.putExtra(MapAttackClient.PARAM_USER_ROLE, roleString);
+				mSocketIoIntent.putExtra(PARAM_USER_ID, userID);
+				mSocketIoIntent.putExtra(PARAM_INITIALS, initials);
+				mSocketIoIntent.putExtra(MapAttackClient.PARAM_USER_ROLE, roleString);
 				
 			
 				
 				Log.i(TAG, "joined the game");
 
-				
-				
-				
 				// Start our services
 				startServicesIfNotRunning();
 
@@ -363,13 +349,13 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 						Toast.LENGTH_LONG).show();
 				finish();
 			}
-		}
 	}
+	
 
 	private synchronized void stopServicesIfRunning() {
 		if (servicesRunning) {
 			unregisterReceiver(mPushReceiver);
-			stopService(mPushNotificationIntent);
+			stopService(mSocketIoIntent);
 			stopService(mGPSIntent);
 			servicesRunning = false;
 		}
@@ -379,8 +365,8 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 		if (!servicesRunning) {
 			registerReceiver(mPushReceiver, new IntentFilter("PUSH"));
 			Log.d(TAG, "STARTING GPS TRACKING SERVICE");
-			startService(mPushNotificationIntent);
-			bindService(mPushNotificationIntent,mConnection,BIND_AUTO_CREATE);
+			startService(mSocketIoIntent);
+			bindService(mSocketIoIntent,mConnection,BIND_AUTO_CREATE);
 			startService(mGPSIntent);
 			servicesRunning = true;
 		}
@@ -434,28 +420,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 
 	
 
-	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		if (resultCode == Activity.RESULT_OK) {
-			IntentResult scanResult = IntentIntegrator.parseActivityResult(
-					requestCode, resultCode, intent);
-			Log.i(QRTAG, "result code is: " + resultCode);
-			if (scanResult != null) {
-				if (requestCode == IntentIntegrator.REQUEST_CODE) {
-					if (resultCode == RESULT_OK) {
-						mQrCodeReturn = intent.getStringExtra("SCAN_RESULT");
-						// showDialog(DIALOG_QRCODE_SUCCESS);
-						Uri uri = Uri.parse(mQrCodeReturn);
-						startActivity(new Intent(Intent.ACTION_VIEW, uri));
-					} else if (resultCode == RESULT_CANCELED) {
-						showDialog(DIALOG_QRCODE_CANCEL);
-					}
-				}
-			} else {
-				// else continue with any other code you need in the method
-				Log.i(QRTAG, "scan result was null");
-			}
-		}
-	}
+
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -551,16 +516,7 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 					"javascript:handleSocketData('%s');", intent.getExtras()
 							.getString("json"));
 							
-							
-							//.replace('"', '\''));
-
-			// "javascript:handleSocketData(\"hello\")";
-
-			//toSend = toSend.replace('"', '\'');
-
-			Log.i("Testing IO", "URL to open: " + toSend);
-			// String.format("javascript:handleSocketData(\"%s\")",
-			// intent.getExtras().getString("json"))
+		    Log.i("Testing IO", "URL to open: " + toSend);
 
 			mWebView.loadUrl(toSend);
 			msgsWebView.loadUrl(toSend);

@@ -22,18 +22,12 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Toast;
-
 import com.geoloqi.ADB;
-import com.geoloqi.Installation;
 import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
-import com.geoloqi.ui.GameListActivity;
 
 public class MapAttackClient implements GeoloqiConstants {
 	private final String TAG = "MapAttackClient";
@@ -58,7 +52,7 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	public static MapAttackClient getApplicationClient(Context context) {
 		if (singleton == null) {
-			//why no lock??
+			//a lock required?
 			singleton = new MapAttackClient(context);
 		}
 		return singleton;
@@ -86,51 +80,6 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	}
 
-	public void createAnonymousAccount() throws RPCException {
-		try {
-			String name, deviceID, platform, hardware;
-			{// Initialize variables.
-				name = context.getSharedPreferences(PREFERENCES_FILE,
-						Context.MODE_PRIVATE).getString("initials", null);
-				deviceID = Installation.getIDAsString(context);
-				platform = android.os.Build.VERSION.RELEASE;
-				hardware = android.os.Build.MODEL;
-			}
-
-			MyRequest request;
-			{
-				request = new MyRequest(MyRequest.POST, URL_BASE
-						+ "user/create_anon");
-				// request = new MyRequest(MyRequest.POST, URL_BASE + "/game/" +
-				// + "/join/");
-				request.addHeaders(new BasicScheme().authenticate(
-						new UsernamePasswordCredentials(GEOLOQI_ID,
-								GEOLOQI_SECRET), request.getRequest()));
-				request.addEntityParams(pair("name", name),
-						pair("device_id", deviceID),
-						pair("platform", platform), pair("hardware", hardware));
-			}
-
-			JSONObject response = send(request);
-
-			{// Save Results
-				saveToken(new OAuthToken(response));
-				context.getSharedPreferences(PREFERENCES_FILE,
-						Context.MODE_PRIVATE).edit()
-						.putString("userID", response.getString("user_id"))
-						.commit();
-			}
-		} catch (JSONException e) {
-			throw new RuntimeException(e.getMessage());
-		} catch (AuthenticationException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected void saveToken(OAuthToken token) {
-		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-				.edit().putString("authToken", token.accessToken).commit();
-	}
 
 	public boolean hasToken() {
 		// return context.getSharedPreferences(PREFERENCES_FILE,

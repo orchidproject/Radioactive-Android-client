@@ -222,25 +222,18 @@ public class IOSocketService extends Service implements GeoloqiConstants,
 		destroyed = true;
 		if (socket != null) {
 			try {
-//				socket.disconnect();
+
 				stopConnecting();
 				socket.disconnect();
 				                              				
-//				connector.cancel(true);
+
 				Log.d(TAG, "thread stopped");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
 		}
-//		if (connector != null) {
-//			try { 
-//				connector.stop();
-//				
-//			} catch (Exception e) {
-//				Log.e(TAG, e.getMessage());
-//			}
-//		}
+
 		connected = false;
 	}
 

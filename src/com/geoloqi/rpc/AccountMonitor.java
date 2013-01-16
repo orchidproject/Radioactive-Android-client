@@ -13,22 +13,7 @@ public class AccountMonitor {
 	private static ReentrantLock lock = new ReentrantLock();
 	private static Condition userIDReceived = lock.newCondition();
 
-	public static void createUserID(final Context context) {
-		new Thread() {
-			@Override
-			public void run() {
-				lock.lock();
-				try {
-					MapAttackClient.getApplicationClient(context).createAnonymousAccount();
-					userIDReceived.signalAll();
-				} catch (RPCException e) {
-					throw new RuntimeException(e);
-				} finally {
-					lock.unlock();
-				}
-			}
-		}.start();
-	}
+	
 
 	public static String getUserID(Context context) {
 		lock.lock();

@@ -36,7 +36,8 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 	/** The id of the game to launch when finished. */
 	private String mGameId;
-	private String mRoleString="medic";
+	private String mRoleString="unset";
+	private boolean isRoleSet=false;
 	
 	
 	@Override
@@ -60,10 +61,10 @@ public class SignInActivity extends Activity implements OnClickListener {
 			
 			initialsView.setText(sharedPreferences.getString("initials", ""));
 			nameView.setText(sharedPreferences.getString("name", ""));
-			mRoleString = sharedPreferences.getString("role_string", "medic");
+			//mRoleString = sharedPreferences.getString("role_string", "unset");
 			
 		}
-		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(RoleMapping.roleIdMap.get(mRoleString));
+		//MapAttackClient.getApplicationClient(SignInActivity.this).setRole(RoleMapping.roleIdMap.get(mRoleString));
 		// Listen for form submission
 		setTextIndicaters();
 		findViewById(R.id.submit_button).setOnClickListener(this);
@@ -84,6 +85,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View view) {
 		Log.i("model", "model "+ Build.PRODUCT);
+		
 		switch (view.getId()) {
 		case R.id.submit_button:
 			final EditText initialsField = (EditText) findViewById(R.id.initials);
@@ -114,7 +116,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			    		dialog.dismiss();
 			        }
 			    });
-			    
+			    isRoleSet=true;
 			    alertDialog.create().show();
 			  
 				return;
@@ -147,6 +149,15 @@ public class SignInActivity extends Activity implements OnClickListener {
 				return;
 			}
 			
+			if(!isRoleSet){
+				Toast.makeText(getApplicationContext(), "role not set", Toast.LENGTH_LONG).show();
+				return;
+			}else if(initials.length()!=2){
+				Toast.makeText(getApplicationContext(), "need two letters as initials", Toast.LENGTH_LONG).show();
+				return;
+			}
+			
+			
 			prefs.putString("role_string", mRoleString);
 			Log.i("role", "save role string"+ mRoleString);
 			prefs.commit();
@@ -158,6 +169,26 @@ public class SignInActivity extends Activity implements OnClickListener {
 		}
 	}
 	
+	public void setRole(View v){
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+		
+		alertDialog.setTitle("Chose a role");
+		final String[] items = {"medic","firefighter","soldier","transporter"};
+		
+	    alertDialog.setSingleChoiceItems(items , -1, new DialogInterface.OnClickListener() {
+	    	public void onClick(DialogInterface dialog, int item){
+	    		mRoleString=RoleMapping.roleMap.get(item);
+	    		//consider delete this line
+	    		MapAttackClient.getApplicationClient(SignInActivity.this).setRole(item);
+	    		setTextIndicaters();
+	    		isRoleSet=true;
+	    		dialog.dismiss();
+	        }
+	    });
+	    
+	    alertDialog.create().show();
+		
+	}
 
 	/** Stub */
 	private void finishLogin(boolean result) {

@@ -40,18 +40,6 @@ class MyRequest {
 		}
 	}
 
-	synchronized void authorize(OAuthToken token) {
-		ADB.log("In authorize");
-		// Remove the old authorization header.
-		for (Header header : headers) {
-			if (header.getName().equals("Authorization")) {
-				headers.remove(header);
-			}
-		}
-		// Insert the new authorization header.
-		headers.add(new BasicHeader("Authorization", "OAuth " + token.accessToken));
-	}
-
 	synchronized void addHeaders(Header... headers) {
 		ADB.log("In addHeaders");
 		for (int i = 0; i < headers.length; i++) {

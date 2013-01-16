@@ -45,9 +45,7 @@ public class GPSTrackingService extends Service implements LocationListener,
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
-//		SharedPreferences prefs = getApplicationContext().getSharedPreferences(
-//				PREFERENCES_FILE, Context.MODE_PRIVATE);
-//		myRole = prefs.getString(MapAttackClient.PARAM_USER_ROLE, "unknown");
+
 
 		createLogFile();
 

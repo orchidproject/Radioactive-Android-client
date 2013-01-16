@@ -32,10 +32,8 @@ import com.geoloqi.data.Game;
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
-import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.rpc.MapAttackClient;
-import com.geoloqi.services.GeoloqiPositioning;
 import com.geoloqi.widget.GameListArrayAdapter;
 
 public class GameListActivity extends ListActivity implements OnClickListener,
@@ -83,12 +81,11 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 		// Set our on click listeners
 		refreshButton.setOnClickListener(this);
-//		clearHistoryButton.setOnClickListener(this);
+		//clearHistoryButton.setOnClickListener(this);
 		helpButton.setOnClickListener(this);
 		logoutButton.setOnClickListener(this);
 
-		// Reference our positioning service Intent
-//		mPositioningIntent = new Intent(this, GeoloqiPositioning.class);
+
 
 		if (savedInstanceState != null) {
 			// Restore our saved instance state
@@ -104,10 +101,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 
 		if (mSyncOnStart || mGameList.isEmpty()) {
-//			// Start our positioning service
-//			stopService(mPositioningIntent);
-//			startService(mPositioningIntent);
-
 			// Search for nearby games
 			setLoading(true);
 			new RequestGamesListTask(this, getLastKnownLocation(), false)
