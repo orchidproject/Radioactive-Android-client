@@ -17,7 +17,6 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -70,6 +69,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 
 		setContentView(R.layout.game_list_activity);
+		
+		getActionBar().hide();
 
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
@@ -208,8 +209,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		final Game selection = (Game) l.getItemAtPosition(position);
 
 		// Initialise the TabbedMapActivity for the indicated game
-		Intent intent = new Intent(this, TabbedMapActivity.class);
-		intent.putExtra(TabbedMapActivity.PARAM_GAME_ID, selection.id);
+		Intent intent = new Intent(this, GameActivity.class);
+		//TODO intent.putExtra(GameActivity.PARAM_GAME_ID, selection.id);
 		
 		if (sharedPreferences != null) {
 			//check whether we have to logout of an existing game first.
@@ -232,21 +233,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		case R.id.refresh_button:
 			new RequestGamesListTask(this, getLastKnownLocation()).execute();
 			break;
-		/*
-		 * case R.id.geoloqi: final Intent geoloqiIntent = new
-		 * Intent(Intent.ACTION_VIEW, Uri.parse("http://orchid.ac.uk/"));
-		 * geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		 * geoloqiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		 * startActivity(geoloqiIntent); break;
-		 */
-//		case R.id.clear_button:
-//			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-//					.edit().remove("userID").commit();
-//			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-//					.edit().remove("gameID").commit();
-//			sharedPreferences.edit().remove("gameId").commit();
-//			showDialog(CLEAR_HISTORY_DIALOG);
-//			break;
+		
 		case R.id.help_button:
 			showDialog(HELP_DIALOG);
 			break;

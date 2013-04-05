@@ -190,27 +190,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 		
 	}
 
-	/** Stub */
-	private void finishLogin(boolean result) {
-		if (result) {
-			if (!TextUtils.isEmpty(mGameId)) {
-				// Launch the map attack activity
-
-				//Log.i("AAA", "finishing login");
-				Intent intent = new Intent(this, TabbedMapActivity.class);
-				intent.putExtra(TabbedMapActivity.PARAM_GAME_ID, mGameId);
-				startActivity(intent);
-			} else {
-				Log.e(TAG, "Got an empty game ID when trying to finish login!");
-				Toast.makeText(this, R.string.error_invalid_game_id, Toast.LENGTH_LONG).show();
-			}
-		} else {
-			Toast.makeText(this, R.string.error_join_game, Toast.LENGTH_LONG).show();
-		}
-
-		// Finish the login activity
-		finish();
-	}
+	
 
 	
 }

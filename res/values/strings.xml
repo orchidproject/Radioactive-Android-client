@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">AtomicOrchid</string>
-    
+
     <!-- Game List -->
     <string name="game_list_label">Games - Tap to join</string>
     <string name="game_list_empty_text">Cannot load any Game. This could be caused
@@ -9,23 +10,22 @@
         1. There are not games scheduled at the moment \n
         2. There is no Internet connection available and it is impossible to 
         connect to the server.\n
-        \nPlease check your Internet connection and refresh the list of games. 
-    </string>
+        \nPlease check your Internet connection and refresh the list of games. </string>
     <string name="send">Send</string>
     <string name="start">start</string>
     <string name="msgHint">Your message</string>
     <string name="lng">test Longitude</string>
-     <string name="lat">test Latitude</string>
-     <string name="testInterval">interval (in sec)</string>
+    <string name="lat">test Latitude</string>
+    <string name="testInterval">interval (in sec)</string>
     <string name="logout_button">Log out</string>
     <string name="game_list_loading_text">Searching for games...</string>
-    
+
     <!-- Sign In -->
     <string name="sign_in_loading_text">Joining game...</string>
-    
+
     <!-- Buttons -->
     <string name="find_a_game_button">Refresh</string>
-    
+
     <!-- Error Messages -->
     <string name="error_game_list_unavailable">The game server is not responding. Do you have an active data connection?</string>
     <string name="error_initials">Please provide your first and last initial.</string>
@@ -37,4 +37,8 @@
     <string name="help_page">Lost? Having problems?\nSorry, there is too little space here for a full game manual, but if you are really struggling please call 07766 393 844.</string>
     <string name="clear_history_button">Clear History</string>
     <string name="clear_history_dialog">The history of your games played and user IDs has been cleared.\n\nThis is the first thing you should do if you ever experienced problems joining a game.</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_game">GameActivity</string>
+
 </resources>

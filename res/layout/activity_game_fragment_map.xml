@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    
+  
+    
+     <LinearLayout 
+         android:layout_width="match_parent"
+    	 android:layout_height="0px"
+    	 android:layout_weight="1"
+    	 
+    	 android:orientation="horizontal">
+    	 <RelativeLayout 
+         	android:layout_width="0dp"
+    	 	android:layout_height="match_parent"
+    	    android:layout_weight="1"
+    	 	android:orientation="vertical">
+    	 	<TextView
+    	 		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 		android:layout_alignParentTop="true"
+    	 		android:text="Radiation">
+    	 	</TextView>
+    	 	
+    	 	<TextView
+    	 		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 		android:textSize="30pt"
+    	 		android:layout_centerInParent="true"
+    	 		android:gravity="center"
+    	 		android:text="0">
+    	 	</TextView>
+        </RelativeLayout>
+        
+        <RelativeLayout
+         	android:layout_width="0dp"
+    	 	android:layout_height="match_parent"
+    	 	android:layout_weight="3"
+    	 	>
+    	    <TextView
+    	        android:id="@+id/health_label"
+    	 		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 		android:text="Health"
+    	 		android:layout_alignParentTop="true"
+    	 		
+    	 		>
+    	 	</TextView>
+    	 	<FrameLayout
+         		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 	    android:padding="10dp"
+    	 	    android:layout_below="@id/health_label"
+    			>
+    			<FrameLayout
+         		android:layout_width="match_parent"
+    	 		android:layout_height="30dp"
+    	 	    android:background="#000000"
+    			>
+    			</FrameLayout>
+    			
+    		</FrameLayout>
+    	 	
+        </RelativeLayout>
+    </LinearLayout>
+    
+    
+     
+     <!-- map container -->
+    <FrameLayout
+         android:id="@+id/map_container"
+         android:layout_width="match_parent"
+    	 android:layout_height="0px"
+    	 android:layout_weight="3"
+    	>
+    	   <TextView
+    	 		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 		android:text="Radiation">
+    	 	</TextView>
+    
+    </FrameLayout> 
+    
+
+</LinearLayout>

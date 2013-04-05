@@ -74,9 +74,9 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	private MapAttackClient(Context context) {
 		this.context = context;
-		HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
-		HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
-		client = new DefaultHttpClient(httpParams);
+		//HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
+		//HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
+		//client = new DefaultHttpClient(httpParams);
 
 	}
 
@@ -296,6 +296,7 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	protected synchronized JSONObject send(MyRequest request)
 			throws RPCException {
+		client=new DefaultHttpClient();
 		ADB.log("param " + request.getRequest().getURI());
 		Log.i(TAG, "param " + request.getRequest().getURI());
 		JSONObject response;
