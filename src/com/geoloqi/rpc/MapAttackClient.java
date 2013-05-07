@@ -113,7 +113,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		JSONObject response = send(request);
 		try {
 			JSONArray gamesArray = response.getJSONArray("games");
-			//Log.i(TAG, "AAAAAAAA" + response.getString("games"));
+			
 			ArrayList<Game> games = new ArrayList<Game>();
 			for (int i = 0; i < gamesArray.length(); i++) {
 				games.add(new Game(gamesArray.getJSONObject(i)));
@@ -296,8 +296,7 @@ public class MapAttackClient implements GeoloqiConstants {
 
 	protected synchronized JSONObject send(MyRequest request)
 			throws RPCException {
-		ADB.log("param " + request.getRequest().getURI());
-		Log.i(TAG, "param " + request.getRequest().getURI());
+		
 		JSONObject response;
 		try {
 			String response_str = EntityUtils.toString(client.execute(
