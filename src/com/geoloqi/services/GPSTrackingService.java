@@ -1,3 +1,8 @@
+// the whole class shall be removed, there is no point to implement an extra service
+ 
+
+
+
 package com.geoloqi.services;
 
 import java.io.File;
@@ -19,7 +24,6 @@ import android.util.Log;
 
 import com.geoloqi.interfaces.GeoloqiConstants;
 import com.geoloqi.interfaces.LoggingConstants;
-import com.geoloqi.rpc.MapAttackClient;
 
 public class GPSTrackingService extends Service implements LocationListener,
 		GeoloqiConstants {

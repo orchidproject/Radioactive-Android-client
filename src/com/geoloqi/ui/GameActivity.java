@@ -3,14 +3,15 @@ package com.geoloqi.ui;
 import com.geoloqi.mapattack.R;
 import com.geoloqi.mapattack.R.layout;
 import com.geoloqi.mapattack.R.menu;
+import com.geoloqi.services.GPSTracker;
+import com.geoloqi.services.SocketIOManager;
+import com.google.android.gms.maps.SupportMapFragment;
 
 
 import android.os.Bundle;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
-import android.app.Activity;
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -21,9 +22,12 @@ import android.view.ViewGroup;
 
 public class GameActivity extends FragmentActivity implements ActionBar.TabListener{
 
-	ActionBar.Tab mapTab;
-	ActionBar.Tab msgTab;
-	ActionBar.Tab testTab;
+	private ActionBar.Tab mapTab;
+	private ActionBar.Tab msgTab;
+	private ActionBar.Tab testTab;
+	private GPSTracker gps = null;
+	private SocketIOManager socketIO =  null;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -35,10 +39,27 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		mapTab = actionBar.newTab().setText("Map").setTabListener(this);
 		msgTab = actionBar.newTab().setText("Message").setTabListener(this);
-	    testTab= actionBar.newTab().setText("Test").setTabListener(this);
+	    testTab= actionBar.newTab().setText("Tasks").setTabListener(this);
 		actionBar.addTab(mapTab);
 		actionBar.addTab(msgTab);
 		actionBar.addTab(testTab);
+		
+		gps = new GPSTracker(getApplicationContext());
+		socketIO =  new SocketIOManager();
+	}
+	@Override
+	public void onStart(){
+		super.onStart();
+		socketIO.connect();
+		gps.start();
+		
+	}
+	
+	@Override
+	public void onStop(){
+		super.onStop();
+		socketIO.disconnect();
+		gps.stop();
 	}
 
 	@Override
@@ -96,11 +117,12 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				//this method is always called when tab selected
 				
 				View mContentView=inflater.inflate(R.layout.activity_game_fragment_map, container,false);
-				//mMapAdapter = new MapAdapter(MainActivity.this);
-				//getChildFragmentManager().beginTransaction().replace(R.id.map_container, mMapAdapter.getMapFragment()).commit();
-
-				//mMapAdapter.addAll(ItemCollection.getItemCollection().getData());
-				//create mapAdapter and assign a map
+				
+				
+				SupportMapFragment mapFragment = new SupportMapFragment();
+				getActivity().getSupportFragmentManager().beginTransaction()
+				.replace(R.id.map_container, mapFragment).commit();
+				
 				
 				return mContentView;
 				

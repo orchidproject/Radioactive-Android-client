@@ -44,6 +44,7 @@
     	 		android:layout_width="match_parent"
     	 		android:layout_height="wrap_content"
     	 		android:text="Health"
+    	 		android:background="#ff0000"
     	 		android:layout_alignParentTop="true"
     	 		
     	 		>
@@ -57,7 +58,7 @@
     			<FrameLayout
          		android:layout_width="match_parent"
     	 		android:layout_height="30dp"
-    	 	    android:background="#000000"
+    	 	    android:background="#110000"
     			>
     			</FrameLayout>
     			
@@ -75,11 +76,7 @@
     	 android:layout_height="0px"
     	 android:layout_weight="3"
     	>
-    	   <TextView
-    	 		android:layout_width="match_parent"
-    	 		android:layout_height="wrap_content"
-    	 		android:text="Radiation">
-    	 	</TextView>
+       
     
     </FrameLayout> 
     

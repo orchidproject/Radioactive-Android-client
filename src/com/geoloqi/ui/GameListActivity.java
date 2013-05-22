@@ -74,7 +74,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 		// Find our views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
-//		final Button clearHistoryButton = (Button) findViewById(R.id.clear_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
 		final Button logoutButton = (Button) findViewById(R.id.logout_button);
 		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
