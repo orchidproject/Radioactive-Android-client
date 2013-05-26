@@ -9,10 +9,10 @@ import android.widget.Toast;
 
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.services.IOSocketService.ConnectorThread;
 
-public class SocketIOManager implements GeoloqiConstants, MessageCallback{
+public class SocketIOManager implements OrchidConstants, MessageCallback{
 	private int connectionState = 0; //state model 0 - not connected, 1 - connecting, 2 - connected
 	private IOSocket socket=null;
 	//private boolean initiateDisconnection = false;
@@ -81,6 +81,10 @@ public class SocketIOManager implements GeoloqiConstants, MessageCallback{
 				
 		}
 		
+	}
+	
+	public void sendMsg(String string){
+		//socket.
 	}
 	//callbacks of socketIO.
 	@Override

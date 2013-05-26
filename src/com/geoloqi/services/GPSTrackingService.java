@@ -22,11 +22,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 
 public class GPSTrackingService extends Service implements LocationListener,
-		GeoloqiConstants {
+		OrchidConstants {
 
 	public static final String TAG = "GPSTrackingService";
 	public static final String GPS_INTENT = "GPS";

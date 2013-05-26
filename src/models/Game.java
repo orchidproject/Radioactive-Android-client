@@ -1,4 +1,4 @@
-package com.geoloqi.data;
+package models;
 
 import org.json.JSONException;
 import org.json.JSONObject;

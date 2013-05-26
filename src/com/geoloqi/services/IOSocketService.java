@@ -22,7 +22,7 @@ import android.widget.Toast;
 
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.rpc.MapAttackClient;
@@ -30,7 +30,7 @@ import com.geoloqi.ui.GameListActivity;
 import com.geoloqi.ui.TabbedMapActivity;
 import com.geoloqi.widget.LogWriter;
 
-public class IOSocketService extends Service implements GeoloqiConstants,
+public class IOSocketService extends Service implements OrchidConstants,
 		MessageCallback {
 	//singleton but not working
 	private static IOSocketService mInstance;

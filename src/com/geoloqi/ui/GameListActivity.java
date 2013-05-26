@@ -3,6 +3,8 @@ package com.geoloqi.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.Game;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -27,8 +29,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.geoloqi.data.Game;
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.mapattack.R;
@@ -36,7 +37,7 @@ import com.geoloqi.rpc.MapAttackClient;
 import com.geoloqi.widget.GameListArrayAdapter;
 
 public class GameListActivity extends ListActivity implements OnClickListener,
-		GeoloqiConstants {
+		OrchidConstants {
 	public static final String TAG = "GameListActivity";
 
 	public static final String ORCHID_TAG = LoggingConstants.RECORDING_TAG;
@@ -66,7 +67,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		this.context = getApplicationContext();
 		
 		sharedPreferences  = getSharedPreferences(
-				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
+				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 
 		setContentView(R.layout.game_list_activity);
 		
@@ -244,7 +245,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	
 	private void logout() {
 		Editor prefs = (Editor) this.getSharedPreferences(
-				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 		prefs.putString("initials", "");
 		prefs.putString("name", "");
 		//sharedPreferences.edit().remove("userID").commit();
@@ -327,7 +328,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	/**
 	 * A simple AsyncTask to request the game list from the server.
 	 * 
-	 * @TODO: Move this to an external class file.
+	 * 
 	 * */
 	private static class RequestGamesListTask extends
 			AsyncTask<Void, Void, ArrayList<Game>> {

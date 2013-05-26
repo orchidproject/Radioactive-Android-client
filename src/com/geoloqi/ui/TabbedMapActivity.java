@@ -37,7 +37,7 @@ import android.widget.TabHost.TabContentFactory;
 import android.widget.TabWidget;
 import android.widget.Toast;
 
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.mapattack.R;
@@ -50,7 +50,7 @@ import com.geoloqi.ui.JavaScriptInterface;
 import java.lang.Float;
 import android.widget.TextView;
 
-public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
+public class TabbedMapActivity extends TabActivity implements OrchidConstants {
 	
 	public static boolean testMode=false;
 
@@ -311,14 +311,14 @@ public class TabbedMapActivity extends TabActivity implements GeoloqiConstants {
 				Log.d(LoggingConstants.RECORDING_TAG, "Joined game " + mGameId);
 				//note game id in prefs
 				Editor prefs = (Editor) this.getSharedPreferences(
-						GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+						OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 				prefs.putString("gameId", mGameId);
 				prefs.commit();
 				
-				String initials = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("initials", "");
+				String initials = this.getSharedPreferences(OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("initials", "");
 				
 				//BEGIN FROM HERE
-				String roleString = this.getSharedPreferences(GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("role_string", "medic");
+				String roleString = this.getSharedPreferences(OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).getString("role_string", "medic");
 				
 				String userID = AccountMonitor.getUserID(this);
 				mSocketIoIntent.putExtra(PARAM_USER_ID, userID);

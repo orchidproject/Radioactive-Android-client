@@ -22,7 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.geoloqi.mapattack.R;
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
 import com.geoloqi.rpc.MapAttackClient;
@@ -53,7 +53,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 
 		// Load saved user information
 		final SharedPreferences sharedPreferences = this.getSharedPreferences(
-				GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
+				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
 		if (sharedPreferences != null) {
 			final TextView initialsView = (TextView) findViewById(R.id.initials);
 			final TextView nameView = (TextView) findViewById(R.id.name);
@@ -96,7 +96,7 @@ public class SignInActivity extends Activity implements OnClickListener {
 			final String name = nameField.getText().toString();
 
 			Editor prefs = (Editor) this.getSharedPreferences(
-					GeoloqiConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
+					OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 			prefs.putString("initials", initials);
 			prefs.putString("name", name);
 			

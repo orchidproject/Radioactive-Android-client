@@ -16,9 +16,9 @@ import org.apache.http.params.BasicHttpParams;
 
 import com.geoloqi.ADB;
 
-class MyRequest {
-	static final int GET = 0;
-	static final int POST = 1;
+public class MyRequest {
+	public static final int GET = 0;
+	public static final int POST = 1;
 
 	private ArrayList<Header> headers = new ArrayList<Header>();
 	private BasicHttpParams params = new BasicHttpParams();
@@ -27,7 +27,7 @@ class MyRequest {
 
 	private final HttpRequestBase request;
 
-	MyRequest(int requestType, String url) {
+	public MyRequest(int requestType, String url) {
 		switch (requestType) {
 		case GET:
 			request = new HttpGet(url);

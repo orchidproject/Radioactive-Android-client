@@ -3,6 +3,8 @@ package com.geoloqi.rpc;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import models.Game;
+
 import org.apache.http.Header;
 import org.apache.http.ParseException;
 import org.apache.http.auth.AuthenticationException;
@@ -24,12 +26,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 import com.geoloqi.ADB;
-import com.geoloqi.data.Game;
-import com.geoloqi.interfaces.GeoloqiConstants;
+import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
 
-public class MapAttackClient implements GeoloqiConstants {
+public class MapAttackClient implements OrchidConstants {
 	private final String TAG = "MapAttackClient";
 
 	private static final int TIMEOUT = 60000;
@@ -101,15 +102,7 @@ public class MapAttackClient implements GeoloqiConstants {
 		MyRequest request = new MyRequest(MyRequest.GET, GAME_LIST_ADDRESS
 				+ (latitude == null ? "" : "&latitude=" + latitude
 						+ "&longitude=" + longitude));
-		Header authHeader;
-		/*
-		 * try { authHeader = new BasicScheme().authenticate(new
-		 * UsernamePasswordCredentials(GEOLOQI_ID, GEOLOQI_SECRET),
-		 * request.getRequest()); } catch (AuthenticationException e) { throw
-		 * new RPCException(e.getMessage()); }
-		 * 
-		 * request.addHeaders(authHeader);
-		 */
+		
 		JSONObject response = send(request);
 		try {
 			JSONArray gamesArray = response.getJSONArray("games");

@@ -1,6 +1,7 @@
 package com.geoloqi.widget;
 
-import com.geoloqi.data.Game;
+import models.Game;
+
 import com.geoloqi.mapattack.R;
 
 import android.content.Context;
