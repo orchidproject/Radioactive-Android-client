@@ -19,13 +19,14 @@ import android.os.AsyncTask;
 
 public class ImageLoader implements OrchidConstants{
 	private Bitmap[] task = new Bitmap[4];
-	private Bitmap[] player = new Bitmap[4];
+	//private Bitmap[] player = new Bitmap[4];
 	private Bitmap tick;
 	private Bitmap cross;
 	
 	private boolean loaded = false;
 	
 	private static ImageLoader singleton =null;
+	//for the first time, it must be loaded in an async task
 	public static ImageLoader getImageLoader(){
 		if(singleton == null)
 			singleton = new ImageLoader();
@@ -43,10 +44,6 @@ public class ImageLoader implements OrchidConstants{
 		return task[type];
 	}
 	
-	public Bitmap getPlayerImage(int role){
-		return player[role];
-	}
-	
 	public Bitmap getTick(){
 		return tick;
 	}
@@ -61,12 +58,12 @@ public class ImageLoader implements OrchidConstants{
 		task[1] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon2.png");
 		task[2] =  getBitmapFromURL(IMAGE_URL_BASE + "victim.png");
 		task[3] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon4.png");
-		player[0] =  getBitmapFromURL(IMAGE_URL_BASE + "medic.png");
+		/*player[0] =  getBitmapFromURL(IMAGE_URL_BASE + "medic.png");
 		player[1] =  getBitmapFromURL(IMAGE_URL_BASE + "firefighter.png");
 		player[2] =  getBitmapFromURL(IMAGE_URL_BASE + "soldier.png");
-		player[3] =  getBitmapFromURL(IMAGE_URL_BASE + "transporter.png");
-		tick = getBitmapFromURL(IMAGE_URL_BASE + "tick.png");
-		cross = getBitmapFromURL(IMAGE_URL_BASE + "dead.png");
+		player[3] =  getBitmapFromURL(IMAGE_URL_BASE + "transporter.png");*/
+		//tick = getBitmapFromURL(IMAGE_URL_BASE + "tick.png");
+		//cross = getBitmapFromURL(IMAGE_URL_BASE + "dead.png");
 	}
 	
 	private Bitmap getBitmapFromURL(String src) {
@@ -83,23 +80,39 @@ public class ImageLoader implements OrchidConstants{
 	        return null;
 	    }
 	}
-	private static class LoadImageTask extends
-		AsyncTask<Void, Void,Integer> {
-		ImageLoader loader;
+	
+	public void loadPlayerImage(String initials, String skill, Callback callback){
+		LoadImageTask loader = new LoadImageTask(
+				URL_BASE+"player/"+skill.substring(0, 1)+"/"+skill.substring(1, 2)
+				+ "/" + skill
+				+"/map_icon.png",
+				callback);
+		loader.execute();
+	}
+	
+	abstract static public class Callback {
+		abstract public void callback(Bitmap bm);
 		
-		public LoadImageTask(ImageLoader loader){
-			this.loader = loader;
+	}
+	private class LoadImageTask extends
+		AsyncTask<Void, Void,Bitmap> {
+		
+		String url = null;
+		Callback callback = null;
+		public LoadImageTask(String url, Callback call){
+			this.url = url;
+			callback =  call;
 		}
 
 		@Override
-		protected Integer doInBackground(Void... params) {
+		protected Bitmap doInBackground(Void... params) {
 			
-			return 0;
+			return getBitmapFromURL(url);
 		}
 
 		@Override
-		protected void onPostExecute(Integer res) {
-				loader.loaded = true;
+		protected void onPostExecute(Bitmap res) {
+				callback.callback(res);
 		}
 	}
 }

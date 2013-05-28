@@ -24,11 +24,14 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.util.Log;
 import com.geoloqi.ADB;
 import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
+import com.geoloqi.widget.ImageLoader.Callback;
 
 public class MapAttackClient implements OrchidConstants {
 	private final String TAG = "MapAttackClient";
@@ -46,6 +49,8 @@ public class MapAttackClient implements OrchidConstants {
 	private String mUserName;
 	private String mInitials;
 
+	private int gameId = -1; // -1 is unloaded
+
 	// private Integer mMyRoleId = 3;
 	// private String mMyRoleString = "";
 
@@ -59,10 +64,18 @@ public class MapAttackClient implements OrchidConstants {
 		return singleton;
 	}
 
-	public int getRoleId(){
-		
+	public int getRoleId(){	
 		return mMyRoleId;
-		
+	}
+	
+	public boolean isLoaded(){
+		if(gameId == -1){
+			return false;
+		}
+		return true;
+	}
+	public int getGameId(){
+		return gameId;
 	}
 	
 	
@@ -75,23 +88,8 @@ public class MapAttackClient implements OrchidConstants {
 
 	private MapAttackClient(Context context) {
 		this.context = context;
-		//HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT);
-		//HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT);
-		//client = new DefaultHttpClient(httpParams);
-
 	}
 
-
-	public boolean hasToken() {
-		// return context.getSharedPreferences(PREFERENCES_FILE,
-		// Context.MODE_PRIVATE).contains("authToken");
-		return true;
-	}
-
-	public String getToken() {
-		return context.getSharedPreferences(PREFERENCES_FILE,
-				Context.MODE_PRIVATE).getString("authToken", null);
-	}
 
 	public ArrayList<Game> getGames() throws RPCException {
 		return getGames(null, null);
@@ -161,7 +159,11 @@ public class MapAttackClient implements OrchidConstants {
 		return null;
 	}
 
-	public void joinGame(String game_id) throws RPCException {
+	public void joinGame(Callback call, String game_id){
+		new JoinGameTask(call, game_id).execute();
+	}
+	
+	public void login(String game_id) throws RPCException, JSONException {
 		String email;
 		
 		{// Initialise variables
@@ -169,9 +171,8 @@ public class MapAttackClient implements OrchidConstants {
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
 			Log.i(TAG, "Saving " + mMyRoleString);
 			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString);
-			// skill = mMyRoleString;
-
-			// token = prefs.getString("authToken", null);
+			
+			//get variables here
 			mUserName = prefs.getString("name", "");
 			mInitials = prefs.getString("initials", "");
 			email = prefs.getString("email", "default@some.com");
@@ -192,35 +193,37 @@ public class MapAttackClient implements OrchidConstants {
 			
 		}
 
+		//get game id and user id, if null, it means it is a new user login
 		String user_id = context.getSharedPreferences(PREFERENCES_FILE,
 				Context.MODE_PRIVATE).getString("userID", null);
 		String old_game_id = context.getSharedPreferences(PREFERENCES_FILE,
 				Context.MODE_PRIVATE).getString("gameID", null);
-		if (user_id != null && old_game_id != game_id) {
+		
+		boolean rejoin = false;
+		if (user_id != null && old_game_id.equals(game_id)) {
 			request.addEntityParams(pair("id", user_id));
 			Log.i(TAG, "trying to re-join game " + game_id + " with user id "
 					+ user_id);
+			rejoin = true;
 		} else {
 			Log.i(TAG, "trying to join game " + game_id + " with role "
 					+ mMyRoleString + " (user id is " + user_id + ")");
 		}
 
-		try {// Send will throw a RuntimeException for the non-JSON return
-				// value.
-			JSONObject response = send(request);
-			Log.i(TAG,
-					"you have been given user_id = "
-							+ response.getString("user_id"));
+		
+		JSONObject response = send(request);
+		
+		
+		//save game user id to preferences
+		if(!rejoin){ //if the player is not rejoin the game, it has a new id and it need to be saved in preference.
+			Log.i(TAG,"you have been given user_id = "+ response.getString("user_id"));
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
 					.edit().putString("userID", response.getString("user_id"))
 					.commit();
-			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-					.edit().putString("gameID", game_id).commit();
-		} catch (JSONException e) {
-			ADB.log("JSONException in MapAttackClient/joinGame: "
-					+ e.getMessage());
-		} catch (RuntimeException e) {
 		}
+		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+					.edit().putString("gameID", game_id).commit();
+		
 	}
 	
 	public void logoutGame(String game_id) throws RPCException {
@@ -296,11 +299,9 @@ public class MapAttackClient implements OrchidConstants {
 		try {
 			String response_str = EntityUtils.toString(client.execute(
 					request.getRequest()).getEntity());
-			//Log.e("AAA", response_str);
+			
 			response = new JSONObject(response_str);
-			// response = new
-			// JSONObject(client.execute(request.getRequest()).toString());
-			// Log.i(TAG, "AAA" + response.toString());
+			
 		} catch (ParseException e) {
 			ADB.log("ParseException: " + e.getMessage());
 			throw new RuntimeException(e.getMessage());
@@ -325,9 +326,51 @@ public class MapAttackClient implements OrchidConstants {
 			return response;
 		}
 	}
-
+	
+	
 	private static BasicNameValuePair pair(String key, String val) {
 		return new BasicNameValuePair(key, val);
 	}
+	
+	
+	
+	//--------asyncTask for login ---------------
+	abstract static public class Callback {
+		abstract public void callback(int status);
+	}
+	
+	private class JoinGameTask extends
+	AsyncTask<Void, Void,Integer> {
+	
+		Callback callback = null;
+		String game_id = null;
+		public JoinGameTask(Callback call,String game_id){
+			callback =  call;
+			this.game_id = game_id;
+		}
+
+		@Override
+		protected Integer doInBackground(Void... params) {
+			try {
+				login(game_id);
+			} catch (RPCException e) {
+				return 1;
+			} catch (JSONException e) {
+				return 2;
+			} catch (Exception e) {
+				return 3;
+			} 
+			
+			gameId = Integer.parseInt(game_id);
+			return 0;
+		}
+
+		@Override
+		protected void onPostExecute(Integer status) {
+			callback.callback(status);
+		}
+	}
+
+	
 
 }

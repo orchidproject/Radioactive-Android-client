@@ -48,6 +48,9 @@ import com.geoloqi.services.IOSocketInterface;
 import com.geoloqi.services.IOSocketService;
 import com.geoloqi.ui.JavaScriptInterface;
 import java.lang.Float;
+
+import org.json.JSONException;
+
 import android.widget.TextView;
 
 public class TabbedMapActivity extends TabActivity implements OrchidConstants {
@@ -304,7 +307,7 @@ public class TabbedMapActivity extends TabActivity implements OrchidConstants {
 				Log.w(TAG, "Trying to unregister an inactive push receiver.");
 		}
 
-		try {
+		/*try {
 				// Join the game
 				client.joinGame(mGameId);
 				
@@ -348,7 +351,9 @@ public class TabbedMapActivity extends TabActivity implements OrchidConstants {
 				Toast.makeText(this, R.string.error_join_game,
 						Toast.LENGTH_LONG).show();
 				finish();
-			}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}*/
 	}
 	
 

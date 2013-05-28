@@ -35,7 +35,6 @@ public class SignInActivity extends Activity implements OnClickListener {
 			Pattern.CASE_INSENSITIVE);
 
 	/** The id of the game to launch when finished. */
-	private String mGameId;
 	private String mRoleString="unset";
 	private boolean isRoleSet=false;
 	
@@ -44,12 +43,6 @@ public class SignInActivity extends Activity implements OnClickListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sign_in_activity);
-		
-		
-		final Bundle extras = getIntent().getExtras();
-		if (extras != null) {
-			mGameId = extras.getString(TabbedMapActivity.PARAM_GAME_ID);
-		}
 
 		// Load saved user information
 		final SharedPreferences sharedPreferences = this.getSharedPreferences(
@@ -61,10 +54,9 @@ public class SignInActivity extends Activity implements OnClickListener {
 			
 			initialsView.setText(sharedPreferences.getString("initials", ""));
 			nameView.setText(sharedPreferences.getString("name", ""));
-			//mRoleString = sharedPreferences.getString("role_string", "unset");
 			
 		}
-		//MapAttackClient.getApplicationClient(SignInActivity.this).setRole(RoleMapping.roleIdMap.get(mRoleString));
+		
 		// Listen for form submission
 		setTextIndicaters();
 		findViewById(R.id.submit_button).setOnClickListener(this);

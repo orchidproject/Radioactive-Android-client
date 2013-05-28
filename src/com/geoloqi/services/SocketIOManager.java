@@ -1,22 +1,42 @@
 package com.geoloqi.services;
 
 import java.io.IOException;
+import java.nio.channels.NotYetConnectedException;
+import java.util.Arrays;
+import java.util.Date;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.OrchidConstants;
+import com.geoloqi.interfaces.StateCallback;
 import com.geoloqi.services.IOSocketService.ConnectorThread;
+import com.geoloqi.services.IOSocketService.TestThread;
 
 public class SocketIOManager implements OrchidConstants, MessageCallback{
-	private int connectionState = 0; //state model 0 - not connected, 1 - connecting, 2 - connected
+	private int connectionState = 0; //state model 0 - not connected, 1 - connecting, 2 - connected, 3 - handshaked
 	private IOSocket socket=null;
 	//private boolean initiateDisconnection = false;
 	private ConnectorThread connector =  null;
+	private boolean testing = false;
+	private StateCallback callback = null;
+	
+	private int gameId;
+	private int roleId;
+	
+	public SocketIOManager(StateCallback sc,int game_id, int role_id){
+		callback = sc;
+		this.gameId = game_id;
+		this.roleId = role_id;
+	}
 	
 	
 	
@@ -83,14 +103,84 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 		
 	}
 	
+	
 	public void sendMsg(String string){
 		//socket.
 	}
+	
+	
+	private void joinGameChannel() {
+		try {
+			socket.emit("game-join", new JSONObject("{channel:"+1+",id:"+1+"}") );
+			Log.i("SocketIOManager", "Connected to game " + 1);
+			connectionState = 3;
+			
+		} catch (IOException e) {
+			Log.e("SocketIOManager", "IOException in joinGame: " + e);
+		}catch (JSONException e){
+			Log.e("SocketIOManager", "JSON parse error in sendBackAck: " + e);
+		}
+
+	}
+	
 	//callbacks of socketIO.
 	@Override
 	public void on(String event, JSONObject... data) {
-		// TODO Auto-generated method stub
 		// do handshake, other things give it to GameActivity for rendering.
+		if (event == null) {
+			Log.e("SocketIOManager", "Received null event.");
+		} else {
+			Log.i("SocketIOManager", String.format(
+					"Received event %s from Web socket with objects %s", event,
+					Arrays.toString(data)));
+			if (event.equals("data")) {
+				
+				for (final JSONObject jsonObject : data) {
+					Handler handler = new Handler(Looper.getMainLooper());
+					//need to put it to mainthread
+					handler.post(new Runnable(){
+
+						@Override
+						public void run() {
+							callback.update(jsonObject);
+						} 
+					});
+					
+					
+					/*try{
+						//sendBackAck(jsonObject.getString("ackid"));
+						jsonObject.put("time_stamp", (new Date()).getTime());
+						//logWriter.appendLog(jsonObject.toString());
+						
+					}
+					catch(Exception e){
+						e.printStackTrace();
+					}*/
+
+				}
+				
+			} else if (event.equals("game")) {
+				int counter = 0;
+				boolean done = false;
+				while (!done) {
+					try {
+						joinGameChannel();
+						Thread.sleep(1000);
+						done = true;
+					} catch (NotYetConnectedException nye) {
+						if (counter++ > 10) {
+							throw nye;
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			} else {
+				Log.w("SocketIOManager", "Could not handle event " + event);
+			}
+			
+			
+		}
 	}
 
 	@Override
@@ -114,6 +204,94 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 	@Override
 	public void onDisconnect() {
 		// TODO Auto-generated method stub
+		
+	}
+	//--- code for socket IO test-----
+	
+	public void startTest(float lat,float lng,int time){
+		   
+		   Log.i("Testing IO","starting");
+		   if(connectionState == 3){
+			   if(testing){
+				   Log.i("Testing IO","test already started");
+			   }
+			   else{
+				   testing=true;
+				   TestThread tt= new TestThread();
+				   tt.setLat(lat);
+				   tt.setLng(lng);
+				   tt.setInterval(time);
+				   tt.start();
+			   }
+			   
+		   }
+		   else{
+			   Log.i("Testing IO","socket io connection not estabilshed, test aborted");
+		   }
+	}
+	
+	 public void stopTest() throws RemoteException { 
+		   testing=false;
+	}
+	
+	private class TestThread extends Thread {
+		float lat;
+		float lng;
+		int interval;
+		public void setLat(float la){
+			lat=la;
+		}
+		public void setLng(float ln){
+			lng=ln;
+		}
+		public void setInterval(int inter){
+			interval=inter;
+		}
+		
+		@Override
+		public void run() {
+			while(testing){
+				try {
+					Log.i("Testing IO",String.format(
+							"will sleep  %d.",
+							interval));
+					
+					Thread.sleep(interval);
+					
+					
+					JSONObject object = new JSONObject();
+					object.put("longitude", lng);
+					object.put("latitude", lat);
+					object.put("accuracy", 1);
+					
+					
+					String skill = "soldier";
+					object.put("skill", skill);
+					object.put("player_id", 0);
+					object.put("initials", "TS");
+					
+					
+					if (connectionState == 3) {
+						Log.i("Testing IO", String.format(
+								"Sending location-push %s. Skill is %s.",
+								object, skill));
+						socket.emit("location-push", object);
+						
+					}else{
+						Log.i("Testing IO", "No socket IO connection");
+					}
+				} catch (InterruptedException e) {
+					testing=false;
+					e.printStackTrace();
+				} catch (JSONException e) {
+					testing=false;
+					e.printStackTrace();
+				} catch (IOException e) {
+					testing=false;
+					e.printStackTrace();
+				}
+			}
+		}
 		
 	}
 }

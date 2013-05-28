@@ -3,6 +3,8 @@ package com.geoloqi.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONException;
+
 import models.Game;
 
 import android.app.AlertDialog;
@@ -39,7 +41,6 @@ import com.geoloqi.widget.GameListArrayAdapter;
 public class GameListActivity extends ListActivity implements OnClickListener,
 		OrchidConstants {
 	public static final String TAG = "GameListActivity";
-
 	public static final String ORCHID_TAG = LoggingConstants.RECORDING_TAG;
 
 	public static final String PARAM_GAME_LIST = "game_list";
@@ -47,6 +48,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	public static final String PARAM_SYNC_ON_START = "sync_on_start";
 
 	public static final String PARAM_GAME_ID = "game_id";
+	public static final String PARAM_PLAYER_ID = "player_id";
 
 	private static final int HELP_DIALOG = 0;
 	private static final int CLEAR_HISTORY_DIALOG = 1;
@@ -73,40 +75,22 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		
 		getActionBar().hide();
 
-		// Find our views
+		// Find views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
 		final Button logoutButton = (Button) findViewById(R.id.logout_button);
 		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
 		loginView.setText(getLoggedInText());
 
-		// Set our on click listeners
+		// Set on click listeners
 		refreshButton.setOnClickListener(this);
-		//clearHistoryButton.setOnClickListener(this);
 		helpButton.setOnClickListener(this);
 		logoutButton.setOnClickListener(this);
 
-
-
-		if (savedInstanceState != null) {
-			// Restore our saved instance state
-			mSyncOnStart = savedInstanceState.getBoolean(PARAM_SYNC_ON_START,
-					true);
-			mNearestIntersection = savedInstanceState
-					.getString(PARAM_NEAREST_INTERSECTION);
-			mGameList = savedInstanceState
-					.getParcelableArrayList(PARAM_GAME_LIST);
-
-			setNearestIntersection(mNearestIntersection);
-			populateGameList(mGameList);
-		}
-
-		if (mSyncOnStart || mGameList.isEmpty()) {
-			// Search for nearby games
-			setLoading(true);
-			new RequestGamesListTask(this, getLastKnownLocation(), false)
+		setLoading(true);
+		new RequestGamesListTask(this, getLastKnownLocation(), false)
 					.execute();
-		}
+		
 	}
 
 	private String getLoggedInText() {
@@ -140,15 +124,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-
-		outState.putBoolean(PARAM_SYNC_ON_START, false);
-		outState.putString(PARAM_NEAREST_INTERSECTION, mNearestIntersection);
-		outState.putParcelableArrayList(PARAM_GAME_LIST,
-				(ArrayList<? extends Parcelable>) mGameList);
-	}
+	
 
 	/**
 	 * Populate the ListView with a new GameListArrayAdapter from the provided
@@ -160,7 +136,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		Log.d(ORCHID_TAG, "Populated list of games: " + games);
 		setLoading(false);
 		if (games != null) {
-			String activeGame = sharedPreferences.getString("gameId", "");
+			String activeGame = sharedPreferences.getString("gameID", "");
 			Log.d(TAG, "activeGame: "+activeGame);
 			mGameList = games;
 			for (int i = 0; i<mGameList.size();  i++) {
@@ -181,15 +157,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	 * 
 	 * @param intersection
 	 */
-	private void setNearestIntersection(final String intersection) {
-		if (!TextUtils.isEmpty(intersection)) {
-			mNearestIntersection = intersection;
-			TextView textView = (TextView) findViewById(R.id.game_list_label);
-			if (textView != null) {
-				textView.setText(String.format("Games near %s", intersection));
-			}
-		}
-	}
+	
 
 	/** Get the last known location from the device. */
 	private Location getLastKnownLocation() {
@@ -208,37 +176,64 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		final Game selection = (Game) l.getItemAtPosition(position);
 
-		// Initialise the TabbedMapActivity for the indicated game
-		Intent intent = new Intent(this, GameActivity.class);
-		//TODO intent.putExtra(GameActivity.PARAM_GAME_ID, selection.id);
-		
-		if (sharedPreferences != null) {
-			//check whether we have to logout of an existing game first.
-			String currentId = sharedPreferences.getString("gameId", "");
-			if (!currentId.equals(selection.id)) {
-				//logout first
-				Thread initialiseLogout = new LogoutServer();
-				initialiseLogout.run();
-				startActivity(intent);
+		//join game here
+		MapAttackClient mc = MapAttackClient.getApplicationClient(this);
+	
+		mc.joinGame(new MapAttackClient.Callback() {
+				
+				@Override
+				public void callback(int status) {
+					switch(status){
+						case 0:
+							//success
+							break;
+						case 1:
+							Toast.makeText(GameListActivity.this, "RPC error when joining game", Toast.LENGTH_LONG).show();
+							return;
+					case 2:
+							Toast.makeText(GameListActivity.this, "JSON error when joining game", Toast.LENGTH_LONG).show();
+							return;
+					case 3:
+							Toast.makeText(GameListActivity.this, "Unknown error when joining game", Toast.LENGTH_LONG).show();
+							return;
+						
+					}
+					
+					//Initialise the GameActivity for the indicated game
+					Intent intent = new Intent(GameListActivity.this, GameActivity.class);
+					
+					if (sharedPreferences != null) {
+						//check whether we have to logout of an existing game first.
+						String currentId = sharedPreferences.getString("gameId", "");
+						if (!currentId.equals(selection.id)) {
+							//logout first !!! this is not implemented now
+							/*Thread initialiseLogout = new LogoutServer();
+							initialiseLogout.run();*/
+							startActivity(intent);
+						}
+						else 
+							startActivity(intent);
+					}
+					
+				}
+				
+				
 			}
-			else 
-				startActivity(intent);
-		}
+		, selection.id);
 		
 	}
 
 	@Override
 	public void onClick(View view) {
 		switch (view.getId()) {
-		case R.id.refresh_button:
-			new RequestGamesListTask(this, getLastKnownLocation()).execute();
+			case R.id.refresh_button:
+				new RequestGamesListTask(this, getLastKnownLocation()).execute();
+			break;	
+			case R.id.help_button:
+				showDialog(HELP_DIALOG);
 			break;
-		
-		case R.id.help_button:
-			showDialog(HELP_DIALOG);
-			break;
-		case R.id.logout_button:
-			logout();
+			case R.id.logout_button:
+				logout();
 			break;
 		}
 	}
@@ -248,9 +243,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
 		prefs.putString("initials", "");
 		prefs.putString("name", "");
-		//sharedPreferences.edit().remove("userID").commit();
-		//sharedPreferences.edit().remove("gameID").commit();
-		sharedPreferences.edit().remove("gameId").commit();
+		sharedPreferences.edit().remove("gameID").commit();
 		prefs.commit();
 		Intent logInActivity = new Intent(this, SignInActivity.class);
 		startActivity(logInActivity);
@@ -333,9 +326,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private static class RequestGamesListTask extends
 			AsyncTask<Void, Void, ArrayList<Game>> {
 		private final Context mContext;
-		// private final Location mLocation;
-
-		private String mIntersection = null;
 		private ProgressDialog mProgressDialog = null;
 
 		public RequestGamesListTask(final Context context,
@@ -390,8 +380,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 				return client.getGames();
 				// }
 			} catch (RPCException e) {
-				Log.e(TAG,
-						"Got an RPCException when looking for nearby games.", e);
+				Log.e(TAG,"Got an RPCException when looking for nearby games.", e);
 			}
 			return new ArrayList<Game>();
 		}
@@ -400,7 +389,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		protected void onPostExecute(ArrayList<Game> games) {
 			try {
 				final GameListActivity activity = (GameListActivity) mContext;
-				activity.setNearestIntersection(mIntersection);
 				activity.populateGameList(games);
 			} catch (ClassCastException e) {
 				Log.w(TAG,

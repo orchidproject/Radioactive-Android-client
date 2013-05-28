@@ -29,9 +29,6 @@ public abstract interface OrchidConstants {
 	public static final String PREFERENCES_FILE = "GEOLOQIHTTPCLIENT";
 	public static final String VERSION = "1";
 	
-	public static final String[] roleMapping = {};
-	public static final String[] taskMapping = {};
-	
 	public static final String  IMAGE_URL_BASE =  URL_BASE + "img/" ;
 	
 }

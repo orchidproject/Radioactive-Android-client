@@ -1,10 +1,18 @@
 package com.geoloqi.ui;
 
-import com.geoloqi.mapattack.R;
+import java.io.IOException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.geoloqi.mapattack.R;
+import com.geoloqi.services.SocketIOManager;
+
+import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +26,15 @@ public class TestFragment extends Fragment{
 	private EditText testInterval;
 	
 	private boolean loaded = false;
-
+	private SocketIOManager sm;
+	private Context context;
+	
+	public void setSocketIO(SocketIOManager sm){
+		this.sm = sm;
+	}
+	public void setContext(Context context){
+		this.context = context;
+	}
 
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -62,20 +78,17 @@ public class TestFragment extends Fragment{
 					float flat;
 					float flng;
 					int   itime;
-					/*try{
+					try{
 						flat=new Float(lat);
 						flng=new Float(lng);
 						itime=new Integer(time);
 						
-						//iIOSocket.startTest(flat, flng, itime);
+						sm.startTest(flat, flng, itime);
 					}catch(NumberFormatException e){
-						//Toast.makeText(getApplicationContext(), "wrong lat/lng/time format", Toast.LENGTH_SHORT).show();
+						Toast.makeText(context, "wrong lat/lng/time format", Toast.LENGTH_SHORT).show();
 						
 						return;
-					}catch(RemoteException e){
-						//Toast.makeText(getApplicationContext(), "remote exception", Toast.LENGTH_SHORT).show();
-						return;
-					}*/
+					}
 					
 					((Button)v).setText("stop");
 					testLatEditor.setEnabled(false);
@@ -84,12 +97,12 @@ public class TestFragment extends Fragment{
 					started=true;
 				}
 				else{
-					/*try {
-						//iIOSocket.stopTest();
+					try {
+						sm.stopTest();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
-					}*/
+					}
 					((Button)v).setText("start");
 					testLatEditor.setEnabled(true);
 					testLngEditor.setEnabled(true);
@@ -100,5 +113,10 @@ public class TestFragment extends Fragment{
 		});
 		loaded = true;
 	}
+	
+	
+	
+	
+	
 
 }

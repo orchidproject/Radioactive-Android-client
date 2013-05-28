@@ -41,12 +41,12 @@ public class GameState implements OrchidConstants  {
 		return loaded;
 	}
 	
-	public void loadState(){
-		new LoadGameStateTask(this).execute();
+	public void loadState(int game_id){
+		new LoadGameStateTask(game_id).execute();
 	}
 
-	private JSONObject load(){
-		MyRequest request = new MyRequest(MyRequest.GET, URL_BASE +"game/1/status.json");
+	private JSONObject load(int game_id){
+		MyRequest request = new MyRequest(MyRequest.GET, URL_BASE +"game/"+game_id+"/status.json");
 		client=new DefaultHttpClient();
 		ADB.log("param " + request.getRequest().getURI());
 		
@@ -80,9 +80,8 @@ public class GameState implements OrchidConstants  {
 			return response;
 		}
 	}
-	private void updateGamesStates(){
-		
-	}
+	
+	
 	
 	
 	/**
@@ -90,16 +89,15 @@ public class GameState implements OrchidConstants  {
 	 * 
 	 * 
 	 * */
-	private static class LoadGameStateTask extends
+	private class LoadGameStateTask extends
 			AsyncTask<Void, Void, JSONObject> {
 		
 		private ProgressDialog mProgressDialog = null;
-		private GameState mState = null;
+		private int game_id;
 		
 
-		public LoadGameStateTask( GameState state) {
-			//mContext = context;
-			mState = state;
+		public LoadGameStateTask(int game_id) {
+			this.game_id =  game_id;
 		}
 
 		@Override
@@ -110,7 +108,7 @@ public class GameState implements OrchidConstants  {
 		protected JSONObject doInBackground(Void... params) {
 			//init images
 			ImageLoader.getImageLoader();
-			return mState.load();
+			return load(game_id);
 			
 		}
 
@@ -119,9 +117,9 @@ public class GameState implements OrchidConstants  {
 			
 			
 			JSONObject json = gameState;
-			mState.loaded = true;
-			mState.callback.bulkUpdate(gameState);
-			mState.callback.setGameArea();
+			loaded = true;
+			callback.bulkUpdate(gameState);
+			callback.setGameArea();
 		}
 	}
 }
