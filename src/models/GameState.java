@@ -107,7 +107,7 @@ public class GameState implements OrchidConstants  {
 		@Override
 		protected JSONObject doInBackground(Void... params) {
 			//init images
-			ImageLoader.getImageLoader();
+			ImageLoader.getImageLoader().loadImages();
 			return load(game_id);
 			
 		}
@@ -116,7 +116,7 @@ public class GameState implements OrchidConstants  {
 		protected void onPostExecute(JSONObject gameState) {
 			
 			
-			JSONObject json = gameState;
+			//JSONObject json = gameState;
 			loaded = true;
 			callback.bulkUpdate(gameState);
 			callback.setGameArea();

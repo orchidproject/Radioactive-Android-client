@@ -2,35 +2,31 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical" 
+    android:padding="15dp">
     <TextView 
         	android:layout_height="wrap_content"
         	android:layout_width="match_parent"
-        	android:text="message is shown here"
+        	android:text="messages are shown here"
         />
     <LinearLayout 
     	android:layout_width="match_parent"
     	android:layout_height="match_parent"
     	android:gravity="right"
     	android:orientation="horizontal" >
+    	 <TextView 
+    	    android:id="@+id/task_status"
+        	android:layout_height="wrap_content"
+        	android:layout_width="wrap_content"
+        	android:text="haha"
+         />
     	<Button 
+    	    android:id="@+id/accept_task"
     	    android:layout_width="wrap_content"
     		android:layout_height="wrap_content"
     		android:text="ack"
     	    />
-    	<Button 
-    	    android:layout_width="wrap_content"
-    		android:layout_height="wrap_content"
-    		android:text="ack"
-    	    />
-    	<Button 
-    	    android:layout_width="wrap_content"
-    		android:layout_height="wrap_content"
-    		android:text="ack"
-    	    />
-    
-
-	</LinearLayout>
-    
+    	
+     </LinearLayout>
 
 </LinearLayout>

@@ -114,9 +114,4 @@ public class TestFragment extends Fragment{
 		loaded = true;
 	}
 	
-	
-	
-	
-	
-
 }

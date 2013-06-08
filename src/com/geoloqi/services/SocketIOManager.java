@@ -30,12 +30,16 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 	private StateCallback callback = null;
 	
 	private int gameId;
-	private int roleId;
+	private String roleString;
+	private int playerId;
+	private String initials;
 	
-	public SocketIOManager(StateCallback sc,int game_id, int role_id){
+	public SocketIOManager(StateCallback sc,int game_id, String role,String initials, int player_id){
 		callback = sc;
 		this.gameId = game_id;
-		this.roleId = role_id;
+		this.roleString = role;
+		this.playerId = player_id;
+		this.initials= initials;
 	}
 	
 	
@@ -111,7 +115,7 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 	
 	private void joinGameChannel() {
 		try {
-			socket.emit("game-join", new JSONObject("{channel:"+1+",id:"+1+"}") );
+			socket.emit("game-join", new JSONObject("{channel:"+gameId+",id:"+playerId+"}") );
 			Log.i("SocketIOManager", "Connected to game " + 1);
 			connectionState = 3;
 			
@@ -206,6 +210,25 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void sendInstructionAck(int id, int status){
+		if(connectionState == 3){
+			JSONObject object = new JSONObject();
+			
+			try {
+				object.put("id", id);
+				object.put("status", status);
+				socket.emit("ack-instruction", object);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+	}
 	//--- code for socket IO test-----
 	
 	public void startTest(float lat,float lng,int time){
@@ -265,16 +288,15 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 					object.put("accuracy", 1);
 					
 					
-					String skill = "soldier";
-					object.put("skill", skill);
-					object.put("player_id", 0);
-					object.put("initials", "TS");
+					object.put("skill", roleString);
+					object.put("player_id", playerId);
+					object.put("initials", initials);
 					
 					
 					if (connectionState == 3) {
 						Log.i("Testing IO", String.format(
 								"Sending location-push %s. Skill is %s.",
-								object, skill));
+								object, roleString));
 						socket.emit("location-push", object);
 						
 					}else{

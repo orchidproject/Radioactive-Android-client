@@ -50,6 +50,7 @@ public class MapAttackClient implements OrchidConstants {
 	private String mInitials;
 
 	private int gameId = -1; // -1 is unloaded
+	private int userId =  -1;// unassigined userName
 
 	// private Integer mMyRoleId = 3;
 	// private String mMyRoleString = "";
@@ -78,6 +79,17 @@ public class MapAttackClient implements OrchidConstants {
 		return gameId;
 	}
 	
+	public int getPlayerId(){
+		return userId;
+	}
+	
+	public String getRoleString(){
+		return mMyRoleString;
+	}
+	
+	public String getInitials() {
+		return mInitials;
+	}
 	
 	public void setRole(int role_id){
 		//make sure it index begin with 0
@@ -88,6 +100,10 @@ public class MapAttackClient implements OrchidConstants {
 
 	private MapAttackClient(Context context) {
 		this.context = context;
+		SharedPreferences prefs = context.getSharedPreferences(
+				PREFERENCES_FILE, Context.MODE_PRIVATE);
+		mMyRoleString = prefs.getString(PARAM_USER_ROLE, null);
+		
 	}
 
 
@@ -170,7 +186,7 @@ public class MapAttackClient implements OrchidConstants {
 			SharedPreferences prefs = context.getSharedPreferences(
 					PREFERENCES_FILE, Context.MODE_PRIVATE);
 			Log.i(TAG, "Saving " + mMyRoleString);
-			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString);
+			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString).commit();
 			
 			//get variables here
 			mUserName = prefs.getString("name", "");
@@ -200,7 +216,7 @@ public class MapAttackClient implements OrchidConstants {
 				Context.MODE_PRIVATE).getString("gameID", null);
 		
 		boolean rejoin = false;
-		if (user_id != null && old_game_id.equals(game_id)) {
+		if (user_id != null && old_game_id != null && old_game_id.equals(game_id)) {
 			request.addEntityParams(pair("id", user_id));
 			Log.i(TAG, "trying to re-join game " + game_id + " with user id "
 					+ user_id);
@@ -217,10 +233,12 @@ public class MapAttackClient implements OrchidConstants {
 		//save game user id to preferences
 		if(!rejoin){ //if the player is not rejoin the game, it has a new id and it need to be saved in preference.
 			Log.i(TAG,"you have been given user_id = "+ response.getString("user_id"));
+			user_id=response.getString("user_id");
 			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
 					.edit().putString("userID", response.getString("user_id"))
 					.commit();
 		}
+		userId = Integer.parseInt(user_id);
 		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
 					.edit().putString("gameID", game_id).commit();
 		
@@ -358,6 +376,7 @@ public class MapAttackClient implements OrchidConstants {
 			} catch (JSONException e) {
 				return 2;
 			} catch (Exception e) {
+				e.printStackTrace();
 				return 3;
 			} 
 			
@@ -370,6 +389,8 @@ public class MapAttackClient implements OrchidConstants {
 			callback.callback(status);
 		}
 	}
+
+	
 
 	
 

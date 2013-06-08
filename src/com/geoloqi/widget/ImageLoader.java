@@ -3,6 +3,7 @@ package com.geoloqi.widget;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.io.InputStream;
 
 import models.GameState;
@@ -22,6 +23,7 @@ public class ImageLoader implements OrchidConstants{
 	//private Bitmap[] player = new Bitmap[4];
 	private Bitmap tick;
 	private Bitmap cross;
+	private HashMap<Integer, Bitmap> playerImages = new HashMap<Integer, Bitmap>();
 	
 	private boolean loaded = false;
 	
@@ -32,12 +34,7 @@ public class ImageLoader implements OrchidConstants{
 			singleton = new ImageLoader();
 		return singleton;
 	}
-	
-	public ImageLoader(){
-		loadImages();
-	}
-	
-	
+
 	
 	
 	public Bitmap getTaskImage(int type){
@@ -62,8 +59,8 @@ public class ImageLoader implements OrchidConstants{
 		player[1] =  getBitmapFromURL(IMAGE_URL_BASE + "firefighter.png");
 		player[2] =  getBitmapFromURL(IMAGE_URL_BASE + "soldier.png");
 		player[3] =  getBitmapFromURL(IMAGE_URL_BASE + "transporter.png");*/
-		//tick = getBitmapFromURL(IMAGE_URL_BASE + "tick.png");
-		//cross = getBitmapFromURL(IMAGE_URL_BASE + "dead.png");
+		tick = getBitmapFromURL(IMAGE_URL_BASE + "tick.png");
+		cross = getBitmapFromURL(IMAGE_URL_BASE + "dead.png");
 	}
 	
 	private Bitmap getBitmapFromURL(String src) {
@@ -81,9 +78,15 @@ public class ImageLoader implements OrchidConstants{
 	    }
 	}
 	
-	public void loadPlayerImage(String initials, String skill, Callback callback){
-		LoadImageTask loader = new LoadImageTask(
-				URL_BASE+"player/"+skill.substring(0, 1)+"/"+skill.substring(1, 2)
+	public void loadPlayerImage(int id, String initials, String skill, Callback callback){
+		Bitmap bm  = playerImages.get(id);
+		if(bm!=null){
+			callback.callback(bm);
+			return;
+		}
+		
+		LoadImageTask loader = new LoadImageTask(id,
+				URL_BASE+"player/"+initials.substring(0, 1)+"/"+initials.substring(1, 2)
 				+ "/" + skill
 				+"/map_icon.png",
 				callback);
@@ -98,8 +101,10 @@ public class ImageLoader implements OrchidConstants{
 		AsyncTask<Void, Void,Bitmap> {
 		
 		String url = null;
+		int player_id;
 		Callback callback = null;
-		public LoadImageTask(String url, Callback call){
+		public LoadImageTask(Integer id, String url, Callback call){
+			this.player_id = id;
 			this.url = url;
 			callback =  call;
 		}
@@ -112,6 +117,7 @@ public class ImageLoader implements OrchidConstants{
 
 		@Override
 		protected void onPostExecute(Bitmap res) {
+				playerImages.put(player_id, res);
 				callback.callback(res);
 		}
 	}

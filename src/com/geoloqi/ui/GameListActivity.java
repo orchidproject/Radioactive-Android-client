@@ -79,8 +79,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
 		final Button helpButton = (Button) findViewById(R.id.help_button);
 		final Button logoutButton = (Button) findViewById(R.id.logout_button);
-		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
-		loginView.setText(getLoggedInText());
 
 		// Set on click listeners
 		refreshButton.setOnClickListener(this);
@@ -95,16 +93,18 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 
 	private String getLoggedInText() {
 		String text = "";
-		String initials = "";
+		String initials = null;
 
 		if (sharedPreferences != null) {
-			initials = sharedPreferences.getString("initials", "");
-			text = "Logged in as "+initials;
+			initials = sharedPreferences.getString("initials", null);
 		}
-		if (initials.equals("") || sharedPreferences == null) {   
+		if (initials == null || sharedPreferences == null) {   
 			text = "Not logged in.";
 			Intent logInActivity = new Intent(this, SignInActivity.class);
 			startActivity(logInActivity);
+		}
+		else{
+			text = initials;
 		}
 		return text;
 	}
@@ -119,6 +119,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	@Override
 	public void onResume() {
 		super.onResume();
+		final TextView loginView = (TextView) findViewById(R.id.logged_in_label);
+		loginView.setText(getLoggedInText());
 		if (mGameList != null) {
 			populateGameList(mGameList);
 		}
@@ -241,9 +243,10 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private void logout() {
 		Editor prefs = (Editor) this.getSharedPreferences(
 				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
-		prefs.putString("initials", "");
-		prefs.putString("name", "");
-		sharedPreferences.edit().remove("gameID").commit();
+		prefs.remove("initials");
+		prefs.remove("name");
+		prefs.remove("gameID");
+		prefs.remove(MapAttackClient.PARAM_USER_ROLE);
 		prefs.commit();
 		Intent logInActivity = new Intent(this, SignInActivity.class);
 		startActivity(logInActivity);

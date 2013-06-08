@@ -4,8 +4,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import models.GameState;
+import models.InstructionV1;
+
 import com.geoloqi.mapattack.R;
 import com.geoloqi.widget.MsgArrayAdaptor;
+import com.geoloqi.widget.TaskArrayAdaptor;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,18 +21,18 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ProgressBar;
 
-public class MsgListViewFragment extends ListFragment {
+public class PlanListViewFragment extends ListFragment {
 	
 
 	 // This is the Adapter being used to display the list's data
-	 private MsgArrayAdaptor mAdapter;
-	 
+	 private TaskArrayAdaptor mAdapter;
+	
 	 
 	 @Override	
 	 public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 
-		View contentView=inflater.inflate(R.layout.activity_game_fragment_msg, container,false);
+		View contentView=inflater.inflate(R.layout.activity_game_fragment_task, container,false);
 		return contentView;
 	 }
 
@@ -45,8 +48,8 @@ public class MsgListViewFragment extends ListFragment {
 	        // Must add the progress bar to the root of the layout
 	        ViewGroup root = (ViewGroup) getActivity().findViewById(android.R.id.content);
 	        root.addView(progressBar);
-
-	        mAdapter = new MsgArrayAdaptor(getActivity());
+	        
+	        /*mAdapter = new TaskArrayAdaptor(getActivity());
 	        setListAdapter(mAdapter);
 
 	        // Prepare the loader.  Either re-connect with an existing one,
@@ -55,19 +58,16 @@ public class MsgListViewFragment extends ListFragment {
 
 	        //no need to use loader as this is just an example and data is small
 	        //sample test
-	        JSONObject test1=null;
-			try {
-				test1 = new JSONObject("{\"time_stamp\":0, \"message\":{\"content\": \"hello\"}}");
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	        mAdapter.add(test1);
-	        mAdapter.add(test1);
-	        mAdapter.add(test1);
-	        mAdapter.add(test1);
-	        mAdapter.add(test1);
-	        
+	        InstructionV1 test1=null;
+			
+			test1 = new InstructionV1(12,1024,1,"south east", "AA","AA");
+			
+	        mAdapter.add(test1);*/
 
 	 }
+
+
+	public TaskArrayAdaptor getAdaptor() {
+		return mAdapter;
+	}
 }

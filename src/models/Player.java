@@ -27,35 +27,91 @@ public class Player {
 	public static final String[] roleMapping = {"medic","firefighter","soldier","transporter"};
 	public static final String[] taskMapping = {};
 	
-	public Player(JSONObject su, GoogleMap map){
+	public static Player newPlayerFromPlayerLocation(JSONObject su, GoogleMap map){
+		final Player p = new Player(map);
 		try {
+			//null case player id end everthing
 			//status = su.getInt("status");
-			lat = (float) su.getDouble("latitude");
-			lng = (float) su.getDouble("longitude");
-			skill = su.getString("skill");
-			id = su.getInt("player_id");
-			initials = su.getString("initials");
+			p.lat = (float) su.getDouble("latitude");
+			p.lng = (float) su.getDouble("longitude");
+			p.skill = su.getString("skill");
+			p.id = su.getInt("player_id");
+			p.initials = su.getString("initials");
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		
-		mMap =  map;
+	
 		ImageLoader loader = ImageLoader.getImageLoader();
-		loader.loadPlayerImage(initials, skill, 
+		loader.loadPlayerImage(p.id,p.initials, p.skill, 
 				new ImageLoader.Callback() {
 					
 					@Override
 					public void callback(Bitmap bm) {
-						mMarker = mMap.addMarker(new MarkerOptions()
-					     .position(new LatLng(lat, lng))
+						p.mMarker = p.mMap.addMarker(new MarkerOptions()
+					     .position(new LatLng(p.lat, p.lng))
 					     .icon(BitmapDescriptorFactory.fromBitmap(bm))
 					     );
 						
 					}
 				}
 		);
-		
+		return p;
 	}
+	
+	public static Player newPlayerFromPlayerInfo(JSONObject su, GoogleMap map){
+		final Player p = new Player(map);
+		boolean drawable = true;
+		try {
+			//defensive code
+			//status = su.getInt("status");
+			
+			if(!Double.isNaN(su.optDouble("latitude")) ){
+				p.lat = (float) su.getDouble("latitude");
+			}else{
+				drawable = false;
+			}
+			
+			if(!Double.isNaN(su.optDouble("longitude")) ){
+				p.lng = (float) su.getDouble("longitude");
+			}
+			else{
+				drawable = false;
+			}
+			
+			
+			//skill, id, different from location object
+			p.skill = roleMapping[su.getInt("skill")];
+			p.id = su.getInt("id");
+			
+			p.initials = su.getString("initials");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	    
+		//do not draw if the player do not have a location.
+		if(!drawable) return p;
+		
+		ImageLoader loader = ImageLoader.getImageLoader();
+		loader.loadPlayerImage(p.id,p.initials, p.skill, 
+				new ImageLoader.Callback() {
+					
+					@Override
+					public void callback(Bitmap bm) {
+						p.mMarker = p.mMap.addMarker(new MarkerOptions()
+					     .position(new LatLng(p.lat, p.lng))
+					     .icon(BitmapDescriptorFactory.fromBitmap(bm))
+					     );
+						
+					}
+				}
+		);
+		return p;
+	}
+	private Player(GoogleMap map){
+		mMap =  map;
+	}
+	
+	
 	
 	public void update(JSONObject su){
 		//any thing except id 
@@ -63,25 +119,34 @@ public class Player {
 			lat = (float) su.getDouble("latitude");
 			lng = (float) su.getDouble("longitude");
 		} catch (JSONException e) {
-			e.printStackTrace();
+			//no marker made
+			return;
 		}
-		
+		if(mMarker==null){
+			
+		}
 		mMarker.setPosition(new LatLng(lat, lng));
 	}
 	
 	public void updateStatus(JSONObject update){
+		
+		final String s = update.optString("status");
+		String image = skill;
+		if(s.equals("incapicatated")){
+			image="dead";
+		}
+		else if(s.equals("normal")){
+			image=skill;
+		}
+		
 		if(mMarker!=null){
-			ImageLoader loader = ImageLoader.getImageLoader();
-			loader.loadPlayerImage(initials, "dead", 
+			final ImageLoader loader = ImageLoader.getImageLoader();
+			loader.loadPlayerImage(id,initials, image, 
 					new ImageLoader.Callback() {
 						
 						@Override
 						public void callback(Bitmap bm) {
-							mMarker.remove();
-							mMarker = mMap.addMarker(new MarkerOptions()
-						     .position(new LatLng(lat, lng))
-						     .icon(BitmapDescriptorFactory.fromBitmap(bm))
-						     );
+							mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
 							
 							
 						}
@@ -93,6 +158,14 @@ public class Player {
 
 	public int getId() {
 		return id;
+	}
+
+	public String getInitials() {
+		return initials;
+	}
+
+	public String getSkill() {
+		return skill;
 	}
 	
 }

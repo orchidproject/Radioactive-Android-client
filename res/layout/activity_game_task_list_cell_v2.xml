@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" 
+    android:padding="15dp">
+    <TextView 
+        	android:layout_height="wrap_content"
+        	android:layout_width="match_parent"
+        	android:textSize="20sp"
+        	android:text="Signed up by:"
+        />
+    <TextView 
+        	android:layout_height="wrap_content"
+        	android:layout_width="match_parent"
+        	android:textSize="20sp"
+        	android:text="Evacuate task: 02"
+        />
+    <TextView 
+        	android:layout_height="wrap_content"
+        	android:layout_width="match_parent"
+        	android:textSize="20sp"
+        	android:text="Priority:"
+        />
+    <TextView 
+        	android:layout_height="wrap_content"
+        	android:layout_width="match_parent"
+        	android:textSize="20sp"
+        	android:text="Instruction sent: 5 mins ago"
+        />
+    <LinearLayout 
+    	android:layout_width="match_parent"
+    	android:layout_height="match_parent"
+    	android:gravity="right"
+    	android:orientation="horizontal" >
+    	 <TextView 
+    	    android:id="@+id/instruction_status"
+        	android:layout_height="wrap_content"
+        	android:layout_width="wrap_content"
+        	android:text="Status: waiting for your response"
+         />
+    	<Button 
+    	    android:id="@+id/accept_task"
+    	    android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:text="accept"
+    	    />
+    	
+     </LinearLayout>
+
+</LinearLayout>

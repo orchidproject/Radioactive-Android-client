@@ -24,7 +24,7 @@ public class MsgArrayAdaptor extends ArrayAdapter<JSONObject> {
 	
 	public View getView(final int position,View contentView,ViewGroup parent){
 		if(contentView == null){
-            contentView = mInflater.inflate(R.layout.activity_game_list_cell, parent, false);
+            contentView = mInflater.inflate(R.layout.activity_game_msg_list_cell, parent, false);
             //populate the content
         }
 		return contentView;
