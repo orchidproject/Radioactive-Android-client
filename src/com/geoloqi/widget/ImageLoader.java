@@ -11,6 +11,8 @@ import models.GameState;
 import org.json.JSONObject;
 
 import com.geoloqi.interfaces.OrchidConstants;
+import com.geoloqi.rpc.OrchidClient;
+import com.geoloqi.widget.ImageLoader.Callback;
 
 
 import android.app.ProgressDialog;
@@ -23,7 +25,9 @@ public class ImageLoader implements OrchidConstants{
 	//private Bitmap[] player = new Bitmap[4];
 	private Bitmap tick;
 	private Bitmap cross;
+	private Bitmap self_icon;
 	private HashMap<Integer, Bitmap> playerImages = new HashMap<Integer, Bitmap>();
+	private HashMap<Integer, Bitmap> taskImages = new HashMap<Integer, Bitmap>();
 	
 	private boolean loaded = false;
 	
@@ -36,7 +40,10 @@ public class ImageLoader implements OrchidConstants{
 	}
 
 	
-	
+	public Bitmap getSelfIcon(){
+		
+		return self_icon;
+	}
 	public Bitmap getTaskImage(int type){
 		return task[type];
 	}
@@ -55,6 +62,7 @@ public class ImageLoader implements OrchidConstants{
 		task[1] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon2.png");
 		task[2] =  getBitmapFromURL(IMAGE_URL_BASE + "victim.png");
 		task[3] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon4.png");
+		self_icon =  getBitmapFromURL(IMAGE_URL_BASE + "blue_dot.png");
 		/*player[0] =  getBitmapFromURL(IMAGE_URL_BASE + "medic.png");
 		player[1] =  getBitmapFromURL(IMAGE_URL_BASE + "firefighter.png");
 		player[2] =  getBitmapFromURL(IMAGE_URL_BASE + "soldier.png");
@@ -80,12 +88,13 @@ public class ImageLoader implements OrchidConstants{
 	
 	public void loadPlayerImage(int id, String initials, String skill, Callback callback){
 		Bitmap bm  = playerImages.get(id);
+		
 		if(bm!=null){
 			callback.callback(bm);
 			return;
 		}
 		
-		LoadImageTask loader = new LoadImageTask(id,
+		LoadPlayerImageTask loader = new LoadPlayerImageTask(id,
 				URL_BASE+"player/"+initials.substring(0, 1)+"/"+initials.substring(1, 2)
 				+ "/" + skill
 				+"/map_icon.png",
@@ -93,17 +102,39 @@ public class ImageLoader implements OrchidConstants{
 		loader.execute();
 	}
 	
+	public void loadTaskImage(int id, String initials, String type, Callback callback){
+		Bitmap bm  = taskImages.get(id);
+		if(bm!=null){
+			callback.callback(bm);
+			return;
+		}
+		
+		LoadTaskImageTask loader = new LoadTaskImageTask(id,
+				URL_BASE+"player/"+initials.substring(0, 1)+"/"+initials.substring(1, 2)
+				+ "/" + type
+				+"/map_icon.png",
+				callback);
+		loader.execute();
+	}
+	
+	public void loadImage(String string, Callback callback) {
+		new LoadImageTask(URL_BASE+"img/"+string,callback).execute();
+	}
+	
+	
+	
+//<-----aync tasks --------------->	
 	abstract static public class Callback {
 		abstract public void callback(Bitmap bm);
-		
 	}
-	private class LoadImageTask extends
+	
+	private class LoadPlayerImageTask extends
 		AsyncTask<Void, Void,Bitmap> {
 		
 		String url = null;
 		int player_id;
 		Callback callback = null;
-		public LoadImageTask(Integer id, String url, Callback call){
+		public LoadPlayerImageTask(Integer id, String url, Callback call){
 			this.player_id = id;
 			this.url = url;
 			callback =  call;
@@ -121,4 +152,53 @@ public class ImageLoader implements OrchidConstants{
 				callback.callback(res);
 		}
 	}
+	
+	private class LoadTaskImageTask extends
+	AsyncTask<Void, Void,Bitmap> {
+	
+		String url = null;
+		int task_id;
+		Callback callback = null;
+		public LoadTaskImageTask(Integer id, String url, Callback call){
+			this.task_id = id;
+			this.url = url;
+			callback =  call;
+		}
+
+		@Override
+		protected Bitmap doInBackground(Void... params) {
+		
+			return getBitmapFromURL(url);
+		}
+	
+		@Override
+		protected void onPostExecute(Bitmap res) {
+			taskImages.put(task_id, res);
+			callback.callback(res);
+		}
+	}
+	
+	private class LoadImageTask extends
+	AsyncTask<Void, Void,Bitmap> {
+	
+		String url = null;
+		Callback callback = null;
+		public LoadImageTask( String url, Callback call){
+			
+			this.url = url;
+			callback =  call;
+		}
+
+		@Override
+		protected Bitmap doInBackground(Void... params) {
+		
+			return getBitmapFromURL(url);
+		}
+	
+		@Override
+		protected void onPostExecute(Bitmap res) {
+			callback.callback(res);
+		}
+	}
+
 }

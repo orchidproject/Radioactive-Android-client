@@ -16,6 +16,7 @@ import android.os.AsyncTask;
 import com.geoloqi.ADB;
 import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.StateCallback;
+import com.geoloqi.rpc.OrchidClient;
 import com.geoloqi.rpc.MyRequest;
 import com.geoloqi.widget.ImageLoader;
 
@@ -26,16 +27,18 @@ public class GameState implements OrchidConstants  {
 	private StateCallback callback = null;
 	
 	
-
+	private static GameState single = null;
 	public static GameState getGameState(StateCallback callback){
-		return new GameState(callback);
+		if(single==null){
+			single= new GameState(
+					);
+			
+		}
+		single.callback=callback;
+		return single;
 	}
 	
-	public GameState(StateCallback callback) {
-		this.callback = callback;
-	}
-	
-	private ArrayList<JSONObject> updates;//maybe for log purpose 
+	//private ArrayList<JSONObject> updates;//maybe for log purpose 
 	
 	public boolean isLoaded(){
 		return loaded;
@@ -92,7 +95,6 @@ public class GameState implements OrchidConstants  {
 	private class LoadGameStateTask extends
 			AsyncTask<Void, Void, JSONObject> {
 		
-		private ProgressDialog mProgressDialog = null;
 		private int game_id;
 		
 
@@ -102,6 +104,7 @@ public class GameState implements OrchidConstants  {
 
 		@Override
 		protected void onPreExecute() {
+			callback.preLoad();
 		}
 		
 		@Override
@@ -118,8 +121,7 @@ public class GameState implements OrchidConstants  {
 			
 			//JSONObject json = gameState;
 			loaded = true;
-			callback.bulkUpdate(gameState);
-			callback.setGameArea();
+			callback.afterLoad(gameState);
 		}
 	}
 }

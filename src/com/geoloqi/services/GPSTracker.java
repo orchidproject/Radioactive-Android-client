@@ -1,8 +1,4 @@
 package com.geoloqi.services;
-
-import java.io.IOException;
-import java.util.Date;
-
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -14,14 +10,13 @@ import android.util.Log;
 public class GPSTracker implements LocationListener {
 	public static final String TAG = "GPSTrackingService";
 	public static final String GPS_INTENT = "GPS";
-
 	public static final String PARAM_LONGITUDE = "longitude";
 	public static final String PARAM_LATITUDE = "latitude";
 	public static final String PARAM_ACCURACY = "accuracy";
 	
 	private LocationManager mlocationManager;
 	
-	private Context appContext;
+	private Context appContext=null;
 	
 	public GPSTracker(Context c){
 		appContext = c;
@@ -43,11 +38,12 @@ public class GPSTracker implements LocationListener {
 	}
 	@Override
 	public void onLocationChanged(Location location) {
+		//potential filiter need to be applied here
 		Intent intent = new Intent(GPS_INTENT);
 		intent.putExtra(PARAM_LONGITUDE, location.getLongitude());
 		intent.putExtra(PARAM_LATITUDE, location.getLatitude());
 		intent.putExtra(PARAM_ACCURACY, location.getAccuracy());
-		//intent.putExtra("skill", myRole);
+		
 		Log.d(TAG, "BROADCAST lat: " +location.getLatitude() +", long: "+location.getLongitude() );
 		appContext.sendBroadcast(intent);
 		/*code reseved for logging
@@ -80,6 +76,11 @@ public class GPSTracker implements LocationListener {
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void destroy(){
+		//prevent memo leak
+		appContext = null;
 	}
 
 }

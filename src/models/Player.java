@@ -4,7 +4,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.graphics.Bitmap;
+import android.widget.Toast;
 
+import com.geoloqi.rpc.OrchidClient;
 import com.geoloqi.widget.ImageLoader;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -22,12 +24,13 @@ public class Player {
 	
 	private GoogleMap mMap;
 	private Marker mMarker;
+	private boolean isClient=false;
 	
 	
 	public static final String[] roleMapping = {"medic","firefighter","soldier","transporter"};
 	public static final String[] taskMapping = {};
 	
-	public static Player newPlayerFromPlayerLocation(JSONObject su, GoogleMap map){
+	public static Player newPlayerFromPlayerLocation(JSONObject su, GoogleMap map, boolean isClient){
 		final Player p = new Player(map);
 		try {
 			//null case player id end everthing
@@ -37,28 +40,17 @@ public class Player {
 			p.skill = su.getString("skill");
 			p.id = su.getInt("player_id");
 			p.initials = su.getString("initials");
+			p.isClient = isClient;
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	
-		ImageLoader loader = ImageLoader.getImageLoader();
-		loader.loadPlayerImage(p.id,p.initials, p.skill, 
-				new ImageLoader.Callback() {
-					
-					@Override
-					public void callback(Bitmap bm) {
-						p.mMarker = p.mMap.addMarker(new MarkerOptions()
-					     .position(new LatLng(p.lat, p.lng))
-					     .icon(BitmapDescriptorFactory.fromBitmap(bm))
-					     );
-						
-					}
-				}
-		);
+		p.mMarker = map.addMarker(new MarkerOptions().position(new LatLng(p.lat,p.lng)));
+		p.setIcon(p.skill);
 		return p;
 	}
 	
-	public static Player newPlayerFromPlayerInfo(JSONObject su, GoogleMap map){
+	public static Player newPlayerFromPlayerInfo(JSONObject su, GoogleMap map, boolean isClient){
 		final Player p = new Player(map);
 		boolean drawable = true;
 		try {
@@ -82,7 +74,7 @@ public class Player {
 			//skill, id, different from location object
 			p.skill = roleMapping[su.getInt("skill")];
 			p.id = su.getInt("id");
-			
+			p.isClient = isClient;
 			p.initials = su.getString("initials");
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -91,20 +83,8 @@ public class Player {
 		//do not draw if the player do not have a location.
 		if(!drawable) return p;
 		
-		ImageLoader loader = ImageLoader.getImageLoader();
-		loader.loadPlayerImage(p.id,p.initials, p.skill, 
-				new ImageLoader.Callback() {
-					
-					@Override
-					public void callback(Bitmap bm) {
-						p.mMarker = p.mMap.addMarker(new MarkerOptions()
-					     .position(new LatLng(p.lat, p.lng))
-					     .icon(BitmapDescriptorFactory.fromBitmap(bm))
-					     );
-						
-					}
-				}
-		);
+		p.mMarker = map.addMarker(new MarkerOptions().position(new LatLng(p.lat,p.lng)));
+		p.setIcon(p.skill);
 		return p;
 	}
 	private Player(GoogleMap map){
@@ -123,7 +103,8 @@ public class Player {
 			return;
 		}
 		if(mMarker==null){
-			
+			mMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(lat,lng)));
+			setIcon(skill);
 		}
 		mMarker.setPosition(new LatLng(lat, lng));
 	}
@@ -140,19 +121,47 @@ public class Player {
 		}
 		
 		if(mMarker!=null){
-			final ImageLoader loader = ImageLoader.getImageLoader();
-			loader.loadPlayerImage(id,initials, image, 
-					new ImageLoader.Callback() {
-						
-						@Override
-						public void callback(Bitmap bm) {
-							mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
-							
-							
-						}
-					}
-			);
+			setIcon(image);
 		}
+	}
+	private void setIcon(String image){
+		if(mMarker==null){
+			throw new RuntimeException("marker is null");
+		}
+		final ImageLoader loader = ImageLoader.getImageLoader();
+		//if(loader.getTick()==null){
+			//for some reason, the self_icon can not be properly loaded, this is a fallback plan
+			//Toast.makeText(context, "warning: tick icon is not loaded", Toast.LENGTH_SHORT).show();
+		//}
+		
+		if(isClient){
+			if(loader.getSelfIcon()==null){
+				//for some reason, the self_icon can not be properly loaded, this is a fallback plan
+				loader.loadImage("blue_dot",
+						new ImageLoader.Callback() {
+							@Override
+							public void callback(Bitmap bm) {
+								Bitmap resized = Bitmap.createScaledBitmap(bm, 20,20, true);
+								mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(resized));
+							}
+						}
+				);
+				return;
+			}
+			mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(loader.getSelfIcon()));
+			return;
+		}
+		
+		loader.loadPlayerImage(id,initials, image, 
+				new ImageLoader.Callback() {
+					
+					@Override
+					public void callback(Bitmap bm) {
+						//Bitmap resized = Bitmap.createScaledBitmap(bm, 100,100, true);
+						mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
+					}
+				}
+		);
 	}
 	
 
@@ -166,6 +175,14 @@ public class Player {
 
 	public String getSkill() {
 		return skill;
+	}
+
+	public LatLng getLatLng() {
+		if(mMarker != null){
+			return mMarker.getPosition();
+		}else{
+			return null;
+		}
 	}
 	
 }

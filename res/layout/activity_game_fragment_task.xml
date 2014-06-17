@@ -3,10 +3,63 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-    <ListView
+   
+    <RelativeLayout 
+       
+    	android:layout_width="match_parent"
+    	android:layout_height="wrap_content"
+    	android:orientation="vertical"
+    	
+    	>
+    	<ListView
         	android:id="@android:id/list"
         	android:layout_width="match_parent"
         	android:layout_height="wrap_content" 
-        	android:layout_gravity="fill_vertical">
-    </ListView>
+        	android:layout_gravity="fill_vertical"
+        	
+        	>
+    	</ListView>
+    	<LinearLayout 
+    	    android:id="@+id/input_wrapper"
+    		android:layout_width="match_parent"
+    		android:layout_height="wrap_content"
+    		android:orientation="vertical"
+    		android:layout_alignParentBottom="true" >
+    		
+    		<EditText 
+    	    	android:id="@+id/tmsg_edit"
+    	    	android:layout_width="match_parent"
+    	    	android:layout_height="wrap_content"
+    	    	android:inputType="text"
+    	    	android:hint="type message here"
+    	    	android:singleLine="false"
+    	    	android:width="0dip"
+    	    	android:imeOptions="actionSend"
+    	    	>   
+    		</EditText>
+    		<Button 
+    	     	android:id="@+id/tmsg_send"
+    	    	android:layout_width="wrap_content"
+    	    	android:layout_height="wrap_content"
+    	    	android:text="send"
+    	    	android:layout_gravity="right"
+    	    	>   
+    		</Button>
+     	</LinearLayout>
+     	
+    
+		<ListView
+        	android:id="@+id/tmsg_content"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content" 
+        	
+        	android:layout_above="@id/input_wrapper"
+        	android:transcriptMode="alwaysScroll">
+    	</ListView>
+    	
+		
+    	
+		
+	</RelativeLayout>
+	
 </LinearLayout>

@@ -15,7 +15,4 @@ public class CheckMapTask extends AsyncTask<Void,Void,Integer> {
 		return 0;
 	}
 	
-	
-	
-
 }

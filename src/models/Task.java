@@ -4,8 +4,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import com.geoloqi.interfaces.OrchidConstants;
+import com.geoloqi.mapattack.R;
 import com.geoloqi.widget.ImageLoader;
 import com.geoloqi.widget.ImageLoader;
 import com.google.android.gms.maps.GoogleMap;
@@ -15,20 +17,23 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Task implements OrchidConstants {
+	//private static char[] char_mapping = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+	private static String[] task_mapping = {"task_icon1","task_icon2","task_icon3","task_icon4"};
+	
 	private int id;
     private int status=0;//0- idle, 1- 2- 3- deflaut to 0
 	private float lat;
 	private float lng;
 	private int type;
 	
-	private GoogleMap mMap;
+	//private GoogleMap mMap;
 	private Marker mMarker;
 	private boolean carried;
+	private String initials;
 	
 	
 	
-	
-	public Task(JSONObject su, GoogleMap map){
+	public Task(JSONObject su, final GoogleMap map){
 		try {
 			status = su.getInt("state");
 			id = su.getInt("id");
@@ -39,19 +44,59 @@ public class Task implements OrchidConstants {
 			e.printStackTrace();
 		}
 		
-		mMap =  map;
+		//map it to a string representation 
+		int first = (this.id/10)%10;
+		int second = this.id%10;
+		this.initials =  first+""+second;
+		
+		//mMap =  map;
 		ImageLoader loader = ImageLoader.getImageLoader();
 		
-		Bitmap bm;
-		if(status==2)
-			bm = loader.getTick();
-		else
-			bm = loader.getTaskImage(type);
-			
-		mMarker = map.addMarker(new MarkerOptions()
-	     .position(new LatLng(lat, lng))
-	     .icon(BitmapDescriptorFactory.fromBitmap(bm))
-	     );
+		if(status==2){
+			//assest loaded at the begining of the game
+			Bitmap tick = loader.getTick();
+			if(tick == null){
+				loader.loadTaskImage(id,initials, "tick", 
+						new ImageLoader.Callback() {
+							
+							@Override
+							public void callback(Bitmap bm) {
+								mMarker = map.addMarker(new MarkerOptions()
+							     .position(new LatLng(lat, lng))
+							     .icon(BitmapDescriptorFactory.fromBitmap(bm))
+							     );
+								
+							}
+						}
+				);
+			}
+			else{
+				mMarker = map.addMarker(new MarkerOptions()
+					.position(new LatLng(lat, lng))
+					.icon(BitmapDescriptorFactory.fromBitmap(tick))
+				);
+			}
+		}
+		else{
+			//need dynamic loading
+			loader.loadTaskImage(id,initials, task_mapping[type], 
+					new ImageLoader.Callback() {
+						
+						@Override
+						public void callback(Bitmap bm) {
+							mMarker = map.addMarker(new MarkerOptions()
+						     .position(new LatLng(lat, lng))
+						     .icon(BitmapDescriptorFactory.fromBitmap(bm))
+						     );
+							
+						}
+					}
+			);
+		}
+	}
+	
+	public String getTaskInitials(){
+		return initials;
 	}
 	
 	
@@ -67,10 +112,26 @@ public class Task implements OrchidConstants {
 		
 		mMarker.setPosition(new LatLng(lat, lng));
 		
+		//mMap =  map;
+		ImageLoader loader = ImageLoader.getImageLoader();
 		if(status!=2 && current_status ==2){
 		    status = current_status;
 			Bitmap tick = ImageLoader.getImageLoader().getTick();
-			mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(tick));
+			if(tick == null){
+				loader.loadTaskImage(id,initials, "tick", 
+						new ImageLoader.Callback() {
+							
+							@Override
+							public void callback(Bitmap bm) {
+								mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
+								
+							}
+						}
+				);
+			}
+			else{
+				mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(tick));
+			}
 		}
 		
 		

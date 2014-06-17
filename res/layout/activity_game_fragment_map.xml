@@ -28,7 +28,7 @@
     	 	    android:id="@+id/radiation_panel"
     	 		android:layout_width="match_parent"
     	 		android:layout_height="wrap_content"
-    	 		android:textSize="30pt"
+    	 		android:textSize="20pt"
     	 		android:layout_centerInParent="true"
     	 		android:gravity="center"
     	 		android:text="0">
@@ -54,23 +54,23 @@
     	 	    android:id= "@+id/health_holder"
          		android:layout_width="match_parent"
     	 		android:layout_height="wrap_content"
-    	 	    android:padding="10dp"
     	 	    android:background="#ffffff"
     	 		android:layout_below="@id/health_label"
     			>
     			<FrameLayout
     			android:id= "@+id/health_bar"
          		android:layout_width="200dp"
-    	 		android:layout_height="30dp"
+    	 		android:layout_height="25dp"
     	 	    android:background="#00ff00"
     			>
     			</FrameLayout>
     			
     		</FrameLayout>
     		<LinearLayout
+    		    android:id ="@+id/status"
          		android:layout_width="match_parent"
     	 		android:layout_height="wrap_content"
-    	 	    android:padding="10dp"
+    	 	    android:padding="5dp"
     	 	    android:background="#ffffff"
     	 		android:layout_below="@id/health_holder"
     	 		android:orientation="horizontal"
@@ -79,7 +79,7 @@
     	      
     	 			android:layout_width="wrap_content"
     	 			android:layout_height="wrap_content"
-    	 			android:text="Your role:"
+    	 			android:text="Your role:  "
     	 			android:background="#ffffff"	 		
     	 			/>
     			 <ImageView
@@ -89,10 +89,10 @@
     	 			android:background="#ffffff"	 		
     	 			/>
     			 <TextView
-    	      
+    	      		android:id= "@+id/task_text_indicator"
     	 			android:layout_width="wrap_content"
     	 			android:layout_height="wrap_content"
-    	 			android:text="  Picked up:"
+    	 			android:text="  Picked up: none"
     	 			android:background="#ffffff"	 		
     	 			/>
     			 <ImageView
@@ -100,6 +100,31 @@
     	 			android:layout_width="wrap_content"
     	 			android:layout_height="wrap_content"
     	 			android:background="#ffffff"	 		
+    	 			/>
+    	 			
+    			
+    		</LinearLayout>
+    		<LinearLayout
+         		android:layout_width="match_parent"
+    	 		android:layout_height="wrap_content"
+    	 	    android:background="#ffffff"
+    	 		android:layout_below="@id/status"
+    	 		android:orientation="horizontal"
+    	 		android:gravity="right"
+    			>
+    			<Button
+    	      		android:id ="@+id/btn_find_me"
+    	 			android:layout_width="wrap_content"
+    	 			android:layout_height="wrap_content"
+    	 			android:textSize="10sp"
+    	 			android:text="find me" 		
+    	 			/>
+    			<Button
+    	      		android:id ="@+id/btn_find_game_area"
+    	 			android:layout_width="wrap_content"
+    	 			android:layout_height="wrap_content"
+    	 			android:textSize="10sp"
+    	 			android:text="game area" 		
     	 			/>
     	 			
     			

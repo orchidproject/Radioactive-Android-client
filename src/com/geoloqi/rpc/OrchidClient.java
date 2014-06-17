@@ -24,49 +24,47 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 import com.geoloqi.ADB;
 import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
-import com.geoloqi.widget.ImageLoader.Callback;
 
-public class MapAttackClient implements OrchidConstants {
+public class OrchidClient implements OrchidConstants {
 	private final String TAG = "MapAttackClient";
 
-	private static final int TIMEOUT = 60000;
-
-	private static final HttpParams httpParams = new BasicHttpParams();
 	private static HttpClient client;
-	private static MapAttackClient singleton = null;
+	private static OrchidClient singleton = null;
 	private Context context;
 
-	private Integer mMyRoleId=0;
-
-	private String mMyRoleString;
-	private String mUserName;
-	private String mInitials;
-
+	
+	
+	//user information
+	private String mInitials=null;
 	private int gameId = -1; // -1 is unloaded
 	private int userId =  -1;// unassigined userName
+	private int mRoleId =  -1;//unassigned
+	private String mMyRoleString=null;
+	private boolean isLogin = false;
+	private AsyncTask<Void, Void, Integer> mJoinGameTask;
 
-	// private Integer mMyRoleId = 3;
-	// private String mMyRoleString = "";
+	private boolean rejoin;
+
+	
 
 	public final static String PARAM_USER_ROLE = "userRole";
 
-	public static MapAttackClient getApplicationClient(Context context) {
+	public static OrchidClient getApplicationClient(Context context) {
 		if (singleton == null) {
 			//a lock required?
-			singleton = new MapAttackClient(context);
+			singleton = new OrchidClient(context);
 		}
 		return singleton;
 	}
 
 	public int getRoleId(){	
-		return mMyRoleId;
+		return mRoleId;
 	}
 	
 	public boolean isLoaded(){
@@ -91,19 +89,36 @@ public class MapAttackClient implements OrchidConstants {
 		return mInitials;
 	}
 	
-	public void setRole(int role_id){
+	private void setRole(int role_id){
 		//make sure it index begin with 0
-		mMyRoleId = role_id;
-		mMyRoleString = RoleMapping.roleMap.get(mMyRoleId);
-		Log.i(TAG, "client" + "set+"+mMyRoleString+mMyRoleId);
+		mRoleId = role_id;
+		mMyRoleString = RoleMapping.roleMap.get(mRoleId);
+		Log.i(TAG, "client" + "set+"+mMyRoleString+mRoleId);
 	}
 
-	private MapAttackClient(Context context) {
+	private OrchidClient(Context context) {
 		this.context = context;
-		SharedPreferences prefs = context.getSharedPreferences(
-				PREFERENCES_FILE, Context.MODE_PRIVATE);
-		mMyRoleString = prefs.getString(PARAM_USER_ROLE, null);
-		
+		SharedPreferences sp = context.getSharedPreferences(OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
+		//pupulate fields
+		//get game id and user id, if null, it means it is a new user login
+		String old_user_id = sp.getString("userID", null);
+		String old_game_id = sp.getString("gameID", null);
+		String old_role = sp.getString("roleId", null);
+		String old_initials = sp.getString("initials", null);
+		//String old_name = sp.getString("name", null);
+		//check integratiy
+		if(old_user_id!=null&&
+		   old_game_id!=null&&
+		   old_role!=null&&
+		   old_initials!=null
+		   )
+		{
+			setRole(Integer.valueOf(old_role));
+			gameId = Integer.valueOf(old_game_id);
+			mInitials = old_initials;
+			userId = Integer.valueOf(old_user_id);
+			isLogin=true;
+		}
 	}
 
 
@@ -175,138 +190,34 @@ public class MapAttackClient implements OrchidConstants {
 		return null;
 	}
 
-	public void joinGame(Callback call, String game_id){
-		new JoinGameTask(call, game_id).execute();
+	public void joinGame(Callback call, String game_id,String initials, String name, String roleId){
+		mJoinGameTask = new JoinGameTask(call, game_id, initials, name, roleId);
+		mJoinGameTask.execute();
 	}
 	
-	public void login(String game_id) throws RPCException, JSONException {
-		String email;
-		
-		{// Initialise variables
-			SharedPreferences prefs = context.getSharedPreferences(
-					PREFERENCES_FILE, Context.MODE_PRIVATE);
-			Log.i(TAG, "Saving " + mMyRoleString);
-			prefs.edit().putString(PARAM_USER_ROLE, mMyRoleString).commit();
-			
-			//get variables here
-			mUserName = prefs.getString("name", "");
-			mInitials = prefs.getString("initials", "");
-			email = prefs.getString("email", "default@some.com");
-			
-		}
-		
+	public JSONObject login(String game_id, String initials, String name, String roleId) throws RPCException, JSONException {
+	
 		MyRequest request;
-		{// Initialise the request.
-			String url = URL_BASE + "game/" + game_id + "/join";
-			request = new MyRequest(MyRequest.POST, url);
-			Log.i(TAG, "joining at " + url);
-			request.addEntityParams(
-					pair("role_id", mMyRoleId.toString()),
-					pair("role", mMyRoleString),
-					pair("name", mUserName),
-					pair("initials", mInitials),
-					pair("email", email));
-			
-		}
-
-		//get game id and user id, if null, it means it is a new user login
-		String user_id = context.getSharedPreferences(PREFERENCES_FILE,
-				Context.MODE_PRIVATE).getString("userID", null);
-		String old_game_id = context.getSharedPreferences(PREFERENCES_FILE,
-				Context.MODE_PRIVATE).getString("gameID", null);
-		
-		boolean rejoin = false;
-		if (user_id != null && old_game_id != null && old_game_id.equals(game_id)) {
-			request.addEntityParams(pair("id", user_id));
-			Log.i(TAG, "trying to re-join game " + game_id + " with user id "
-					+ user_id);
+		String url = URL_BASE + "game/" + game_id + "/join";
+		request = new MyRequest(MyRequest.POST, url);
+		Log.i(TAG, "joining at " + url);
+		if(isLogin&&(gameId+"").equals(game_id)){
+			request.addEntityParams(pair("id", userId+""));
 			rejoin = true;
-		} else {
-			Log.i(TAG, "trying to join game " + game_id + " with role "
-					+ mMyRoleString + " (user id is " + user_id + ")");
 		}
-
-		
-		JSONObject response = send(request);
-		
-		
-		//save game user id to preferences
-		if(!rejoin){ //if the player is not rejoin the game, it has a new id and it need to be saved in preference.
-			Log.i(TAG,"you have been given user_id = "+ response.getString("user_id"));
-			user_id=response.getString("user_id");
-			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-					.edit().putString("userID", response.getString("user_id"))
-					.commit();
+		else{
+			request.addEntityParams(
+					pair("role_id",Integer.valueOf(roleId).toString()),
+					pair("name", name),
+					pair("initials", initials),
+					pair("email", "default@some.com"));
+			rejoin = false;
 		}
-		userId = Integer.parseInt(user_id);
-		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
-					.edit().putString("gameID", game_id).commit();
+		
+		return send(request);
 		
 	}
-	
-	public void logoutGame(String game_id) throws RPCException {
-		
-		SharedPreferences prefs = context.getSharedPreferences(
-				PREFERENCES_FILE, Context.MODE_PRIVATE);	
-		Log.i(TAG, "Logging out game" + game_id);	
-		String user_id = prefs.getString("userID", null);
-		
-		MyRequest request;
-		{
-			String url = URL_BASE + "game/" + game_id + "/logout";
-			request = new MyRequest(MyRequest.POST, url);
-			Log.i(TAG, "logging out at " + url);
-			if (user_id != null)
-				request.addEntityParams(pair("id", user_id));
-		}
 
-		try {// Send will throw a RuntimeException for the non-JSON return
-				// value.
-			JSONObject response = send(request);
-			Log.i(TAG,
-					"logout status = "
-							+ response.getString("status"));
-		} catch (JSONException e) {
-			ADB.log("JSONException in MapAttackClient/logoutGame: "
-					+ e.getMessage());
-		} catch (RuntimeException e) {
-		}
-	}
-	
-	public void sendMessage(String game_id, String message) {
-		
-
-		SharedPreferences prefs = context.getSharedPreferences(
-				PREFERENCES_FILE, Context.MODE_PRIVATE);	
-		Log.i(TAG, "Sending message" + message);	
-		String user_id = prefs.getString("userID", null);
-		
-		MyRequest request;
-		
-		{
-			String url = URL_BASE + "game/mobile/" + game_id + "/message";
-			request = new MyRequest(MyRequest.POST, url);
-			Log.i(TAG, "Posting to handler " + url);
-			if (user_id != null)
-				request.addEntityParams(pair("id", user_id));
-			request.addEntityParams(pair("content", message.toString()));
-		}
-
-		try {// Send will throw a RuntimeException for the non-JSON return
-				// value.
-			JSONObject response = send(request);
-			Log.i(TAG,
-					"message response = "
-							+ response);
-		} catch (RuntimeException e) {
-			ADB.log("RuntimeException in MapAttackClient/sendMessage: "
-					+ e.getMessage());
-		} catch (RPCException e) {
-			ADB.log("RPCException in MapAttackClient/sendMessage: "
-					+ e.getMessage());
-		}
-		
-	}
 
 	protected synchronized JSONObject send(MyRequest request)
 			throws RPCException {
@@ -361,16 +272,30 @@ public class MapAttackClient implements OrchidConstants {
 	AsyncTask<Void, Void,Integer> {
 	
 		Callback callback = null;
-		String game_id = null;
-		public JoinGameTask(Callback call,String game_id){
+		String game_id_to_join = null;
+		String initials_to_join = null;
+		String name_to_join = null;
+		String role_id_to_join =null;
+		
+		public JoinGameTask(Callback call,String game_id, String initials, String name,String roleId){
 			callback =  call;
-			this.game_id = game_id;
+			game_id_to_join = game_id;
+			initials_to_join = initials;
+			name_to_join = name;
+			role_id_to_join = roleId;
 		}
 
 		@Override
 		protected Integer doInBackground(Void... params) {
+			JSONObject response = null;
 			try {
-				login(game_id);
+				response = login(
+						game_id_to_join,
+						initials_to_join,
+						name_to_join,
+						role_id_to_join
+					);
+				
 			} catch (RPCException e) {
 				return 1;
 			} catch (JSONException e) {
@@ -380,18 +305,61 @@ public class MapAttackClient implements OrchidConstants {
 				return 3;
 			} 
 			
-			gameId = Integer.parseInt(game_id);
+			//if game changes, save game id, other info keep same;
+			if(rejoin) {
+				isLogin = true;
+				return 0;
+			}
+			
+			//save everything here
+			Log.i(TAG,"you have been given user_id = "+ response.optString("user_id","null"));
+			String user_id = response.optString("user_id",null);
+			
+			userId = Integer.parseInt(user_id);
+			gameId = Integer.parseInt(game_id_to_join);	
+			mInitials = initials_to_join;
+			setRole(Integer.valueOf(role_id_to_join));
+
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+						.edit().putString("userID", user_id).commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+					.edit().putString("gameID", game_id_to_join).commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+						.edit().putString("initials", initials_to_join).commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+						.edit().putString("roleId", role_id_to_join).commit();
+			context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE)
+						.edit().putString("name", name_to_join).commit();
+			
+			isLogin = true;
 			return 0;
 		}
+		
 
 		@Override
-		protected void onPostExecute(Integer status) {
-			callback.callback(status);
+		protected void onPostExecute(Integer status) {		
+			callback.callback(status);		
 		}
 	}
 
-	
+	public boolean isLoggin() {
+		
+		if(mRoleId!=-1&&gameId!=-1&&userId!=-1&&mInitials!=null&&isLogin){
+			return true;
+		}else{
+			isLogin=false;
+			return false;
+		}
+	}
 
-	
+	public void logout() {
+		mRoleId=-1;
+		gameId=-1;
+		userId=-1;
+		mInitials=null;
+		mMyRoleString =null;
+		isLogin=false;
+		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().clear().commit();
+	}
 
 }

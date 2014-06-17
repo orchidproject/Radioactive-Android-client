@@ -7,6 +7,7 @@ import org.json.JSONException;
 
 import models.Game;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -14,8 +15,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -23,6 +22,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -35,7 +35,7 @@ import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.LoggingConstants;
 import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.mapattack.R;
-import com.geoloqi.rpc.MapAttackClient;
+import com.geoloqi.rpc.OrchidClient;
 import com.geoloqi.widget.GameListArrayAdapter;
 
 public class GameListActivity extends ListActivity implements OnClickListener,
@@ -53,27 +53,21 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	private static final int HELP_DIALOG = 0;
 	private static final int CLEAR_HISTORY_DIALOG = 1;
 
-	private boolean mSyncOnStart = true;
 	private Intent mPositioningIntent;
 	private ArrayList<Game> mGameList = null;
-	private String mNearestIntersection = null;
 
-	private Context context;
-	private SharedPreferences sharedPreferences;
+	ProgressDialog mJoiningProgress =null;
+	private boolean joining= false;
 
 	
+	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		this.context = getApplicationContext();
-		
-		sharedPreferences  = getSharedPreferences(
-				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE);
-
 		setContentView(R.layout.game_list_activity);
-		
-		getActionBar().hide();
+		if (android.os.Build.VERSION.SDK_INT >= 11)
+			getActionBar().hide();
 
 		// Find views
 		final Button refreshButton = (Button) findViewById(R.id.refresh_button);
@@ -92,19 +86,26 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	}
 
 	private String getLoggedInText() {
+		OrchidClient mc = OrchidClient.getApplicationClient(this);
 		String text = "";
-		String initials = null;
-
-		if (sharedPreferences != null) {
-			initials = sharedPreferences.getString("initials", null);
-		}
-		if (initials == null || sharedPreferences == null) {   
+		
+		
+		if (
+				!mc.isLoggin()
+				&&(getIntent().getExtras()==null||getIntent().getExtras().getBoolean("used")) 
+			) 
+		{   
 			text = "Not logged in.";
 			Intent logInActivity = new Intent(this, SignInActivity.class);
 			startActivity(logInActivity);
 		}
-		else{
-			text = initials;
+		else if(mc.isLoggin()){
+			//getInitials
+			text = mc.getInitials();
+		}
+		else {
+			text = getIntent().getExtras().getString("initials");
+			getIntent().putExtra("used",true);//when press home button the intent persist, so need to flag it 
 		}
 		return text;
 	}
@@ -138,7 +139,8 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		Log.d(ORCHID_TAG, "Populated list of games: " + games);
 		setLoading(false);
 		if (games != null) {
-			String activeGame = sharedPreferences.getString("gameID", "");
+			OrchidClient mc = OrchidClient.getApplicationClient(this);
+			String activeGame = mc.getGameId() + "";
 			Log.d(TAG, "activeGame: "+activeGame);
 			mGameList = games;
 			for (int i = 0; i<mGameList.size();  i++) {
@@ -179,12 +181,35 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		final Game selection = (Game) l.getItemAtPosition(position);
 
 		//join game here
-		MapAttackClient mc = MapAttackClient.getApplicationClient(this);
-	
-		mc.joinGame(new MapAttackClient.Callback() {
+		OrchidClient mc = OrchidClient.getApplicationClient(this);
+	    mJoiningProgress = ProgressDialog.show(this,null,"Joining Game...",false,false);
+	    
+		String initials ;
+	    String name;
+	    String roleId ;
+	    //login parameters
+	    if(mc.isLoggin()){
+	    	initials = mc.getInitials();
+		    name = mc.getInitials();
+		    roleId = mc.getRoleId() +"";
+	    	
+	    }else{
+	    	initials = getIntent().getExtras().getString("initials");
+		    name = getIntent().getExtras().getString("name");
+		    roleId = getIntent().getExtras().getString("roleId");
+	    }
+	    
+	    
+		joining = true;
+		mc.joinGame(new OrchidClient.Callback() {
 				
 				@Override
 				public void callback(int status) {
+					// Dismiss our progress dialog
+					if (mJoiningProgress != null) {
+						mJoiningProgress.dismiss();
+					}
+					joining = false;
 					switch(status){
 						case 0:
 							//success
@@ -192,10 +217,10 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 						case 1:
 							Toast.makeText(GameListActivity.this, "RPC error when joining game", Toast.LENGTH_LONG).show();
 							return;
-					case 2:
+						case 2:
 							Toast.makeText(GameListActivity.this, "JSON error when joining game", Toast.LENGTH_LONG).show();
 							return;
-					case 3:
+						case 3:
 							Toast.makeText(GameListActivity.this, "Unknown error when joining game", Toast.LENGTH_LONG).show();
 							return;
 						
@@ -203,26 +228,11 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 					
 					//Initialise the GameActivity for the indicated game
 					Intent intent = new Intent(GameListActivity.this, GameActivity.class);
-					
-					if (sharedPreferences != null) {
-						//check whether we have to logout of an existing game first.
-						String currentId = sharedPreferences.getString("gameId", "");
-						if (!currentId.equals(selection.id)) {
-							//logout first !!! this is not implemented now
-							/*Thread initialiseLogout = new LogoutServer();
-							initialiseLogout.run();*/
-							startActivity(intent);
-						}
-						else 
-							startActivity(intent);
-					}
-					
-				}
-				
-				
-			}
-		, selection.id);
-		
+					startActivity(intent);
+					    
+				}					
+		}
+		, selection.id, initials, name, roleId);	
 	}
 
 	@Override
@@ -241,13 +251,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 	}
 	
 	private void logout() {
-		Editor prefs = (Editor) this.getSharedPreferences(
-				OrchidConstants.PREFERENCES_FILE, Context.MODE_PRIVATE).edit();
-		prefs.remove("initials");
-		prefs.remove("name");
-		prefs.remove("gameID");
-		prefs.remove(MapAttackClient.PARAM_USER_ROLE);
-		prefs.commit();
+		OrchidClient.getApplicationClient(this).logout();
 		Intent logInActivity = new Intent(this, SignInActivity.class);
 		startActivity(logInActivity);
 	}
@@ -298,28 +302,6 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		}
 		return dialog;
 	}
-	
-	private class LogoutServer extends Thread {
-		
-		@Override
-		public void run() {
-			final MapAttackClient client = MapAttackClient
-					.getApplicationClient(GameListActivity.this);
-			try {
-				String currentId = sharedPreferences.getString("gameId", "");
-				client.logoutGame(currentId);
-			} catch (RPCException e) {
-				Log.e(TAG, "Got an RPCException when trying to join the game!",
-						e);
-				Toast.makeText(GameListActivity.this, R.string.error_join_game,
-						Toast.LENGTH_LONG).show();
-				finish();
-			}
-			sharedPreferences.edit().remove("userID").commit();
-			sharedPreferences.edit().remove("gameID").commit();
-		}
-		
-	}
 
 	/**
 	 * A simple AsyncTask to request the game list from the server.
@@ -364,7 +346,7 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 		protected ArrayList<Game> doInBackground(Void... params) {
 
 			// Get the MapAttackClient
-			final MapAttackClient client = MapAttackClient
+			final OrchidClient client = OrchidClient
 					.getApplicationClient(mContext);
 			try {
 				/*
@@ -405,4 +387,15 @@ public class GameListActivity extends ListActivity implements OnClickListener,
 			}
 		}
 	}
+	
+	/*private void cancelJoining(){
+		MapAttackClient mc = MapAttackClient.getApplicationClient(this);
+		mc.cancelJoinGame();
+		joining=false;
+		if (mJoiningProgress != null) {
+			mJoiningProgress.dismiss();
+		}
+	}*/
+	
+	
 }

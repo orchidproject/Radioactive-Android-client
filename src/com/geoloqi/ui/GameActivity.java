@@ -13,18 +13,23 @@ import models.Task;
 
 import com.geoloqi.interfaces.StateCallback;
 import com.geoloqi.mapattack.R;
-import com.geoloqi.rpc.MapAttackClient;
+import com.geoloqi.rpc.OrchidClient;
 import com.geoloqi.services.GPSTracker;
 import com.geoloqi.services.SocketIOManager;
 import com.geoloqi.widget.ImageLoader;
-import com.geoloqi.widget.ImageLoader.Callback;
+import com.geoloqi.widget.MsgArrayAdaptor;
 import com.geoloqi.widget.TaskArrayAdaptor;
+import com.geoloqi.widget.TaskMsgArrayAdaptor;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -34,17 +39,22 @@ import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -52,6 +62,8 @@ import android.widget.Toast;
 
 public class GameActivity extends FragmentActivity implements ActionBar.TabListener, StateCallback{
 
+	public static boolean testMode = false;
+	public static boolean sensorEnabled = false;
 	private ActionBar.Tab mapTab;
 	private ActionBar.Tab msgTab;
 	private ActionBar.Tab testTab;
@@ -69,16 +81,25 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	private int healthBarWidth = 0;
 	private TextView radiationView = null;
 	private ImageView taskIndicator = null;
+	private TextView taskTextIndicator = null;
 	
 	private ArrayList<Player> players = new ArrayList<Player>();
 	private ArrayList<Task> tasks = new ArrayList<Task>();
 	
+	private ProgressDialog mProgress;
+	
 	boolean alertShown = false;
+	private MsgArrayAdaptor mMsgViewAdaptor;
+	private int msgCount = 0;
+	private TaskMsgArrayAdaptor mMsgTaskAdaptor;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_game);
+		 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		
 		
 		// Set up the action bar to show tabs.
 		final ActionBar actionBar = getActionBar();
@@ -88,23 +109,29 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		mapTab = actionBar.newTab().setText("Map").setTabListener(this);
 		msgTab = actionBar.newTab().setText("Message").setTabListener(this);
 	    taskTab= actionBar.newTab().setText("Tasks").setTabListener(this);
-	    testTab = actionBar.newTab().setText("Test").setTabListener(this);
+	   
 		actionBar.addTab(mapTab);
 		actionBar.addTab(msgTab);
 		actionBar.addTab(taskTab);
-		actionBar.addTab(testTab);
+		if(testMode){
+			testTab = actionBar.newTab().setText("Test").setTabListener(this);
+			actionBar.addTab(testTab);
+		}
 		
 		
 		
 		gps = new GPSTracker(getApplicationContext());
-		MapAttackClient mc = MapAttackClient.getApplicationClient(this);
+		OrchidClient mc = OrchidClient.getApplicationClient(this);
 		socketIO =  new SocketIOManager(this,mc.getGameId(),
 				mc.getRoleString(),
 				mc.getInitials(),
-				mc.getPlayerId()
+				mc.getPlayerId(),
+				this
 		);
 		
 		mTaskAdaptor = new TaskArrayAdaptor(this,socketIO);
+		mMsgTaskAdaptor = new TaskMsgArrayAdaptor(this);
+		mMsgViewAdaptor = new MsgArrayAdaptor(this);
 		
 	}
 	
@@ -113,32 +140,51 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onStart();
 		socketIO.connect();
 		gps.start();
-		GoogleMap map = mMapFragment.getMap();
 		if (healthBar== null){
-			
 			
 			healthBar = mMapFragment.getHealthBar();
 			//record original width
 			healthBarWidth =  healthBar.getLayoutParams().width;
 			radiationView = mMapFragment.getRadiationView();
 			taskIndicator = mMapFragment.getTaskIndicator();
+			taskTextIndicator = mMapFragment.getTaskTextIndicator();
+			mMapFragment.getFindMeButton().setOnClickListener(new OnClickListener(){
+
+				@Override
+				public void onClick(View v) {
+					findMe();
+				}
+			});
+			mMapFragment.getGameAreaButton().setOnClickListener(new OnClickListener(){
+
+				@Override
+				public void onClick(View v) {
+					setGameArea();
+				}
+			});
 			
 		}
+		OrchidClient mc = OrchidClient.getApplicationClient(this);
+		GameState.getGameState(this).loadState(mc.getGameId());
 		
-		if (!GameState.getGameState(this).isLoaded()){
-			MapAttackClient mc = MapAttackClient.getApplicationClient(this);
-			GameState.getGameState(this).loadState(mc.getGameId());
+		
 			
-		}
-		
-		
 	}
 	
 	@Override
 	public void onStop(){
 		super.onStop();
+		//Timer.getInstance().stop();
 		socketIO.disconnect();
 		gps.stop();
+		finish();
+	}
+	
+	@Override
+	public void onDestroy(){
+		socketIO.destroy();
+		gps.destroy();
+		super.onDestroy();
 	}
 
 	@Override
@@ -154,10 +200,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		
 	}
 	
-	@Override
-	public void onResume(){
-		super.onResume();
-	}
+	
 	
 	private void test(){
 		//test unit
@@ -166,7 +209,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					@Override
 					protected Integer doInBackground(Void... params) {
 						int count = 100;
-					    int user_id = MapAttackClient.getApplicationClient(GameActivity.this).getPlayerId();
+					    int user_id = OrchidClient.getApplicationClient(GameActivity.this).getPlayerId();
 						Handler handler = new Handler(Looper.getMainLooper());
 						while(count>0){
 							//wait for map initialization
@@ -190,13 +233,13 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 								json3 = "{\"id\":100, \"latitude\":0, \"longitude\":0, \"type\": 0 ,\"players\":\"49,1\",\"state\": 2}";
 								json4 = "{\"id\":51, \"status\": \"incapicatated\"}";
 							}
-							final String json5;
+							/*final String json5;
 							if(count%10==0){
 								json5 = "[{\"id\":51, \"status\": 1,\"time\": 10000,\"teammate\": 50,\"task\": \"02\",\"direction\": \"southeast\" }]";
 							}
 							else{
 								json5 = "[{\"id\":51, \"status\": 1,\"time\": 10000,\"teammate\": 58,\"task\": \"01\",\"direction\": \"southeast\" }]";
-							}
+							}*/
 							final int c = count;
 							//need to put it to mainthread
 							handler.post(new Runnable(){
@@ -227,6 +270,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onTabSelected(Tab tab, FragmentTransaction ft) {
+				
 				//TODO probably better to use tag to retrive fregments
 				FragmentManager fm= getSupportFragmentManager();
 				if(tab == mapTab){
@@ -244,18 +288,24 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				else if (tab == msgTab){
 					if(mMsgFragment == null){
 						mMsgFragment = new MsgListViewFragment();
+						mMsgFragment.setAdaptor(mMsgViewAdaptor);
+						mMsgFragment.setSocket(socketIO);
 					    fm.beginTransaction().add(R.id.container,mMsgFragment).commit();
 					}
 					else{
 						//use show and hide to persist state
 						fm.beginTransaction().show(mMsgFragment).commit();
 					}
+					msgCount = 0;
+					msgTab.setText("MESSAGE("+msgCount+")");
 					
 				}
 				else if (tab == taskTab){
 					if(mTaskFragment == null){
 						mTaskFragment = new PlanListViewFragment();
 						mTaskFragment.setListAdapter(mTaskAdaptor);
+						mTaskFragment.setMsgAdapter(mMsgTaskAdaptor);
+						mTaskFragment.setSocket(socketIO);
 						fm.beginTransaction().add(R.id.container,mTaskFragment).commit();
 					}
 					else{
@@ -284,17 +334,24 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onTabUnselected(Tab tab, FragmentTransaction arg1) {
+		//dismiss keyboard if any
+		InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+		
 		FragmentManager fm= getSupportFragmentManager();
-		if(tab == mapTab){		
+		if(tab == mapTab){	
+				
 				fm.beginTransaction().hide(mMapFragment).commit();	
 		}
 		else if (tab == msgTab){	
+				imm.hideSoftInputFromWindow(mMsgFragment.getView().getWindowToken(), 0);
 				fm.beginTransaction().hide(mMsgFragment).commit();	
 		}
 		else if (tab == testTab){
+				imm.hideSoftInputFromWindow(mTestFragment.getView().getWindowToken(), 0);
 				fm.beginTransaction().hide(mTestFragment).commit();
 		}
 		else if (tab == taskTab){
+				
 				fm.beginTransaction().hide(mTaskFragment).commit();
 		}
 		
@@ -304,6 +361,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	public  static class MapFragment extends Fragment{
 			SupportMapFragment mapFragment ;
 			ImageView imgView;
+			
 
 			@Override
 			public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -313,13 +371,25 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				View mContentView=inflater.inflate(R.layout.activity_game_fragment_map, container,false);
 				
 				
-				mapFragment = new SupportMapFragment();
+				mapFragment = SupportMapFragment.newInstance(new GoogleMapOptions().mapType(1));
+				
 				getActivity().getSupportFragmentManager().beginTransaction()
 				.replace(R.id.map_container, mapFragment).commit();
 				
 				
+				
 				return mContentView;
 				
+			}
+			public Button getGameAreaButton() {
+				if(getView()!=null)
+					return (Button) getView().findViewById(R.id.btn_find_game_area);
+				return null;
+			}
+			public Button getFindMeButton() {
+				if(getView()!=null)
+					return (Button) getView().findViewById(R.id.btn_find_me);
+				return null;
 			}
 			@Override
 			public void onResume(){
@@ -327,7 +397,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				if (imgView != null)
 						return;
 			    imgView = (ImageView) getView().findViewById(R.id.role_image);
-			    MapAttackClient mc = MapAttackClient.getApplicationClient(getActivity());
+			    OrchidClient mc = OrchidClient.getApplicationClient(getActivity());
 			    int player_id = mc.getPlayerId();
 			    String initials = mc.getInitials();
 			    String role = mc.getRoleString();
@@ -348,6 +418,12 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				return null;
 			}
 			
+			public TextView getTaskTextIndicator(){
+				if(getView()!=null)
+					return (TextView) getView().findViewById(R.id.task_text_indicator);
+				return null;
+			}
+			
 			public View getHealthBar(){
 				if(getView()!=null)
 					return getView().findViewById(R.id.health_bar);
@@ -361,74 +437,16 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			}
 			
 			public GoogleMap getMap(){
+				mapFragment.getMap().setIndoorEnabled(false);
 				return mapFragment.getMap();
 			}
 			
 			
 	}
 	
-	public  static class MsgFragment extends Fragment{
-		
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			//this method is always called when tab selected
-			
-			View mContentView=inflater.inflate(R.layout.activity_game_fragment_msg, container,false);
-			return mContentView;
-		}
-		
-	}
 	
-/*	public  static class TaskFragment extends Fragment{
-		
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			//this method is always called when tab selected
-			
-			View mContentView=inflater.inflate(R.layout.activity_game_fragment_task, container,false);
-			return mContentView;
-		}
-		
-		public void onActivityCreated(Bundle savedInstanceState) {
-			super.onActivityCreated(savedInstanceState);
-			final Button accept = (Button) getView().findViewById(R.id.accept_task);
-			//final Button reject = (Button) getView().findViewById(R.id.reject_task);
-			final TextView  status = (TextView) getView().findViewById(R.id.task_status);
-			accept.setOnClickListener(new OnClickListener(){
-
-				@Override
-				public void onClick(View arg0) {
-					accept.setEnabled(false);
-					reject.setEnabled(true);
-					status.setText("you have accepted the task");
-					
-				}
-				
-			});
-			
-			//reject.setOnClickListener(new OnClickListener(){
-
-				@Override
-				public void onClick(View arg0) {
-					reject.setEnabled(false);
-					accept.setEnabled(true);
-					status.setText("you have rejected the task");
-				}
-				
-			});
-			
-		}
-		
-	}
-*/
-
 	
 	//---------for game Logic here finally----------
-	@Override
 	public void update(JSONObject update) {
 		
 		if(update.optJSONObject("health")!=null){
@@ -438,6 +456,11 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		else if(update.optJSONObject("location")!=null){
 			JSONObject location =  update.optJSONObject("location");
 			updatePlayer(location);
+			
+		}
+		else if(update.optJSONObject("message")!=null){
+			JSONObject msg =  update.optJSONObject("message");
+			updateMsg(msg);
 			
 		}
 		else if(update.optJSONObject("task")!=null){
@@ -456,10 +479,22 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			JSONArray array = update.optJSONArray("instructions");
 			updateInstructions(array);
 		}
+		else if(update.optJSONObject("ack-instruction")!=null){
+			JSONObject ack = update.optJSONObject("ack-instruction");
+			updateInstructionAck(ack);
+		}
+		else if(update.optJSONObject("cleanup")!=null){
+			cleanUpPlayer(update.optJSONObject("cleanup"));
+		}
+		else if(update.optString("system",null)!=null){
+			updateSystemInfo(update.optString("system"));
+		}
+		
 		
 		
 	}
-	@Override
+	
+
 	public void bulkUpdate(JSONObject updates) {
 		
 		JSONArray ts = updates.optJSONArray("tasks");
@@ -495,8 +530,13 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					update = ps.getJSONObject(i);
 					Player p = getPlayerById(update.getInt("id"));
 					if(p == null){
-						Player new_player =  Player.newPlayerFromPlayerInfo(update,mMapFragment.getMap());
+						boolean isClient = false;
+						if(OrchidClient.getApplicationClient(this).getPlayerId() == update.optInt("id")){
+							isClient = true;
+						}
+						Player new_player =  Player.newPlayerFromPlayerInfo(update,mMapFragment.getMap(),isClient);
 						players.add(new_player);
+						
 					}
 					else{
 						p.update(update);
@@ -507,28 +547,57 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			}
 		}
 		
-		JSONArray dps = updates.optJSONArray("dropoffpoints");
-		
+		JSONArray dps = updates.optJSONArray("dropoffpoints");	
 		//dealing with tasks
 		if(dps != null){
-					for (int i = 0; i< dps.length(); i++){
+				for (int i = 0; i< dps.length(); i++){
 						JSONObject update;
 						try {
 							update = dps.getJSONObject(i);
-							double lat = update.getDouble("latitude");
-							double lng = update.getDouble("longitude");
+							int id = update.getInt("id");
+							final double lat = update.getDouble("latitude");
+							final double lng = update.getDouble("longitude");
 							mMapFragment.getMap().addCircle(new CircleOptions()
 								.center(new LatLng(lat,lng))
 								.radius(update.getInt("radius"))
 								.fillColor(0x330000FF)
 								.strokeColor(0x330000FF)
 							);
+							ImageLoader loader = ImageLoader.getImageLoader();
+					
+							loader.loadImage("large_number/"+(id%10)+".png",
+									new ImageLoader.Callback() {
+										@Override
+										public void callback(Bitmap bm) {
+											mMapFragment.getMap().addMarker(new MarkerOptions()
+												.position(new LatLng(lat,lng)).icon(BitmapDescriptorFactory.fromBitmap(bm)));
+					
+										}
+									}
+							);
+							
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}		
-					}
+				}
 		}
-		test();
+		
+		//manually push an instruciton
+		Player p = getPlayerById(OrchidClient.getApplicationClient(this).getPlayerId());
+		InstructionV1 fake_instruction = new InstructionV1(-1,0,1,"none",p,-1,-1);
+		mTaskAdaptor.add(fake_instruction);
+		JSONArray ins = updates.optJSONArray("instructions");
+		updateInstructions(ins);
+		//test();
+	}
+	
+	private void cleanUpPlayer(JSONObject player_to_delete){
+		int id = player_to_delete.optInt("player_id");
+		if(OrchidClient.getApplicationClient(this).getPlayerId() == id){
+			OrchidClient.getApplicationClient(this).logout();
+			Toast.makeText(this, "you are foced to logout", Toast.LENGTH_LONG).show();
+			finish();
+		}
 	}
 	
 	private Player getPlayerById(int id){
@@ -552,8 +621,13 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	private void updatePlayer(JSONObject update){
 		 Player p = getPlayerById(update.optInt("player_id"));
 		 if(p == null){
-				Player new_player =  Player.newPlayerFromPlayerLocation(update,mMapFragment.getMap());
+			 	boolean isClient = false;
+				if(OrchidClient.getApplicationClient(this).getPlayerId() == update.optInt("id")){
+					isClient = true;
+				}
+				Player new_player =  Player.newPlayerFromPlayerLocation(update,mMapFragment.getMap(),isClient);
 				players.add(new_player);
+				
 		 }
 		else{
 				p.update(update);
@@ -561,7 +635,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void updateHealth(JSONObject update){
-		int user_id = MapAttackClient.getApplicationClient(this).getPlayerId();
+		int user_id = OrchidClient.getApplicationClient(this).getPlayerId();
 		
 		if(user_id == update.optInt("player_id")){
 			Double value = update.optDouble("value");
@@ -572,7 +646,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void updateExposure(JSONObject update){
-		int user_id = MapAttackClient.getApplicationClient(this).getPlayerId();
+		int user_id = OrchidClient.getApplicationClient(this).getPlayerId();
 		
 		if(user_id == update.optInt("player_id")){
 			Integer value = update.optInt("value");
@@ -594,25 +668,29 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		//set Indicators
 		String players =  update.optString("players");
 		String[] carriers =  players.split(",");
-		MapAttackClient mc = MapAttackClient.getApplicationClient(this);
+		OrchidClient mc = OrchidClient.getApplicationClient(this);
 		
 		boolean carrying = false;
-		for (String carrier: carriers){
-			if(Integer.parseInt(carrier) == mc.getPlayerId()){
-				carrying=true;		
-				break;
+		if(carriers.length==2){
+			for (String carrier: carriers){
+				if(Integer.parseInt(carrier) == mc.getPlayerId()){
+					carrying=true;		
+					break;
+				}
 			}
 		}
 		
 		if(t.isCarried()&&!carrying){
 			// used to carry but not carrying
 			taskIndicator.setImageBitmap(null);
+			taskTextIndicator.setText("Picked up: None");
 			t.setCarried(false);
 			return;
 		}else if(carrying&&!t.isCarried()){
 			Bitmap bm = ImageLoader.getImageLoader().getTaskImage(t.getType());
 			taskIndicator.setImageBitmap(bm);
 			t.setCarried(true);
+			taskTextIndicator.setText("Picked up: ");
 		}
 		
 	}
@@ -624,58 +702,146 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 	}
 	
+	private void updateInstructionAck(JSONObject update){
+		
+		Player p = getPlayerById(update.optInt("player_id"));
+		//assume only one instruction is in the adaptor
+		if(p!=null){
+			mTaskAdaptor.ackInstructionV1(update.optInt("id"),p,update.optInt("status"));
+		}
+		
+		
+	}
+	private void updateSystemInfo(String msg){
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+				this);
+ 
+			// set title
+			alertDialogBuilder.setTitle("System message");
+		
+			// set dialog message
+			alertDialogBuilder
+				.setMessage(msg)
+				.setCancelable(true)
+				.setPositiveButton("Dismiss",new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								//something?
+								
+							}
+						  })
+				.create()
+				.show();
+	}
+	
+	private void updateMsg(final JSONObject update){
+		ActionBar actionBar = getActionBar();
+		int target1 = update.optInt("target");
+		int target2 = update.optInt("target2");
+		int pid = OrchidClient.getApplicationClient(this).getPlayerId();
+		
+		if( target1 == 0 && target2 == 0 ){
+			mMsgViewAdaptor.add(update);
+			if(actionBar.getSelectedTab()!=msgTab){
+				msgTab.setText("MESSAGE("+(++msgCount)+")");
+			}
+		}
+		else if (target1 == pid || target2==pid) {
+			mMsgTaskAdaptor.add(update);
+		}
+		
+		//add code for pop up
+	}
+	
 	private void updateInstructions(JSONArray update){
-		//the adaptor need to be move outside, making it controlled by GameActivity.
-		 
-		mTaskAdaptor.clear();
+		if(update == null){
+			return;
+		}
+		
 		for (int i=0; i<update.length();i++){
 			JSONObject in = update.optJSONObject(i);
 			if(in == null){
 				Toast.makeText(this, "error constructing instructions", Toast.LENGTH_LONG).show();
 				continue;
 			}
+			int confirmed = in.optInt("confirmed");
+			if(confirmed != 1){
+				return;
+			}
 			
 			int status = in.optInt("status");
 			int id = in.optInt("id");
-			String task = in.optString("task");
+			int task = in.optInt("task");
 			String direction = in.optString("direction");
 			int teammate = in.optInt("teammate");
 			int time = in.optInt("time");
+			int player_id = in.optInt("player_id");
 			Player player = getPlayerById(teammate);
-			mTaskAdaptor.add(new InstructionV1(id,time,status,direction,player,task));
 			
-			if(!alertShown){
-				alertShown = true;
+			InstructionV1 instruction = new InstructionV1(id,time,status,direction,player,task,player_id);
+			//Toast.makeText(this, player_id + "<-instruciton for player", Toast.LENGTH_SHORT ).show();
+			int k = OrchidClient.getApplicationClient(this).getPlayerId();
+			if(OrchidClient.getApplicationClient(this).getPlayerId() == player_id){
+				mMsgTaskAdaptor.clear();
+				mTaskAdaptor.clear();
+				mTaskAdaptor.add(instruction);
+				if(!alertShown){
+					alertShown = true;
+				}
+				else{
+					return;
+				}
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+		 
+				// set title
+				alertDialogBuilder.setTitle("New instruction");
+				
+				// set dialog message
+				alertDialogBuilder
+						.setMessage("Click to view the new instruction")
+						.setCancelable(false)
+						.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								alertShown = false;
+								taskTab.select();
+								
+							}
+						  })
+						.create()
+						.show();
 			}
-			else{
-				return;
+			else if(OrchidClient.getApplicationClient(this).getPlayerId() == teammate){
+				mTaskAdaptor.setPeerInstruction(instruction);
 			}
-			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-					this);
-	 
-			// set title
-			alertDialogBuilder.setTitle("New instruction");
 			
-			// set dialog message
-			alertDialogBuilder
-					.setMessage("Click to view the new instruction")
-					.setCancelable(false)
-					.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog,int id) {
-							alertShown = false;
-							taskTab.select();
-							
-						}
-					  })
-					.create()
-					.show();
+			
 				
 		}
 		
 	}
+	
+	public void findMe() {
+		if(players.isEmpty()) return;
+		
+		
+		
+		int player_id = OrchidClient.getApplicationClient(this).getPlayerId();
+		
+		Player current_player = getPlayerById(player_id);
+		if(current_player==null){
+			Toast.makeText(this, "Error,player not fund", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		else if(current_player.getLatLng()==null){
+			Toast.makeText(this, "Player location not updated, please wait", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		mMapFragment.getMap().moveCamera(
+				CameraUpdateFactory.newLatLng(current_player.getLatLng())
+		);
+	}
 
 	
-	@Override
+	
 	public void setGameArea() {
 		if(tasks.isEmpty()) return;
 		
@@ -683,11 +849,55 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		for(Task t : tasks){
 			builder.include(t.getLatLng());
 		}
+		
+		int player_id = OrchidClient.getApplicationClient(this).getPlayerId();
+		Player current_player = getPlayerById(player_id);
+		if(current_player!=null&&current_player.getLatLng()!=null){
+			builder.include(current_player.getLatLng());
+		}
 		mMapFragment.getMap().moveCamera(
 				CameraUpdateFactory.newLatLngBounds(builder.build(), 50)
 		);
 	}
+
+	@Override
+	public void preLoad() {
+		//join game here
+		mProgress = ProgressDialog.show(this,null,"Loading game...",false,false);
+	}
+
+	@Override
+	public void afterLoad(JSONObject updates) {
+		bulkUpdate(updates);
+		setGameArea();
+		if(mProgress!=null){
+			mProgress.dismiss();
+			mProgress = null;	
+		}
+		
+	}
 	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    // Handle the back button
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    	
+	        builder.setMessage("Are you sure you want to leave the game?")
+	               .setPositiveButton("YES", new DialogInterface.OnClickListener() {
+	                   public void onClick(DialogInterface dialog, int id) {
+	                	   finish();
+	                   }
+	               })
+	               .setNegativeButton("NO", new DialogInterface.OnClickListener() {
+	                   public void onClick(DialogInterface dialog, int id) {
+	                       
+	                   }
+	               }).create().show();
+	        
+	        return false;
+	    }
 
-
+	    return super.onKeyDown(keyCode, event);
+	}
 }

@@ -3,43 +3,55 @@ package com.geoloqi.services;
 import java.io.IOException;
 import java.nio.channels.NotYetConnectedException;
 import java.util.Arrays;
-import java.util.Date;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
+
 import com.clwillingham.socket.io.IOSocket;
 import com.clwillingham.socket.io.MessageCallback;
 import com.geoloqi.interfaces.OrchidConstants;
 import com.geoloqi.interfaces.StateCallback;
-import com.geoloqi.services.IOSocketService.ConnectorThread;
-import com.geoloqi.services.IOSocketService.TestThread;
+
+
 
 public class SocketIOManager implements OrchidConstants, MessageCallback{
+	
+	
+	
 	private int connectionState = 0; //state model 0 - not connected, 1 - connecting, 2 - connected, 3 - handshaked
 	private IOSocket socket=null;
-	//private boolean initiateDisconnection = false;
 	private ConnectorThread connector =  null;
 	private boolean testing = false;
 	private StateCallback callback = null;
+	/** The broadcast receiver used to push game data to the server. */
+	private BroadcastReceiver mGPSReceiver = null;
 	
 	private int gameId;
 	private String roleString;
 	private int playerId;
 	private String initials;
 	
-	public SocketIOManager(StateCallback sc,int game_id, String role,String initials, int player_id){
+	private Context mContext=null;
+	
+	public SocketIOManager(StateCallback sc,int game_id, String role,String initials, int player_id, Context con){
 		callback = sc;
 		this.gameId = game_id;
 		this.roleString = role;
 		this.playerId = player_id;
 		this.initials= initials;
+		this.mContext = con;
 	}
 	
 	
@@ -49,7 +61,6 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 			String url = "http://" + IOSOCKET_ADDRESS + ":" + IOSOCKET_PORT + "/";
 			socket = new IOSocket(url, this);
 		}
-		//initiateDisconnection = false;
 		
 		if(connectionState == 0){
 		    connector = new ConnectorThread(); 
@@ -58,18 +69,21 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 			connectionState = 1;
 		}
 		
+		registerGPSReceiver();
+		
 	}
 	
 	public void disconnect(){
 		
 		//actively disconnect
-		//initiateDisconnection = true;
 		if(connectionState == 1){
 			connector.reconnect = false;
 			connector=null;
 		}
 		socket.disconnect();
 		connectionState = 0;
+		
+		unregisterGPSReceiver();
 	}
 
 	
@@ -105,11 +119,6 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 				
 		}
 		
-	}
-	
-	
-	public void sendMsg(String string){
-		//socket.
 	}
 	
 	
@@ -188,47 +197,75 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 	}
 
 	@Override
-	public void onMessage(String message) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onMessage(String message) {}
 
 	@Override
-	public void onMessage(JSONObject json) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onMessage(JSONObject json) {}
 
 	@Override
-	public void onConnect() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onConnect() {}
 
 	@Override
-	public void onDisconnect() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onDisconnect() {}
 	
-	public void sendInstructionAck(int id, int status){
-		if(connectionState == 3){
-			JSONObject object = new JSONObject();
-			
-			try {
-				object.put("id", id);
-				object.put("status", status);
-				socket.emit("ack-instruction", object);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+	/* ---- location listener -----*/
+	private synchronized void unregisterGPSReceiver() {
+		if (mGPSReceiver == null) {
+			return;
 		}
+		mContext.unregisterReceiver(mGPSReceiver);
+		mGPSReceiver = null;
 	}
+
+	private synchronized void registerGPSReceiver() {
+		if (mGPSReceiver != null) {
+			return;
+		}
+		mGPSReceiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context ctxt, Intent intent) {
+				double longitude = intent.getExtras().getDouble(
+						GPSTracker.PARAM_LONGITUDE);
+				double latitude = intent.getExtras().getDouble(
+						GPSTracker.PARAM_LATITUDE);
+				double accuracy = intent.getExtras().getDouble(
+						GPSTracker.PARAM_ACCURACY);
+
+				Log.i("location", String.format(
+						"Received from local GPS: long:%f, lat:%f", longitude,
+						latitude));
+				JSONObject object = new JSONObject();
+
+				try {
+					object.put("longitude", longitude);
+					object.put("latitude", latitude);
+					object.put("accuracy", accuracy);
+
+					object.put("skill", roleString);
+					object.put("player_id", playerId);
+					object.put("initials", initials);
+
+					if (connectionState==3 && socket != null) {
+						socket.emit("location-push", object);
+						Toast.makeText(mContext, "location sent", Toast.LENGTH_SHORT).show();
+					}
+
+				} catch (JSONException e) {
+					Log.e("location", "JSONException in gps push: " + e);
+				} catch (IOException e) {
+					Log.e("location", "IOException in gps push: " + e);
+				}
+			}
+
+		
+		};
+		mContext.registerReceiver(mGPSReceiver, new IntentFilter(GPSTracker.GPS_INTENT));
+
+	}
+
+	
+	
+	
 	//--- code for socket IO test-----
 	
 	public void startTest(float lat,float lng,int time){
@@ -253,8 +290,84 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 		   }
 	}
 	
-	 public void stopTest() throws RemoteException { 
+	public void stopTest() throws RemoteException { 
 		   testing=false;
+	}
+	 
+	public void sendMsg(String content){
+			if(connectionState == 3){
+				JSONObject messageObject = new JSONObject();
+				try {
+					messageObject.put("player_name","name?" );
+					messageObject.put("player_initials", initials);
+					messageObject.put("content", content);
+					messageObject.put("player_skill", roleString);
+					messageObject.put("player_id", playerId);
+					int sent_time = (int) (System.currentTimeMillis()/1000);
+					messageObject.put("timeStamp", sent_time);
+					socket.emit("message", messageObject);
+					 Log.i("Testing IO","msg data sent");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+	}
+	
+	public void sendMsg(String content,int target1, int target2){
+		if(connectionState == 3){
+			JSONObject messageObject = new JSONObject();
+			try {
+				messageObject.put("player_name","name?" );
+				messageObject.put("player_initials", initials);
+				messageObject.put("content", content);
+				messageObject.put("player_skill", roleString);
+				messageObject.put("player_id", playerId);
+				
+				messageObject.put("target", target1);
+				messageObject.put("target2", target2);
+				
+				int sent_time = (int) (System.currentTimeMillis()/1000);
+				messageObject.put("timeStamp", sent_time);
+				socket.emit("message", messageObject);
+				Log.i("Testing IO","msg data sent");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+}
+	 
+	 public void sendInstructionAck(int id, int status, int player_id){
+			if(connectionState == 3){
+				JSONObject object = new JSONObject();
+				
+				try {
+					object.put("id", id);
+					object.put("status", status);
+					object.put("player_id", player_id);
+					socket.emit("ack-instruction", object);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+	}
+	 
+	public void sendMessageAck(int id, int player_id){
+		
+	}
+	
+	public void destroy(){
+		testing=false;
+		//prevent memo leak
+		mContext = null;
 	}
 	
 	private class TestThread extends Thread {
@@ -298,6 +411,7 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 								"Sending location-push %s. Skill is %s.",
 								object, roleString));
 						socket.emit("location-push", object);
+						
 						
 					}else{
 						Log.i("Testing IO", "No socket IO connection");

@@ -38,13 +38,7 @@
         	android:textSize="20sp"
         	android:text="Direction:"
         />
-    <TextView 
-            android:id="@+id/instruction_time"
-        	android:layout_height="wrap_content"
-        	android:layout_width="match_parent"
-        	android:textSize="20sp"
-        	android:text="Instruction sent: 5 mins ago"
-        />
+    
     
      <TextView 
             android:id="@+id/teammate_response"
