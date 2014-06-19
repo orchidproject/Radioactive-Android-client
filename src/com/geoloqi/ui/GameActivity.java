@@ -111,8 +111,8 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	    taskTab= actionBar.newTab().setText("Tasks").setTabListener(this);
 	   
 		actionBar.addTab(mapTab);
-		actionBar.addTab(msgTab);
 		actionBar.addTab(taskTab);
+		actionBar.addTab(msgTab);
 		if(testMode){
 			testTab = actionBar.newTab().setText("Test").setTabListener(this);
 			actionBar.addTab(testTab);
@@ -149,14 +149,12 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			taskIndicator = mMapFragment.getTaskIndicator();
 			taskTextIndicator = mMapFragment.getTaskTextIndicator();
 			mMapFragment.getFindMeButton().setOnClickListener(new OnClickListener(){
-
 				@Override
 				public void onClick(View v) {
 					findMe();
 				}
 			});
 			mMapFragment.getGameAreaButton().setOnClickListener(new OnClickListener(){
-
 				@Override
 				public void onClick(View v) {
 					setGameArea();

@@ -12,6 +12,8 @@ import com.geoloqi.services.SocketIOManager;
 import com.geoloqi.widget.MsgArrayAdaptor;
 import com.geoloqi.widget.TaskArrayAdaptor;
 import com.geoloqi.widget.TaskMsgArrayAdaptor;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.SupportMapFragment;
 
 import android.app.Activity;
 import android.content.Context;
@@ -63,7 +65,7 @@ public class PlanListViewFragment extends ListFragment {
 	        root.addView(progressBar);
 	        
 	        //test
-	        ListView taskMsgView = (ListView) getActivity().findViewById(R.id.tmsg_content);
+	        ListView taskMsgView = (ListView) getActivity().findViewById(R.id.tmsg_c);
 	        MsgArrayAdaptor adapter = new MsgArrayAdaptor(getActivity());
 	        JSONObject j = new JSONObject();
 	        try {
@@ -119,6 +121,8 @@ public class PlanListViewFragment extends ListFragment {
 		    });
 			
 	        taskMsgView.setAdapter(mAdapter);
+	        
+	        //setupMap();
 	 }
 	 
 
@@ -139,5 +143,12 @@ public class PlanListViewFragment extends ListFragment {
 		else{
 			return 0;
 		}
+	}
+	
+	private void setupMap(){
+		SupportMapFragment mapFragment = SupportMapFragment.newInstance(new GoogleMapOptions().mapType(1));
+		
+		getActivity().getSupportFragmentManager().beginTransaction()
+		.replace(R.id.task_map_container, mapFragment).commit();
 	}
 }
