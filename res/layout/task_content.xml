@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <TextView
+         android:id="@+id/instruction_idle"
+         android:layout_width="match_parent"
+    	 android:layout_height="wrap_content"
+    	 android:text =" No task at the moment"
+    	 
+    	>
+    </TextView> 
+    <!-- map container -->
+    <FrameLayout
+         android:id="@+id/task_map_container"
+         android:layout_width="match_parent"
+    	 android:layout_height="0px"
+    	 android:layout_weight="4"
+    	>
+    </FrameLayout> 
+    
+    <LinearLayout 
+         android:id="@+id/instruction_control"
+         android:layout_width="match_parent"
+    	 android:layout_height="wrap_content"
+    	 android:layout_marginBottom="0px"
+    	 android:layout_weight="1"
+    	 android:orientation="horizontal" >
+    	 
+    	<Button 
+    	     android:id="@+id/instruction_accept"
+    	     android:layout_width="wrap_content"
+    	     android:layout_height="wrap_content"
+    	     android:text="accept"
+    	     android:layout_gravity="right"
+    	    
+    	    >   
+    	</Button>
+    	<Button 
+    	     android:id="@+id/instruction_reject"
+    	     android:layout_width="wrap_content"
+    	     android:layout_height="wrap_content"
+    	     android:text="reject"
+    	     android:layout_gravity="right"
+    	     
+    	    >   
+    	</Button>
+    	 <TextView
+         android:id="@+id/instruction_status"
+         android:layout_width="match_parent"
+    	 android:layout_height="wrap_content"
+    	 android:text =" Waiting your response"
+    	 
+    	>
+    </TextView> 
+    </LinearLayout>
+</LinearLayout>

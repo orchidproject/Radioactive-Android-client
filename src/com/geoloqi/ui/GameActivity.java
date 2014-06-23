@@ -74,7 +74,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	private MapFragment mMapFragment=null;
 	private MsgListViewFragment mMsgFragment=null;
 	private TestFragment mTestFragment = null;
-	private PlanListViewFragment mTaskFragment = null;
+	private HQViewFragment mTaskFragment = null;
 	private TaskArrayAdaptor mTaskAdaptor = null;
 	
 	private View healthBar = null;
@@ -91,14 +91,16 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	boolean alertShown = false;
 	private MsgArrayAdaptor mMsgViewAdaptor;
 	private int msgCount = 0;
+	private int hqMsgCount = 0;
 	private TaskMsgArrayAdaptor mMsgTaskAdaptor;
+	private InstructionV1 current_instruction;
 	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_game);
-		 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
 		
 		// Set up the action bar to show tabs.
@@ -106,9 +108,9 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 		actionBar.setDisplayShowTitleEnabled(false);
 		actionBar.setDisplayShowHomeEnabled(false);
-		mapTab = actionBar.newTab().setText("Map").setTabListener(this);
-		msgTab = actionBar.newTab().setText("Message").setTabListener(this);
-	    taskTab= actionBar.newTab().setText("Tasks").setTabListener(this);
+		mapTab = actionBar.newTab().setText("Status").setTabListener(this);
+		msgTab = actionBar.newTab().setText("Chat").setTabListener(this);
+	    taskTab= actionBar.newTab().setText("HQ").setTabListener(this);
 	   
 		actionBar.addTab(mapTab);
 		actionBar.addTab(taskTab);
@@ -129,6 +131,10 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				this
 		);
 		
+		
+		
+		
+		//deplicated
 		mTaskAdaptor = new TaskArrayAdaptor(this,socketIO);
 		mMsgTaskAdaptor = new TaskMsgArrayAdaptor(this);
 		mMsgViewAdaptor = new MsgArrayAdaptor(this);
@@ -154,6 +160,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					findMe();
 				}
 			});
+			
 			mMapFragment.getGameAreaButton().setOnClickListener(new OnClickListener(){
 				@Override
 				public void onClick(View v) {
@@ -280,6 +287,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					else{
 						//use show and hide to persist state
 						fm.beginTransaction().show(mMapFragment).commit();
+						//fm.beginTransaction().attach(mMapFragment).commit();
 					}
 					
 				}
@@ -293,23 +301,27 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					else{
 						//use show and hide to persist state
 						fm.beginTransaction().show(mMsgFragment).commit();
+						//fm.beginTransaction().attach(mMsgFragment).commit();
 					}
 					msgCount = 0;
-					msgTab.setText("MESSAGE("+msgCount+")");
+					msgTab.setText("Chat("+msgCount+")");
 					
 				}
-				else if (tab == taskTab){
+				else if (tab == taskTab){	
 					if(mTaskFragment == null){
-						mTaskFragment = new PlanListViewFragment();
-						mTaskFragment.setListAdapter(mTaskAdaptor);
+						//create TaskFragmentInAdvance
+						mTaskFragment = new HQViewFragment();
+						//no long using a list
+						mTaskFragment.setInstruction(current_instruction);
 						mTaskFragment.setMsgAdapter(mMsgTaskAdaptor);
 						mTaskFragment.setSocket(socketIO);
 						fm.beginTransaction().add(R.id.container,mTaskFragment).commit();
+					}else{
+						fm.beginTransaction().show(mTaskFragment).commit();		
 					}
-					else{
-						//use show and hide to persist state
-						fm.beginTransaction().show(mTaskFragment).commit();
-					}
+					
+					hqMsgCount = 0;
+					taskTab.setText("HQ("+hqMsgCount+")");
 					
 				}
 				else if(tab == testTab){
@@ -325,8 +337,6 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					}
 					
 				}
-				
-				
 		
 	}
 
@@ -360,6 +370,17 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			SupportMapFragment mapFragment ;
 			ImageView imgView;
 			
+			
+			public void onHiddenChanged(boolean hidden) {
+				if(hidden){
+					FragmentManager fm = getActivity().getSupportFragmentManager();
+					fm.beginTransaction().detach( mapFragment).commit();
+				}
+				else{
+					FragmentManager fm = getActivity().getSupportFragmentManager();
+					fm.beginTransaction().attach( mapFragment).commit();
+				}
+			}
 
 			@Override
 			public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -581,12 +602,16 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 		
 		//manually push an instruciton
+		/*
 		Player p = getPlayerById(OrchidClient.getApplicationClient(this).getPlayerId());
-		InstructionV1 fake_instruction = new InstructionV1(-1,0,1,"none",p,-1,-1);
+		InstructionV1 fake_instruction = new InstructionV1(-1,0,1,"none",null,p,-1,-1);
 		mTaskAdaptor.add(fake_instruction);
+		
+		//test();
+		*/
+		
 		JSONArray ins = updates.optJSONArray("instructions");
 		updateInstructions(ins);
-		//test();
 	}
 	
 	private void cleanUpPlayer(JSONObject player_to_delete){
@@ -704,8 +729,8 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		Player p = getPlayerById(update.optInt("player_id"));
 		//assume only one instruction is in the adaptor
-		if(p!=null){
-			mTaskAdaptor.ackInstructionV1(update.optInt("id"),p,update.optInt("status"));
+		if(p!=null && mTaskFragment != null){
+			mTaskFragment.ackInstruction(update.optInt("id"),p,update.optInt("status"));
 		}
 		
 		
@@ -740,11 +765,14 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		if( target1 == 0 && target2 == 0 ){
 			mMsgViewAdaptor.add(update);
 			if(actionBar.getSelectedTab()!=msgTab){
-				msgTab.setText("MESSAGE("+(++msgCount)+")");
+				msgTab.setText("CHAT("+(++msgCount)+")");
 			}
 		}
 		else if (target1 == pid || target2==pid) {
 			mMsgTaskAdaptor.add(update);
+			if(actionBar.getSelectedTab()!=taskTab){
+				taskTab.setText("HQ("+(++hqMsgCount)+")");
+			}
 		}
 		
 		//add code for pop up
@@ -770,18 +798,24 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			int id = in.optInt("id");
 			int task = in.optInt("task");
 			String direction = in.optString("direction");
-			int teammate = in.optInt("teammate");
+			int teammate_id = in.optInt("teammate");
 			int time = in.optInt("time");
 			int player_id = in.optInt("player_id");
-			Player player = getPlayerById(teammate);
+			Player teammate = getPlayerById(teammate_id);
+			Player player =  getPlayerById(player_id);
+			Task taskobj = getTaskById(task);
 			
-			InstructionV1 instruction = new InstructionV1(id,time,status,direction,player,task,player_id);
+			InstructionV1 instruction = new InstructionV1(id,time,status,direction,teammate, player,taskobj,task, player_id);
+			
 			//Toast.makeText(this, player_id + "<-instruciton for player", Toast.LENGTH_SHORT ).show();
 			int k = OrchidClient.getApplicationClient(this).getPlayerId();
 			if(OrchidClient.getApplicationClient(this).getPlayerId() == player_id){
 				mMsgTaskAdaptor.clear();
-				mTaskAdaptor.clear();
-				mTaskAdaptor.add(instruction);
+				current_instruction = instruction;
+				if(mTaskFragment!= null){
+					mTaskFragment.setInstruction(instruction);
+				}
+				
 				if(!alertShown){
 					alertShown = true;
 				}
@@ -807,14 +841,14 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 						.create()
 						.show();
 			}
-			else if(OrchidClient.getApplicationClient(this).getPlayerId() == teammate){
-				mTaskAdaptor.setPeerInstruction(instruction);
+			else if(OrchidClient.getApplicationClient(this).getPlayerId() == teammate_id){
+				//just for acknowledge
+				if(mTaskFragment!= null){
+					mTaskFragment.setInstruction(instruction);
+				}
 			}
-			
-			
 				
 		}
-		
 	}
 	
 	public void findMe() {

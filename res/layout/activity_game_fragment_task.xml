@@ -3,61 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-   
-   
-    	
-    	<ListView
-        	android:id="@android:id/list"
+     <!-- map container -->
+    <FrameLayout
+         android:id="@+id/task"
+         android:layout_width="match_parent"
+    	 android:layout_height="0px"
+    	 android:layout_weight="3"
+    	>
+    </FrameLayout> 
+  
+    <ListView
+        	android:id="@+id/tmsg_c"
         	android:layout_width="match_parent"
-        	android:layout_height="match_parent" 
-        	android:layout_gravity="fill_vertical"
-        	android:layout_weight ="4"
-        	
-        >
+        	android:layout_height="0px"
+    	 	android:layout_weight="3"
+        	android:transcriptMode="alwaysScroll"
+        	android:background = "#FCF1F6"
+     	>
+     </ListView>
+     <LinearLayout 
+         android:layout_width="match_parent"
+    	 android:layout_height="0px"
+    	 android:layout_weight="1"
+    	 
+    	 android:orientation="horizontal">
+    	 
         
-    	</ListView>
-    	
-    	<ListView
-        		android:id="@+id/tmsg_c"
-        		android:layout_width="match_parent"
-        		android:layout_height="match_parent" 
-        		android:layout_weight ="4"
-        		android:transcriptMode="alwaysScroll"
-        		android:background = "#FCF1F6"
-        >
-    	</ListView>
-    	
-    	<LinearLayout 
-    	    android:id="@+id/input_wrapper"
-    		android:layout_width="match_parent"
-    		android:layout_height="match_parent"
-    		android:orientation="horizontal"
-    		android:layout_weight ="6"
-    		android:background = "#FCF1F6"
-    		 >
-    		
-    		<EditText 
+    	 <EditText 
     	    	android:id="@+id/tmsg_edit"
     	    	android:layout_width="match_parent"
     	    	android:layout_height="wrap_content"
     	    	android:inputType="text"
-    	    	android:hint="to HQ and teammate"
+    	    	android:hint="Msg to teammate and HQ"
     	    	android:singleLine="false"
     	    	android:width="0dip"
+    	    	android:layout_weight="2"
     	    	android:imeOptions="actionSend"
-    	    	
     	    	>   
     		</EditText>
-    		
     		<Button 
     	     	android:id="@+id/tmsg_send"
-    	    	android:layout_width="wrap_content"
+    	    	android:layout_width="match_parent"
     	    	android:layout_height="wrap_content"
     	    	android:text="send"
-    	    	
+    	    	android:layout_weight="8"
+    	    	android:layout_gravity="right"
     	    	>   
     		</Button>
-     	</LinearLayout>
-     	
-	
+    </LinearLayout>
+    
+    
 </LinearLayout>

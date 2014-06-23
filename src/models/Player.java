@@ -109,6 +109,12 @@ public class Player {
 		mMarker.setPosition(new LatLng(lat, lng));
 	}
 	
+	public Marker updateOnStaticMap(GoogleMap sMap){
+		Marker m = sMap.addMarker(new MarkerOptions().position(new LatLng(lat,lng)));
+		setIconToMarker(skill, m);
+		return m;
+	}
+	
 	public void updateStatus(JSONObject update){
 		
 		final String s = update.optString("status");
@@ -123,6 +129,48 @@ public class Player {
 		if(mMarker!=null){
 			setIcon(image);
 		}
+	}
+	
+	
+	private void setIconToMarker(String image, final Marker m){
+		if(m==null){
+			throw new RuntimeException("marker is null");
+		}
+		final ImageLoader loader = ImageLoader.getImageLoader();
+		//if(loader.getTick()==null){
+			//for some reason, the self_icon can not be properly loaded, this is a fallback plan
+			//Toast.makeText(context, "warning: tick icon is not loaded", Toast.LENGTH_SHORT).show();
+		//}
+		
+		if(isClient){
+			if(loader.getSelfIcon()==null){
+				//for some reason, the self_icon can not be properly loaded, this is a fallback plan
+				loader.loadImage("blue_dot",
+						new ImageLoader.Callback() {
+							@Override
+							public void callback(Bitmap bm) {
+								Bitmap resized = Bitmap.createScaledBitmap(bm, 20,20, true);
+								m.setIcon(BitmapDescriptorFactory.fromBitmap(resized));
+							}
+						}
+				);
+				return;
+			}
+			m.setIcon(BitmapDescriptorFactory.fromBitmap(loader.getSelfIcon()));
+			return;
+		}
+		
+		loader.loadPlayerImage(id,initials, image, 
+				new ImageLoader.Callback() {
+					
+					@Override
+					public void callback(Bitmap bm) {
+						//Bitmap resized = Bitmap.createScaledBitmap(bm, 100,100, true);
+						m.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
+					}
+				}
+		);
+		
 	}
 	private void setIcon(String image){
 		if(mMarker==null){

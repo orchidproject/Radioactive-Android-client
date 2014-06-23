@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+   
+  
+    	 <FrameLayout
+        	android:id="@+id/task_map_container"
+        	android:layout_width="match_parent"
+        	android:layout_height="match_parent" 
+        	android:layout_weight ="3"
+        	
+        >
+        
+    	</FrameLayout>
+    	
+    	
+    	<ListView
+        		android:id="@+id/tmsg_c"
+        		android:layout_width="match_parent"
+        		android:layout_height="match_parent" 
+        		android:layout_weight ="3"
+        		android:transcriptMode="alwaysScroll"
+        		android:background = "#FCF1F6"
+        >
+    	</ListView>
+    	
+    	<LinearLayout 
+    	    android:id="@+id/input_wrapper"
+    		android:layout_width="match_parent"
+    		android:layout_height="match_parent"
+    		android:orientation="horizontal"
+    		android:layout_weight ="1"
+    		android:background = "#FCF1F6"
+    		 >
+    		
+    		<EditText 
+    	    	android:id="@+id/tmsg_edit"
+    	    	android:layout_width="match_parent"
+    	    	android:layout_height="wrap_content"
+    	    	android:inputType="text"
+    	    	android:hint="to HQ and teammate"
+    	    	android:singleLine="false"
+    	    	android:width="0dip"
+    	    	android:imeOptions="actionSend"
+    	    	
+    	    	>   
+    		</EditText>
+    		
+    		<Button 
+    	     	android:id="@+id/tmsg_send"
+    	    	android:layout_width="wrap_content"
+    	    	android:layout_height="wrap_content"
+    	    	android:text="send"
+    	    	
+    	    	>   
+    		</Button>
+     	</LinearLayout>
+</LinearLayout>

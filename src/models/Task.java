@@ -137,7 +137,46 @@ public class Task implements OrchidConstants {
 		
 	}
 	
+	public Marker updateOnStaticMap(final GoogleMap map){
+		
+		final Marker m = map.addMarker(new MarkerOptions().position(new LatLng(lat,lng)));
+		m.setPosition(new LatLng(lat, lng));
+		
+		//mMap =  map;
+		ImageLoader loader = ImageLoader.getImageLoader();
+		
+		//need dynamic loading
+		loader.loadTaskImage(id,initials, task_mapping[type], 
+				new ImageLoader.Callback() {
+					
+					@Override
+					public void callback(Bitmap bm) {
+					     m.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
+					}
+				}
+		);
+		return m;
+			
+	}
 	
+	private void setIconToMarker(String image, final Marker m){
+		if(m==null){
+			throw new RuntimeException("marker is null");
+		}
+		final ImageLoader loader = ImageLoader.getImageLoader();
+		
+		
+		loader.loadPlayerImage(id,initials, image, 
+				new ImageLoader.Callback() {
+					
+					@Override
+					public void callback(Bitmap bm) {
+						m.setIcon(BitmapDescriptorFactory.fromBitmap(bm));
+					}
+				}
+		);
+		
+	}
 
 	public int getId() {
 		return id;

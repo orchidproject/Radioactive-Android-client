@@ -9,12 +9,24 @@ public class InstructionV1 {
 	private String direction;
 	//change to bitmap later
 	private Player teammate = null;
+	private Player player = null;
 	private int task;
+	private Task taskObj;
 	private int time;
 	private int status;
 	private int player_id;
 	private String task_initials = null;
-	public InstructionV1(int id, int time,int status, String direction, Player teammate,int task, int player_id){
+	
+	
+	public InstructionV1(int id, 
+			int time,
+			int status, 
+			String direction, 
+			Player teammate,
+			Player player,
+			Task taskObj,
+			int task, 
+			int player_id){
 		this.id = id;
 		this.direction = direction;
 		this.teammate = teammate;
@@ -22,6 +34,9 @@ public class InstructionV1 {
 		this.task = task;
 		this.status = status;
 		this.player_id = player_id;
+		this.player = player;
+		this.taskObj = taskObj;
+		
 		//map it to a string representation 
 		if (this.task ==  -1){
 			this.task_initials = null;
@@ -40,6 +55,13 @@ public class InstructionV1 {
 		return direction;
 	}
 	
+	public Player getPlayer(){
+		return player;
+	}
+	
+	public Task getTaskObj(){
+		return taskObj;
+	}
 	//return null if the task is empty( marked is -1)
 	public String getTask() {
 		return task_initials;
@@ -64,6 +86,10 @@ public class InstructionV1 {
 	public void setStatus(int status) {
 		this.status = status;
 		
+	}
+
+	public int getTaskId() {
+		return task;
 	}
 	
 }
