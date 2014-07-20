@@ -14,6 +14,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -74,18 +76,20 @@ public class InstructionFragment extends Fragment {
 		            sMap.getUiSettings().setAllGesturesEnabled(false);
 		            sMap.getUiSettings().setZoomControlsEnabled(false);
 	  
-		            if(instruction!=null){
+		            if(instruction!=null && instruction.getTaskId() != -1){
+		            	//remove all markers from the map
+			        	sMap.clear();
 		            	instruction.getPlayer().updateOnStaticMap(sMap);
 		            	instruction.getTeammate().updateOnStaticMap(sMap);
 		            	instruction.getTaskObj().updateOnStaticMap(sMap);
 		            	PolylineOptions op = new PolylineOptions()
-		            		.add(instruction.getPlayer().getLatLng())
-		            		.add(instruction.getTaskObj().getLatLng());
+	            			.add(instruction.getPlayer().getLatLng())
+	            			.add(instruction.getTaskObj().getLatLng()).width(3);
 		            	sMap.addPolyline(op);
-		            	
+	            	
 		            	op = new PolylineOptions()
-	            			.add(instruction.getTeammate().getLatLng())
-	            			.add(instruction.getTaskObj().getLatLng());
+            				.add(instruction.getTeammate().getLatLng())
+            				.add(instruction.getTaskObj().getLatLng()).width(3);
 		            	sMap.addPolyline(op);
 		            }
 		           
@@ -94,22 +98,22 @@ public class InstructionFragment extends Fragment {
 
 						@Override
 						public void onMapLoaded() {
-							LatLngBounds.Builder  builder = new LatLngBounds.Builder();
+							
 				        	
-				        	
-				        	if(instruction!=null){
+				        	if(instruction!=null && instruction.getTaskId() != -1){
+				        		LatLngBounds.Builder  builder = new LatLngBounds.Builder();
 				        		builder.include(instruction.getPlayer().getLatLng());
 				        		builder.include(instruction.getTeammate().getLatLng());
 				        		builder.include(instruction.getTaskObj().getLatLng()); 
+				        		sMap.moveCamera(
+							    		CameraUpdateFactory.newLatLngBounds(builder.build(), 50)
+							    );
 				        	}
-				        	sMap.moveCamera(
-					    		CameraUpdateFactory.newLatLngBounds(builder.build(), 50)
-					    	);
+				        	
+					    
 							
 						}});
 		        }
-		        
-		      
 		    };
 		    
 			getActivity().getSupportFragmentManager().beginTransaction()
@@ -125,6 +129,8 @@ public class InstructionFragment extends Fragment {
 	        switch(status_code){
 	        	case 1:
 	            	status.setText("Waiting for your response");
+	            	accept.setEnabled(true);
+	            	reject.setEnabled(true);
 	            	break;
 	        	case 2:
 	            	status.setText("Accepted");
@@ -142,7 +148,6 @@ public class InstructionFragment extends Fragment {
 	        }
 	        
 	        accept.setOnClickListener(new OnClickListener(){
-
 				@Override
 				public void onClick(View arg0) {
 					sManager.sendInstructionAck(
@@ -150,19 +155,43 @@ public class InstructionFragment extends Fragment {
 							2,
 							OrchidClient.getApplicationClient(getActivity()).getPlayerId()
 					);
-				}});
-        
+				}});      
 	        	reject.setOnClickListener(new OnClickListener(){
 
 				@Override
 	        	public void onClick(View arg0) {
-	        		sManager.sendInstructionAck(
-						instruction.getId(), 
-						3,
-						OrchidClient.getApplicationClient(getActivity()).getPlayerId()
-	        		);
-	        	}});
+					confirmRejection();
+					
+	        		
+	        }});
 	 }
+	 
+	 private void confirmRejection(){
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+		alertDialogBuilder.setTitle("System message");
+		String msg = "The target will be coverred by radiation in " + instruction.getDeadlineMins() + " mins, Are  you sure you want to reject it?";
+			
+		// set dialog message
+		alertDialogBuilder
+					.setMessage(msg)
+					.setCancelable(true)
+					.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,int id) {
+									sManager.sendInstructionAck(
+											instruction.getId(), 
+											3,
+											OrchidClient.getApplicationClient(getActivity()).getPlayerId()
+						        		);
+								}
+							  })
+				    .setNegativeButton("No",new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,int id) {
+									//do nottingham
+															}
+							  })
+					.create()
+					.show();
+	}
 	 
 	 public void setInstruction(InstructionV1 in){
 		 instruction = in;

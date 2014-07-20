@@ -46,8 +46,9 @@ public class MsgArrayAdaptor extends ArrayAdapter<JSONObject> {
 	    
 		timerView.setText(caculateTime(message.optInt("timeStamp")));
 		final ImageView img = (ImageView)contentView.findViewById(R.id.sender_img);
+		TextView nameView = (TextView)contentView.findViewById(R.id.sender_name);
 		
-		
+		nameView.setText(message.optString("player_name"));
 		
 		//HQ message, no image required
 		if (message.optInt("player_id")==-1) {
@@ -57,7 +58,7 @@ public class MsgArrayAdaptor extends ArrayAdapter<JSONObject> {
 		}
 		try {
 			
-			content.setText("From "+message.getString("player_initials")+ ": "+ message.optString("content"));
+			content.setText("("+message.getString("player_initials")+ "): "+ message.optString("content"));
 			ImageLoader.getImageLoader().loadPlayerImage(
 					message.getInt("player_id"), 
 					message.getString("player_initials"), 

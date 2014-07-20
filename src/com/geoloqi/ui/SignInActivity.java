@@ -4,14 +4,10 @@ import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -20,10 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.geoloqi.mapattack.R;
-import com.geoloqi.interfaces.OrchidConstants;
-import com.geoloqi.interfaces.RPCException;
 import com.geoloqi.interfaces.RoleMapping;
-import com.geoloqi.rpc.OrchidClient;
 
 public class SignInActivity extends Activity implements OnClickListener {
 	public static final String TAG = "SignInActivity";
@@ -106,6 +99,9 @@ public class SignInActivity extends Activity implements OnClickListener {
 					return;
 				}else if(initials.length()!=2){
 					Toast.makeText(getApplicationContext(), "need two letters as initials", Toast.LENGTH_LONG).show();
+					return;
+				}else if(name.length() == 0){
+					Toast.makeText(getApplicationContext(), "please enter you name", Toast.LENGTH_LONG).show();
 					return;
 				}
 					

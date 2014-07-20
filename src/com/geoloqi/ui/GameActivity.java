@@ -18,7 +18,6 @@ import com.geoloqi.services.GPSTracker;
 import com.geoloqi.services.SocketIOManager;
 import com.geoloqi.widget.ImageLoader;
 import com.geoloqi.widget.MsgArrayAdaptor;
-import com.geoloqi.widget.TaskArrayAdaptor;
 import com.geoloqi.widget.TaskMsgArrayAdaptor;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -28,9 +27,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,7 +72,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	private MsgListViewFragment mMsgFragment=null;
 	private TestFragment mTestFragment = null;
 	private HQViewFragment mTaskFragment = null;
-	private TaskArrayAdaptor mTaskAdaptor = null;
+
 	
 	private View healthBar = null;
 	private int healthBarWidth = 0;
@@ -128,22 +125,28 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				mc.getRoleString(),
 				mc.getInitials(),
 				mc.getPlayerId(),
+				mc.getName(),
 				this
 		);
-		
-		
-		
-		
-		//deplicated
-		mTaskAdaptor = new TaskArrayAdaptor(this,socketIO);
 		mMsgTaskAdaptor = new TaskMsgArrayAdaptor(this);
 		mMsgViewAdaptor = new MsgArrayAdaptor(this);
 		
 	}
 	
+	private void toggleResponseWaring(){
+		//SHOW the waringing tag when approapriate
+		if(current_instruction!=null && current_instruction.getStatus()==1){
+			mMapFragment.getResponseWarningView().setVisibility(View.VISIBLE);
+		}
+		else{
+			mMapFragment.getResponseWarningView().setVisibility(View.INVISIBLE);
+		}
+	}
+	
 	@Override
 	public void onStart(){
 		super.onStart();
+		ImageLoader.getImageLoader().adjustIconSize(this);
 		socketIO.connect();
 		gps.start();
 		if (healthBar== null){
@@ -168,12 +171,41 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				}
 			});
 			
+			mMapFragment.getToggleInstructionButton().setOnClickListener(new OnClickListener(){
+				@Override
+				public void onClick(View button) {
+					if(current_instruction== null || current_instruction.getTaskId() == -1 ){
+						Toast.makeText(GameActivity.this, "No task",Toast.LENGTH_LONG).show();
+						return;
+					}
+					
+					if(current_instruction.toggleMap(mMapFragment.getMap())){
+						((Button)button).setText("hide task");
+						findMe();
+					}	
+					else{
+						((Button)button).setText("show task");
+						
+					}
+				}
+			});
 		}
 		OrchidClient mc = OrchidClient.getApplicationClient(this);
 		GameState.getGameState(this).loadState(mc.getGameId());
 		
 		
+		
 			
+	}
+	
+	private void hideMarkers(){
+		for (Player p: players){
+			//p.hide();
+		}
+		
+		for (Task t: tasks){
+			//t.hide();
+		}
 	}
 	
 	@Override
@@ -231,11 +263,11 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 							final String json3;
 							final String json4;
 							if(count%10!=0){
-								json3 = "{\"id\":100, \"latitude\":0, \"longitude\":0, \"type\": 0 ,\"players\":\"57,1\",\"state\": 1}";
+								json3 = "{\"id\":100, \"latitude\":0, \"longitude\":0, \"type\": 0 ,\"players\":\"465,1\",\"state\": 1}";
 								json4 = "{\"id\":51, \"status\": \"normal\"}";
 							}
 							else {
-								json3 = "{\"id\":100, \"latitude\":0, \"longitude\":0, \"type\": 0 ,\"players\":\"49,1\",\"state\": 2}";
+								json3 = "{\"id\":100, \"latitude\":0, \"longitude\":0, \"type\": 0 ,\"players\":\"464,1\",\"state\": 2}";
 								json4 = "{\"id\":51, \"status\": \"incapicatated\"}";
 							}
 							/*final String json5;
@@ -254,10 +286,9 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 									
 									try {
 										
-										updateHealth(new JSONObject(json));
-										updateExposure(new JSONObject(json2));
+										//updateHealth(new JSONObject(json));
+										//updateExposure(new JSONObject(json2));
 										updateTask(new JSONObject(json3));
-										updatePlayerStatus(new JSONObject(json4));
 										if (c%10==0){
 											//updateInstructions(new JSONArray(json5));
 										}
@@ -287,8 +318,9 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					else{
 						//use show and hide to persist state
 						fm.beginTransaction().show(mMapFragment).commit();
-						//fm.beginTransaction().attach(mMapFragment).commit();
 					}
+					
+					
 					
 				}
 				else if (tab == msgTab){
@@ -366,7 +398,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	//it handles map behavior, 
-	public  static class MapFragment extends Fragment{
+	public static class MapFragment extends Fragment{
 			SupportMapFragment mapFragment ;
 			ImageView imgView;
 			
@@ -380,6 +412,16 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 					FragmentManager fm = getActivity().getSupportFragmentManager();
 					fm.beginTransaction().attach( mapFragment).commit();
 				}
+				
+				
+			}
+
+			public Button getToggleInstructionButton() {
+				return (Button) getView().findViewById(R.id.btn_toggle_plan );
+			}
+			
+			public View getResponseWarningView(){
+				return  getView().findViewById(R.id.warning_tag );
 			}
 
 			@Override
@@ -394,8 +436,6 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				
 				getActivity().getSupportFragmentManager().beginTransaction()
 				.replace(R.id.map_container, mapFragment).commit();
-				
-				
 				
 				return mContentView;
 				
@@ -427,6 +467,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 						imgView.setImageBitmap(bm);
 					}
 				});
+				getResponseWarningView().setVisibility(View.INVISIBLE);
 				
 			}
 			
@@ -610,6 +651,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		//test();
 		*/
 		
+		
 		JSONArray ins = updates.optJSONArray("instructions");
 		updateInstructions(ins);
 	}
@@ -654,6 +696,12 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		 }
 		else{
 				p.update(update);
+				if(current_instruction!=null&&
+					(OrchidClient.getApplicationClient(this).getPlayerId() == update.optInt("player_id")
+					||update.optInt("player_id") == current_instruction.getTeammate().getId()))
+				{
+					current_instruction.updateOnMap(mMapFragment.getMap());
+				}
 		}
 	}
 	
@@ -678,7 +726,10 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void updateTask(JSONObject update){
+		
+		
 		Task t = getTaskById(update.optInt("id"));
+		
 		if(t == null){
 			t =  new Task(update,mMapFragment.getMap());
 			tasks.add(t);
@@ -687,8 +738,15 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			t.update(update);
 		}
 		
+		//check whether it is the same as current_instruction
+		if(t.dropped() &&current_instruction.getTaskId() == t.getId()){
+			//push an empty instruction
+			current_instruction = null;
+			mTaskFragment.setInstruction(null);
+			updateSystemInfo("Your task finished");
+		}
 		
-		//set Indicators
+		//set pick up indicators
 		String players =  update.optString("players");
 		String[] carriers =  players.split(",");
 		OrchidClient mc = OrchidClient.getApplicationClient(this);
@@ -708,13 +766,19 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			taskIndicator.setImageBitmap(null);
 			taskTextIndicator.setText("Picked up: None");
 			t.setCarried(false);
-			return;
+			
+			//dropoff dialog
+			updateSystemInfo("Target dropped");
 		}else if(carrying&&!t.isCarried()){
 			Bitmap bm = ImageLoader.getImageLoader().getTaskImage(t.getType());
 			taskIndicator.setImageBitmap(bm);
 			t.setCarried(true);
 			taskTextIndicator.setText("Picked up: ");
+			
+			//pick up dialog
+			updateSystemInfo("Target picked up");
 		}
+		
 		
 	}
 	
@@ -732,9 +796,11 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 		if(p!=null && mTaskFragment != null){
 			mTaskFragment.ackInstruction(update.optInt("id"),p,update.optInt("status"));
 		}
+		toggleResponseWaring();
 		
 		
 	}
+	
 	private void updateSystemInfo(String msg){
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
 				this);
@@ -789,6 +855,7 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				Toast.makeText(this, "error constructing instructions", Toast.LENGTH_LONG).show();
 				continue;
 			}
+			
 			int confirmed = in.optInt("confirmed");
 			if(confirmed != 1){
 				return;
@@ -803,10 +870,11 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 			int player_id = in.optInt("player_id");
 			Player teammate = getPlayerById(teammate_id);
 			Player player =  getPlayerById(player_id);
+			int deadline = in.optInt("deadline");
 			Task taskobj = getTaskById(task);
 			
-			InstructionV1 instruction = new InstructionV1(id,time,status,direction,teammate, player,taskobj,task, player_id);
-			
+			InstructionV1 instruction = new InstructionV1(id,time,status,direction,teammate, player,taskobj,task, player_id,deadline);
+	
 			//Toast.makeText(this, player_id + "<-instruciton for player", Toast.LENGTH_SHORT ).show();
 			int k = OrchidClient.getApplicationClient(this).getPlayerId();
 			if(OrchidClient.getApplicationClient(this).getPlayerId() == player_id){
@@ -825,17 +893,19 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 		 
 				// set title
-				alertDialogBuilder.setTitle("New instruction");
+				alertDialogBuilder.setTitle("New Task");
+				// toggle warning
+				if(instruction.getTaskId() != -1 )
+					toggleResponseWaring();
 				
 				// set dialog message
 				alertDialogBuilder
-						.setMessage("Click to view the new instruction")
-						.setCancelable(false)
-						.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog,int id) {
+					.setMessage("Task changed, go to HQ tab to view the new task")
+					.setCancelable(false)
+					.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog,int id) {
 								alertShown = false;
-								taskTab.select();
-								
+								//taskTab.select();		
 							}
 						  })
 						.create()
@@ -891,6 +961,8 @@ public class GameActivity extends FragmentActivity implements ActionBar.TabListe
 				CameraUpdateFactory.newLatLngBounds(builder.build(), 50)
 		);
 	}
+	
+	
 
 	@Override
 	public void preLoad() {

@@ -53,7 +53,7 @@ public class TaskMsgArrayAdaptor extends ArrayAdapter<JSONObject> {
 		}
 		try {
 			
-			content.setText("From "+message.getString("player_initials")+ ": "+ message.optString("content"));
+			content.setText(message.getString("player_name")+"("+message.getString("player_initials")+ "): "+ message.optString("content"));
 			/*ImageLoader.getImageLoader().loadPlayerImage(
 					message.getInt("player_id"), 
 					message.getString("player_initials"), 

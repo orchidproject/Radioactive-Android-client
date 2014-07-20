@@ -4,29 +4,30 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
     
-  
-    
-     <LinearLayout 
+    <RelativeLayout
          android:layout_width="match_parent"
     	 android:layout_height="0px"
-    	 android:layout_weight="1"
+    	 android:layout_weight="2"
+    	 >
     	 
-    	 android:orientation="horizontal">
+        
+    	 	
     	 <RelativeLayout 
-         	android:layout_width="0dp"
+         	android:layout_width="wrap_content"
     	 	android:layout_height="match_parent"
-    	    android:layout_weight="1"
+    	    android:layout_alignParentLeft = "true"
+    	    android:id="@+id/geiger_counter_container"
     	 	android:orientation="vertical">
     	 	<TextView
-    	 		android:layout_width="match_parent"
+    	 		android:layout_width="wrap_content"
     	 		android:layout_height="wrap_content"
     	 		android:layout_alignParentTop="true"
-    	 		android:text="Radiation">
+    	 		android:text="Radiation     ">
     	 	</TextView>
     	 	
     	 	<TextView
     	 	    android:id="@+id/radiation_panel"
-    	 		android:layout_width="match_parent"
+    	 		android:layout_width="wrap_content"
     	 		android:layout_height="wrap_content"
     	 		android:textSize="20pt"
     	 		android:layout_centerInParent="true"
@@ -36,10 +37,12 @@
         </RelativeLayout>
         
         <RelativeLayout
-         	android:layout_width="0dp"
-    	 	android:layout_height="match_parent"
-    	 	android:layout_weight="3"
-    	 	>
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/geiger_counter_container"
+             >
+
     	    <TextView
     	        android:id="@+id/health_label"
     	 		android:layout_width="match_parent"
@@ -124,7 +127,7 @@
     	 			android:layout_width="wrap_content"
     	 			android:layout_height="wrap_content"
     	 			android:textSize="10sp"
-    	 			android:text="toggle plan" 		
+    	 			android:text="show task" 		
     	 			/>
     			<Button
     	      		android:id ="@+id/btn_find_game_area"
@@ -138,18 +141,22 @@
     		</LinearLayout>
     	 	
         </RelativeLayout>
-    </LinearLayout>
-    
-    
-     
-     <!-- map container -->
+        <ImageView
+            	android:id ="@+id/warning_tag"
+    	 		android:layout_width="wrap_content"
+    	 		android:layout_height="wrap_content"
+    	 		android:layout_alignParentTop="true"
+    	 		android:src="@drawable/warninga"
+    	 		android:layout_centerHorizontal="true"
+    	 		>
+    	 </ImageView>
+    </RelativeLayout>
+    <!-- map container -->
     <FrameLayout
-         android:id="@+id/map_container"
-         android:layout_width="match_parent"
-    	 android:layout_height="0px"
-    	 android:layout_weight="3"
-    	>
-       
+        android:id="@+id/map_container"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="5" >
     
     </FrameLayout> 
     

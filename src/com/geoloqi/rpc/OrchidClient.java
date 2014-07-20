@@ -50,6 +50,7 @@ public class OrchidClient implements OrchidConstants {
 	private AsyncTask<Void, Void, Integer> mJoinGameTask;
 
 	private boolean rejoin;
+	private String name;
 
 	
 
@@ -105,7 +106,7 @@ public class OrchidClient implements OrchidConstants {
 		String old_game_id = sp.getString("gameID", null);
 		String old_role = sp.getString("roleId", null);
 		String old_initials = sp.getString("initials", null);
-		//String old_name = sp.getString("name", null);
+		String old_name = sp.getString("name", null);
 		//check integratiy
 		if(old_user_id!=null&&
 		   old_game_id!=null&&
@@ -118,6 +119,7 @@ public class OrchidClient implements OrchidConstants {
 			mInitials = old_initials;
 			userId = Integer.valueOf(old_user_id);
 			isLogin=true;
+			name = old_name;
 		}
 	}
 
@@ -360,6 +362,11 @@ public class OrchidClient implements OrchidConstants {
 		mMyRoleString =null;
 		isLogin=false;
 		context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE).edit().clear().commit();
+	}
+
+	public String getName() {
+		
+		return name;
 	}
 
 }

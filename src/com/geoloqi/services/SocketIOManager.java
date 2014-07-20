@@ -42,15 +42,17 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 	private String roleString;
 	private int playerId;
 	private String initials;
+	private String name;
 	
 	private Context mContext=null;
 	
-	public SocketIOManager(StateCallback sc,int game_id, String role,String initials, int player_id, Context con){
+	public SocketIOManager(StateCallback sc,int game_id, String role,String initials, int player_id, String player_name, Context con){
 		callback = sc;
 		this.gameId = game_id;
 		this.roleString = role;
 		this.playerId = player_id;
 		this.initials= initials;
+		this.name = player_name;
 		this.mContext = con;
 	}
 	
@@ -252,7 +254,7 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 
 				} catch (JSONException e) {
 					Log.e("location", "JSONException in gps push: " + e);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					Log.e("location", "IOException in gps push: " + e);
 				}
 			}
@@ -298,7 +300,7 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 			if(connectionState == 3){
 				JSONObject messageObject = new JSONObject();
 				try {
-					messageObject.put("player_name","name?" );
+					messageObject.put("player_name",name );
 					messageObject.put("player_initials", initials);
 					messageObject.put("content", content);
 					messageObject.put("player_skill", roleString);
@@ -320,7 +322,7 @@ public class SocketIOManager implements OrchidConstants, MessageCallback{
 		if(connectionState == 3){
 			JSONObject messageObject = new JSONObject();
 			try {
-				messageObject.put("player_name","name?" );
+				messageObject.put("player_name",name );
 				messageObject.put("player_initials", initials);
 				messageObject.put("content", content);
 				messageObject.put("player_skill", roleString);

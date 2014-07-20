@@ -16,9 +16,13 @@ import com.geoloqi.widget.ImageLoader.Callback;
 
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.AsyncTask;
+import android.view.Display;
+import android.view.WindowManager;
 
 public class ImageLoader implements OrchidConstants{
 	private Bitmap[] task = new Bitmap[4];
@@ -28,9 +32,9 @@ public class ImageLoader implements OrchidConstants{
 	private Bitmap self_icon;
 	private HashMap<Integer, Bitmap> playerImages = new HashMap<Integer, Bitmap>();
 	private HashMap<Integer, Bitmap> taskImages = new HashMap<Integer, Bitmap>();
+	private int resize_factor = 0;
 	
 	private boolean loaded = false;
-	
 	private static ImageLoader singleton =null;
 	//for the first time, it must be loaded in an async task
 	public static ImageLoader getImageLoader(){
@@ -38,10 +42,8 @@ public class ImageLoader implements OrchidConstants{
 			singleton = new ImageLoader();
 		return singleton;
 	}
-
 	
 	public Bitmap getSelfIcon(){
-		
 		return self_icon;
 	}
 	public Bitmap getTaskImage(int type){
@@ -56,6 +58,13 @@ public class ImageLoader implements OrchidConstants{
 		return cross;
 	}
 	
+	public void adjustIconSize(Context context){
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		@SuppressWarnings("deprecation")
+		int width = display.getWidth();
+		resize_factor = width/15;
+	}
 	
 	public void loadImages(){
 		task[0] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon1.png");
@@ -63,10 +72,13 @@ public class ImageLoader implements OrchidConstants{
 		task[2] =  getBitmapFromURL(IMAGE_URL_BASE + "victim.png");
 		task[3] =  getBitmapFromURL(IMAGE_URL_BASE + "task_icon4.png");
 		self_icon =  getBitmapFromURL(IMAGE_URL_BASE + "blue_dot.png");
-		/*player[0] =  getBitmapFromURL(IMAGE_URL_BASE + "medic.png");
-		player[1] =  getBitmapFromURL(IMAGE_URL_BASE + "firefighter.png");
-		player[2] =  getBitmapFromURL(IMAGE_URL_BASE + "soldier.png");
-		player[3] =  getBitmapFromURL(IMAGE_URL_BASE + "transporter.png");*/
+		self_icon =  Bitmap.createScaledBitmap( self_icon , resize_factor,resize_factor, true);
+		/*
+		 * player[0] =  getBitmapFromURL(IMAGE_URL_BASE + "medic.png");
+		   player[1] =  getBitmapFromURL(IMAGE_URL_BASE + "firefighter.png");
+		   player[2] =  getBitmapFromURL(IMAGE_URL_BASE + "soldier.png");
+		   player[3] =  getBitmapFromURL(IMAGE_URL_BASE + "transporter.png");
+		*/
 		tick = getBitmapFromURL(IMAGE_URL_BASE + "tick.png");
 		cross = getBitmapFromURL(IMAGE_URL_BASE + "dead.png");
 	}
@@ -142,8 +154,8 @@ public class ImageLoader implements OrchidConstants{
 
 		@Override
 		protected Bitmap doInBackground(Void... params) {
-			
-			return getBitmapFromURL(url);
+			Bitmap resized = Bitmap.createScaledBitmap(getBitmapFromURL(url), resize_factor, resize_factor, true);
+			return resized;
 		}
 
 		@Override
@@ -167,8 +179,8 @@ public class ImageLoader implements OrchidConstants{
 
 		@Override
 		protected Bitmap doInBackground(Void... params) {
-		
-			return getBitmapFromURL(url);
+			Bitmap resized = Bitmap.createScaledBitmap(getBitmapFromURL(url), resize_factor,resize_factor, true);
+			return resized;
 		}
 	
 		@Override
@@ -192,7 +204,8 @@ public class ImageLoader implements OrchidConstants{
 		@Override
 		protected Bitmap doInBackground(Void... params) {
 		
-			return getBitmapFromURL(url);
+			Bitmap resized = Bitmap.createScaledBitmap(getBitmapFromURL(url), resize_factor, resize_factor, true);
+			return resized;
 		}
 	
 		@Override

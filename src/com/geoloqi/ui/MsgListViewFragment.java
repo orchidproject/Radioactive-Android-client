@@ -38,8 +38,7 @@ public class MsgListViewFragment extends ListFragment {
 	 private boolean updateTime = false;
 	 
 		
-	public void setAdaptor(MsgArrayAdaptor mMsgViewAdaptor) {
-			
+	public void setAdaptor(MsgArrayAdaptor mMsgViewAdaptor) {	
 			mAdapter = mMsgViewAdaptor;
 	}
 	public void setSocket(SocketIOManager so){

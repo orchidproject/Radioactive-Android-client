@@ -203,5 +203,12 @@ public class Task implements OrchidConstants {
 		return type;
 	}
 
+	public boolean dropped() {
+		if(status == 2){
+			return true;
+		}
+		return false;
+	}
+
 
 }

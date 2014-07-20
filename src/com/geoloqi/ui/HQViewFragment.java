@@ -91,7 +91,12 @@ public class HQViewFragment extends Fragment {
 						msgView.setText("");
 						InputMethodManager imm = (InputMethodManager)HQViewFragment.this.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 						imm.hideSoftInputFromWindow(msgView.getWindowToken(), 0);
-						socket.sendMsg(text,player_id,instruction.getTeammate().getId());
+						if(instruction!=null && instruction.getTeammate()!= null ){
+							socket.sendMsg(text,player_id,instruction.getTeammate().getId());
+						}
+						else{
+							socket.sendMsg(text,player_id,-1);
+						}
 					}
 					
 			 }});
